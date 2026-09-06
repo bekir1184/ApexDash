@@ -55,8 +55,9 @@ struct RootDashboardView: View {
     private func themeBackground(unit: CGFloat) -> some View {
         switch theme {
         case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
-        // Pit limiter'da gercek ekran gibi ekranin tamami sariya doner.
-        case .realistic: RealisticPalette.ground(limiter: dash.pitLimiterOn)
+        // Ekranin disinda kalan yer direksiyon govdesi; sarı uyari sadece
+        // LCD'nin kendisinde yanar, gercek araclardaki gibi.
+        case .realistic: RealisticPalette.bezel
         case .modern, .game: theme.background
         }
     }

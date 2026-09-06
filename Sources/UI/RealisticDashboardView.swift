@@ -5,6 +5,8 @@ import SwiftUI
 /// pit lane'de gercek araclarda oldugu gibi.
 enum RealisticPalette {
     static let ground = Color(red: 0.055, green: 0.06, blue: 0.05)
+    /// Ekrani cevreleyen direksiyon govdesi.
+    static let bezel = Color(red: 0.075, green: 0.08, blue: 0.09)
     static let limiterGround = Color(red: 0.71, green: 0.75, blue: 0.18)
 
     static func ground(limiter: Bool) -> Color { limiter ? limiterGround : ground }
@@ -28,9 +30,8 @@ struct RealisticDashboardView: View {
     private let alert = Color(red: 0.95, green: 0.42, blue: 0.16)
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: unit * 0.16) {
             wheelLeds
-                .padding(.bottom, unit * 0.14)
 
             VStack(spacing: 0) {
                 topRow
@@ -41,36 +42,51 @@ struct RealisticDashboardView: View {
                 ersBar
             }
             .background(RealisticPalette.ground(limiter: limiter))
-            .overlay(Rectangle().stroke(rule, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous)
+                    .stroke(Color.black.opacity(0.9), lineWidth: unit * 0.1)
+            )
         }
+        // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
+        .padding(.horizontal, unit * 0.28)
+        .padding(.vertical, unit * 0.22)
+        .background(
+            RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
+                .fill(RealisticPalette.bezel)
+                .overlay(
+                    RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
+                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Direksiyon govdesindeki LED'ler
 
-    /// Solda yesil, sagda mavi kume - fotograftaki gibi ekranin genisligince
-    /// yayilir, ortada bosluk kalir.
+    /// Cerceve uzerindeki devir seridi: diger temalarla ayni renk duzeni
+    /// (yesil - kirmizi - mor), bosluksuz ve ekran genisligince.
     private var wheelLeds: some View {
         HStack(spacing: 0) {
-            ledCluster(range: 0..<7, color: Color(red: 0.24, green: 0.92, blue: 0.35))
-            Spacer(minLength: unit * 0.8)
-            ledCluster(range: 7..<15, color: Color(red: 0.35, green: 0.55, blue: 1.0))
-        }
-        .padding(.horizontal, unit * 0.3)
-    }
-
-    private func ledCluster(range: Range<Int>, color: Color) -> some View {
-        HStack(spacing: 0) {
-            ForEach(range, id: \.self) { index in
+            ForEach(0..<15, id: \.self) { index in
                 // Oyunun kendi LED desenini kullaniyoruz: 15 bit, soldan saga.
                 let lit = dash.revLightsBits & (1 << UInt16(index)) != 0
+                let color = ledColor(index)
                 Circle()
-                    .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.06))
-                    .frame(width: unit * 0.46, height: unit * 0.46)
-                    .shadow(color: lit ? color.opacity(0.8) : .clear, radius: unit * 0.16)
+                    .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.05))
+                    .frame(width: unit * 0.34, height: unit * 0.34)
+                    .shadow(color: lit ? color.opacity(0.85) : .clear, radius: unit * 0.14)
                     .frame(maxWidth: .infinity)
             }
         }
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, unit * 0.1)
+    }
+
+    private func ledColor(_ index: Int) -> Color {
+        switch index {
+        case 0..<5: return Color(red: 0.18, green: 0.92, blue: 0.32)
+        case 5..<10: return Color(red: 1.0, green: 0.2, blue: 0.16)
+        default: return Color(red: 0.5, green: 0.42, blue: 1.0)
+        }
     }
 
     // MARK: - Ust satir: delta, durum, tur suresi
