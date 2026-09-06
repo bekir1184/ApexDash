@@ -22,7 +22,7 @@ Ekrana dokunup secilir, yana kaydirarak da gecis yapilir; secim saklanir.
 | --- | --- |
 | `MODERN` | Bosch DDU tarzi, yuksek kontrastli temiz duzen |
 | `DOT MATRIX` | Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir |
-| `SEGMENT` | Tek renkli kehribar segment gosterge, sonmus segment hayaletleriyle |
+| `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
 
 ## Oyun ayarlari (Ayarlar › Telemetri)
 
@@ -71,5 +71,5 @@ Header 29 byte, little-endian, packed. Kullanilan paketler:
 
 - Sektor sureleri ve en iyi tura gore canli delta (paket 2 + 11)
 - Lastik asinma ve hasar (paket 10), lastik basinci
-- ERS deploy modu, batarya %, yakit delta (paket 7)
+- ERS deploy modunun ekranda gosterilmesi
 - Takim renk temalari, ozellestirilebilir kutu yerlesimi

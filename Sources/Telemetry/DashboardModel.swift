@@ -22,6 +22,9 @@ struct DashboardModel {
     var idleRPM: Int = 4000
     var maxGears: Int = 8
     var pitLimiterOn: Bool = false
+    var ersStoreEnergy: Float = 0
+    var ersDeployMode: Int = 0
+    var fuelRemainingLaps: Float = 0
 
     // CarTelemetry2 (paket 16) - 2026 kurallari
     var aeroStraightMode: Bool = false
@@ -89,6 +92,20 @@ struct DashboardModel {
         return brakeTemps.reduce(0, +) / brakeTemps.count
     }
 
+    /// ERS deposunun doluluk orani. Tam depo 4 MJ.
+    var ersFraction: Double {
+        min(max(Double(ersStoreEnergy) / 4_000_000, 0), 1)
+    }
+
+    var ersModeText: String {
+        switch ersDeployMode {
+        case 1: return "MEDIUM"
+        case 2: return "HOTLAP"
+        case 3: return "BOOST"
+        default: return "NONE"
+        }
+    }
+
     static func lapTimeText(_ milliseconds: Int) -> String {
         guard milliseconds > 0 else { return "--:--.---" }
         let minutes = milliseconds / 60_000
@@ -111,6 +128,9 @@ struct DashboardModel {
         idleRPM = s.idleRPM
         maxGears = s.maxGears
         pitLimiterOn = s.pitLimiterOn
+        ersStoreEnergy = s.ersStoreEnergy
+        ersDeployMode = s.ersDeployMode
+        fuelRemainingLaps = s.fuelRemainingLaps
     }
 
     mutating func apply(_ t: CarTelemetry2) {

@@ -4,7 +4,7 @@ import SwiftUI
 enum DashTheme: String, CaseIterable, Identifiable {
     case modern
     case dotMatrix
-    case segment
+    case game
 
     var id: String { rawValue }
 
@@ -12,7 +12,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
         switch self {
         case .modern: return "MODERN"
         case .dotMatrix: return "DOT MATRIX"
-        case .segment: return "SEGMENT"
+        case .game: return "OYUN"
         }
     }
 

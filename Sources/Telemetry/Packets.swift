@@ -167,25 +167,38 @@ struct CarStatus {
     static let stride = 59
 
     var pitLimiterOn: Bool = false
+    var fuelRemainingLaps: Float = 0
     var maxRPM: Int = 15000
     var idleRPM: Int = 4000
     var maxGears: Int = 8
+    /// ERS deposundaki enerji (Joule). Tam depo 4 MJ.
+    var ersStoreEnergy: Float = 0
+    var ersDeployMode: Int = 0
 
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
         guard r.remaining >= Self.stride else { return nil }
         r.skip(4)                            // tractionControl, abs, fuelMix, frontBrakeBias
         guard let limiter = r.uint8() else { return nil }
-        r.skip(12)                           // fuelInTank, fuelCapacity, fuelRemainingLaps
-        guard let maxRPM = r.uint16(),
+        r.skip(8)                            // fuelInTank, fuelCapacity
+        guard let fuelLaps = r.float(),
+              let maxRPM = r.uint16(),
               let idleRPM = r.uint16(),
               let maxGears = r.uint8()
         else { return nil }
+        r.skip(7)                            // drsAllowed, drsActivationDistance, lastikler, bayrak
+        r.skip(8)                            // enginePowerICE, enginePowerMGUK
+        guard let ersStore = r.float(),
+              let deployMode = r.uint8()
+        else { return nil }
 
         self.pitLimiterOn = limiter == 1
+        self.fuelRemainingLaps = fuelLaps
         self.maxRPM = Int(maxRPM)
         self.idleRPM = Int(idleRPM)
         self.maxGears = Int(maxGears)
+        self.ersStoreEnergy = ersStore
+        self.ersDeployMode = Int(deployMode)
     }
 }
 

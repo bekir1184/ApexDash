@@ -48,7 +48,7 @@ struct RootDashboardView: View {
         switch theme {
         case .modern: ModernDashboardView(dash: dash, unit: unit)
         case .dotMatrix: DotMatrixDashboardView(dash: dash, unit: unit)
-        case .segment: SegmentDashboardView(dash: dash, unit: unit)
+        case .game: GameDashboardView(dash: dash, unit: unit)
         }
     }
 
