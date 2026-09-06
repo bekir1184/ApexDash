@@ -47,20 +47,29 @@ struct RealisticDashboardView: View {
 
     // MARK: - Direksiyon govdesindeki LED'ler
 
-    /// Solda yesil, sagda mavi kume - fotograftaki dizilim.
+    /// Solda yesil, sagda mavi kume - fotograftaki gibi ekranin genisligince
+    /// yayilir, ortada bosluk kalir.
     private var wheelLeds: some View {
-        HStack(spacing: unit * 0.16) {
-            ForEach(0..<10, id: \.self) { index in
+        HStack(spacing: 0) {
+            ledCluster(range: 0..<5, color: Color(red: 0.24, green: 0.92, blue: 0.35))
+            Spacer(minLength: unit * 1.6)
+            ledCluster(range: 5..<10, color: Color(red: 0.35, green: 0.55, blue: 1.0))
+        }
+        .padding(.horizontal, unit * 0.3)
+    }
+
+    private func ledCluster(range: Range<Int>, color: Color) -> some View {
+        HStack(spacing: 0) {
+            ForEach(range, id: \.self) { index in
                 let lit = dash.rpmFraction * 10 > Double(index)
-                let color = index < 5
-                    ? Color(red: 0.24, green: 0.92, blue: 0.35)
-                    : Color(red: 0.35, green: 0.55, blue: 1.0)
                 Circle()
                     .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.06))
-                    .frame(width: unit * 0.26, height: unit * 0.26)
-                    .shadow(color: lit ? color.opacity(0.8) : .clear, radius: unit * 0.1)
+                    .frame(width: unit * 0.36, height: unit * 0.36)
+                    .shadow(color: lit ? color.opacity(0.8) : .clear, radius: unit * 0.14)
+                    .frame(maxWidth: .infinity)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Ust satir: delta, durum, tur suresi
