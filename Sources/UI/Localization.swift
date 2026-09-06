@@ -6,6 +6,12 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case english = "en"
 
     var id: String { rawValue }
+
+    /// Telefonun dili Turkce degilse uygulama Ingilizce baslar.
+    static var systemDefault: AppLanguage {
+        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        return preferred.hasPrefix("tr") ? .turkish : .english
+    }
     var label: String { self == .turkish ? "TR" : "EN" }
     var next: AppLanguage { self == .turkish ? .english : .turkish }
 }

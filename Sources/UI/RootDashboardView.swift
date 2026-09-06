@@ -3,12 +3,12 @@ import SwiftUI
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
-    @AppStorage("appLanguage") private var languageID: String = AppLanguage.turkish.rawValue
+    @AppStorage("appLanguage") private var languageID: String = AppLanguage.systemDefault.rawValue
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
-    private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .turkish }
+    private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .systemDefault }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
 
@@ -41,6 +41,11 @@ struct RootDashboardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .overlay {
+                if client.status != .receiving {
+                    waitingOverlay(unit: unit)
+                }
+            }
             .contentShape(Rectangle())
             .onTapGesture { revealPicker() }
             .gesture(
@@ -60,7 +65,7 @@ struct RootDashboardView: View {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
-        .overlay { if client.status != .receiving { waitingOverlay } }
+        
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
     }
@@ -146,28 +151,12 @@ struct RootDashboardView: View {
         .foregroundStyle(.white.opacity(0.22))
     }
 
-    private var waitingOverlay: some View {
-        VStack(spacing: 14) {
-            Text(statusTitle)
-                .font(.system(size: 22, weight: .black, design: .monospaced))
-                .foregroundStyle(.white)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: strings.settingsPath)
-                Text("UDP Telemetry: On")
-                Text("UDP Broadcast Mode: Off")
-                Text(verbatim: "UDP IP Address: \(client.localIP)")
-                Text(verbatim: "UDP Port: \(client.port.rawValue)")
-                Text("UDP Send Rate: 60 Hz")
-                Text("UDP Format: 2026")
-            }
-            .font(.system(size: 15, weight: .semibold, design: .monospaced))
-            .foregroundStyle(.white.opacity(0.65))
-            Text(verbatim: strings.themeHint)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.35))
-        }
-        .padding(28)
-        .background(.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    private func waitingOverlay(unit: CGFloat) -> some View {
+        WaitingView(title: statusTitle,
+                    strings: strings,
+                    localIP: client.localIP,
+                    port: client.port.rawValue,
+                    unit: unit)
     }
 
     private var statusTitle: String {
