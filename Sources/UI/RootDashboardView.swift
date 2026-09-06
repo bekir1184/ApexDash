@@ -2,11 +2,11 @@ import SwiftUI
 
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
-    @AppStorage("dashTheme") private var themeID: String = DashTheme.pro.rawValue
+    @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
-    private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .pro }
+    private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
     private var dash: DashboardModel { client.dash }
 
     var body: some View {
@@ -18,14 +18,6 @@ struct RootDashboardView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, unit * 0.08)
 
-                if let alert = dash.damageAlert {
-                    DamageFlashView(alert: alert, unit: unit)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                        .padding(.bottom, unit * 0.5)
-                        .transition(.scale(scale: 0.85).combined(with: .opacity))
-                        .id(alert.date)
-                }
-
                 if showsThemePicker {
                     VStack(spacing: unit * 0.15) {
                         themePicker(unit: unit)
@@ -35,7 +27,6 @@ struct RootDashboardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: dash.damageAlert)
             .contentShape(Rectangle())
             .onTapGesture { revealPicker() }
             .gesture(
@@ -58,7 +49,6 @@ struct RootDashboardView: View {
     @ViewBuilder
     private func content(unit: CGFloat) -> some View {
         switch theme {
-        case .pro: ProDashboardView(dash: dash, unit: unit)
         case .modern: ModernDashboardView(dash: dash, unit: unit)
         case .dotMatrix: DotMatrixDashboardView(dash: dash, unit: unit)
         case .game: GameDashboardView(dash: dash, unit: unit)

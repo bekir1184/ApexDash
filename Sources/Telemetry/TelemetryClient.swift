@@ -102,48 +102,12 @@ final class TelemetryClient: ObservableObject {
         case .lapData:
             guard let l = LapData(data: data, carIndex: idx) else { return }
             dash.apply(l)
-        case .carDamage:
-            guard let d = CarDamage(data: data, carIndex: idx) else { return }
-            if let alert = Self.newDamage(previous: dash.damage, current: d) {
-                dash.damageAlert = alert
-            }
-            dash.apply(d)
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
         default:
             break
         }
-    }
-
-    /// Iki hasar paketi arasinda artan ilk bolgeyi bulur; en buyuk artis kazanir.
-    static func newDamage(previous: CarDamage?, current: CarDamage) -> DamageAlert? {
-        guard let previous else { return nil }
-
-        var worst: (part: CarPart, total: Int, delta: Int)?
-        func consider(_ part: CarPart, _ before: Int, _ now: Int) {
-            let delta = now - before
-            guard delta > 0 else { return }
-            if worst == nil || delta > worst!.delta { worst = (part, now, delta) }
-        }
-
-        consider(.frontWingLeft, previous.frontLeftWing, current.frontLeftWing)
-        consider(.frontWingRight, previous.frontRightWing, current.frontRightWing)
-        consider(.rearWing, previous.rearWing, current.rearWing)
-        consider(.floor, previous.floor, current.floor)
-        consider(.diffuser, previous.diffuser, current.diffuser)
-        consider(.sidepod, previous.sidepod, current.sidepod)
-        consider(.gearBox, previous.gearBox, current.gearBox)
-        consider(.engine, previous.engine, current.engine)
-
-        let tyreParts: [CarPart] = [.tyreRL, .tyreRR, .tyreFL, .tyreFR]
-        for index in 0..<4 where previous.tyreDamage.indices.contains(index)
-            && current.tyreDamage.indices.contains(index) {
-            consider(tyreParts[index], previous.tyreDamage[index], current.tyreDamage[index])
-        }
-
-        guard let worst else { return nil }
-        return DamageAlert(part: worst.part, total: worst.total, delta: worst.delta, date: Date())
     }
 
     private func startTicker() {
@@ -153,9 +117,6 @@ final class TelemetryClient: ObservableObject {
                 guard let self else { return }
                 self.packetsPerSecond = self.packetCounter
                 self.packetCounter = 0
-                if let alert = self.dash.damageAlert, Date().timeIntervalSince(alert.date) > 4 {
-                    self.dash.damageAlert = nil
-                }
                 if let last = self.lastPacketDate, Date().timeIntervalSince(last) > 2, self.status == .receiving {
                     self.status = .listening
                     self.dash = DashboardModel()

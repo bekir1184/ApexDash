@@ -21,7 +21,6 @@ RATE_HZ = 60
 HEADER_FMT = "<HBBBBBQfIIBB"          # 29 byte
 TELEMETRY_FMT = "<HfffBbHBBH4H4B4BB4f4B"   # 59 byte
 TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte
-DAMAGE_FMT = "<4f" + "B" * 30      # 46 byte
 LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte
 STATUS_FMT = "<BBBBBfffHHBBHBBBbfffBffffB"  # 59 byte
 
@@ -49,28 +48,6 @@ def header(packet_id, frame):
 def rev_bits(percent):
     lit = int(percent / 100 * 15)
     return sum(1 << i for i in range(lit))
-
-
-def damage_packet(frame, wear, front_wing, rear_wing, engine):
-    payload = b""
-    for car in range(CARS):
-        if car == PLAYER:
-            payload += struct.pack(
-                DAMAGE_FMT,
-                wear, wear + 2, wear + 1, wear + 3,        # lastik asinmasi (float, %)
-                0, 0, 0, 0,                                # lastik hasari
-                0, 0, 0, 0,                                # fren hasari
-                0, 0, 0, 0,                                # blister
-                front_wing, front_wing // 2, rear_wing,    # on sol/sag kanat, arka kanat
-                0, 0, 0,                                   # zemin, difuzor, sidepod
-                0, 0,                                      # drs, ers hatasi
-                0, engine,                                 # sanziman, motor
-                0, 0, 0, 0, 0, 0,                          # motor asinmalari
-                0, 0,                                      # blown, seized
-            )
-        else:
-            payload += bytes(46)
-    return header(10, frame) + payload
 
 
 def lapdata_packet(frame, lap_time_ms, lap_num):
@@ -179,10 +156,6 @@ def main():
         if frame % 3 == 0:
             lap_time = int((t % 92) * 1000)
             sock.sendto(lapdata_packet(frame, lap_time, 26), (target, port))
-            # asinma tur boyunca artar; her 12 saniyede bir kanat darbesi gelir
-            wear = min(60.0, t * 0.6)
-            front_wing = min(80, int(t // 12) * 9)
-            sock.sendto(damage_packet(frame, wear, front_wing, 0, 0), (target, port))
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
             sock.sendto(status_packet(frame, ers), (target, port))
             sock.sendto(

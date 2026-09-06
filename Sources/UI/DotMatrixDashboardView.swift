@@ -11,13 +11,14 @@ struct DotMatrixDashboardView: View {
     private let panelStroke = Color.white.opacity(0.55)
     private let cyan = Color(red: 0.35, green: 0.85, blue: 0.95)
     private let green = Color(red: 0.24, green: 0.92, blue: 0.29)
-    private let aeroBlue = Color(red: 0.24, green: 0.78, blue: 1.0)
+    private let batteryYellow = Color(red: 0.98, green: 0.82, blue: 0.15)
+    private let aeroMagenta = Color(red: 0.85, green: 0.35, blue: 0.95)
 
     var body: some View {
         VStack(spacing: unit * 0.16) {
             HStack(spacing: unit * 0.16) {
-                overtakeBanner
-                aeroBanner
+                batteryBanner
+                straightModeBanner
             }
             revLadder
             HStack(alignment: .center, spacing: unit * 0.18) {
@@ -35,28 +36,39 @@ struct DotMatrixDashboardView: View {
 
     // MARK: - Ust gostergeler
 
-    /// Manual override (overtake). 2026'da fazladan elektrik gucu bataryadan
-    /// cekildigi icin doluluk yuzdesi de burada gosteriliyor.
-    private var overtakeBanner: some View {
-        banner(text: dash.overtakeActive ? "OVERTAKE ACTIVE"
-                                         : (dash.overtakeAvailable ? "OVERTAKE READY" : "OVERTAKE"),
-               detail: "\(Int(dash.ersFraction * 100))%",
-               color: green,
-               filled: dash.overtakeActive,
-               dimmed: !dash.overtakeAvailable && !dash.overtakeActive)
+    /// Batarya: overtake icin kullanilabilir enerji. Depo dolunca yanip soner.
+    private var batteryBanner: some View {
+        let full = dash.ersFraction >= 0.99
+        return TimelineView(.periodic(from: .now, by: 0.35)) { context in
+            let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.35) % 2 == 0
+            banner(text: "BATTERY",
+                   detail: "\(Int(dash.ersFraction * 100))%",
+                   color: batteryYellow,
+                   filled: full && phase,
+                   dimmed: false,
+                   fillFraction: dash.ersFraction)
+        }
     }
 
-    /// Aktif aero: 2026 kurallarinda DRS'in yerini alan X (viraj) / Z (duz) modu.
-    private var aeroBanner: some View {
-        banner(text: dash.aeroStraightMode ? "STRAIGHT MODE" : "CORNER MODE",
-               detail: dash.aeroStraightMode ? "Z" : "X",
-               color: aeroBlue,
-               filled: dash.aeroStraightMode,
-               dimmed: !dash.aeroAvailable && !dash.aeroStraightMode)
+    /// Aktif aero: 2026'da DRS'in yerini alan X (viraj) / Z (duz) modu.
+    /// Kullanilabilir hale gelip de gecilmediyse yanip soner.
+    private var straightModeBanner: some View {
+        let engaged = dash.aeroStraightMode
+        let waiting = dash.aeroAvailable && !engaged
+        return TimelineView(.periodic(from: .now, by: 0.35)) { context in
+            let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.35) % 2 == 0
+            banner(text: "STRAIGHT MODE",
+                   detail: engaged ? "Z" : "X",
+                   color: aeroMagenta,
+                   filled: engaged || (waiting && phase),
+                   dimmed: !engaged && !waiting,
+                   fillFraction: 0)
+        }
     }
 
+    /// `fillFraction` verilirse rozetin arkasi o oranda dolar (batarya seviyesi).
     private func banner(text: String, detail: String, color: Color,
-                        filled: Bool, dimmed: Bool) -> some View {
+                        filled: Bool, dimmed: Bool, fillFraction: Double) -> some View {
         let foreground: Color = filled ? .black : (dimmed ? .white.opacity(0.3) : color)
         return HStack(spacing: unit * 0.16) {
             Text(text)
@@ -71,6 +83,15 @@ struct DotMatrixDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: unit * 0.1, style: .continuous)
                 .fill(filled ? color : Color.white.opacity(0.05))
+                .overlay(alignment: .leading) {
+                    if !filled && fillFraction > 0 {
+                        GeometryReader { geo in
+                            RoundedRectangle(cornerRadius: unit * 0.1, style: .continuous)
+                                .fill(color.opacity(0.28))
+                                .frame(width: geo.size.width * fillFraction)
+                        }
+                    }
+                }
         )
         .overlay(
             RoundedRectangle(cornerRadius: unit * 0.1, style: .continuous)
@@ -198,9 +219,9 @@ struct DotMatrixDashboardView: View {
                 Text(verbatim: "\(Int(dash.ersFraction * 100))%")
                     .font(.system(size: unit * 0.68, weight: .black, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("BOOST")
-                    .font(.system(size: unit * 0.34, weight: .black, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.75))
+                Text("BATTERY")
+                    .font(.system(size: unit * 0.32, weight: .black, design: .monospaced))
+                    .foregroundStyle(batteryYellow)
                 Text(dash.ersModeText)
                     .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
                     .foregroundStyle(cyan)
@@ -241,8 +262,7 @@ struct DotMatrixDashboardView: View {
         let ratio = Double(level) / Double(total)
         switch ratio {
         case ..<0.25: return Color(red: 0.95, green: 0.22, blue: 0.18)
-        case ..<0.5: return Color(red: 0.95, green: 0.8, blue: 0.15)
-        default: return Color(red: 0.22, green: 0.85, blue: 0.3)
+        default: return batteryYellow
         }
     }
 
