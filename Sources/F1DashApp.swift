@@ -1,0 +1,22 @@
+import SwiftUI
+
+@main
+struct F1DashApp: App {
+    @StateObject private var client = TelemetryClient()
+
+    var body: some Scene {
+        WindowGroup {
+            DashboardView()
+                .environmentObject(client)
+                .preferredColorScheme(.dark)
+                .onAppear {
+                    UIApplication.shared.isIdleTimerDisabled = true
+                    client.start()
+                }
+                .onDisappear {
+                    UIApplication.shared.isIdleTimerDisabled = false
+                    client.stop()
+                }
+        }
+    }
+}
