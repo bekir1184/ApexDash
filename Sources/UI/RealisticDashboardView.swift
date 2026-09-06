@@ -30,8 +30,11 @@ struct RealisticDashboardView: View {
     private let alert = Color(red: 0.95, green: 0.42, blue: 0.16)
 
     var body: some View {
-        VStack(spacing: unit * 0.16) {
+        VStack(spacing: unit * 0.06) {
+            // Serit ekranin en ust kenarina, guvenli alanin disina tasar:
+            // uzerinde yazi olmadigi icin Dynamic Island'in ustunden gecebilir.
             wheelLeds
+                .padding(.horizontal, -unit * 1.6)
 
             HStack(spacing: unit * 0.22) {
                 sideLights
@@ -39,17 +42,11 @@ struct RealisticDashboardView: View {
                 sideLights
             }
         }
-        // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
+        // Govde zemini kok gorunumden gelir ve tum ekrani kaplar; burada
+        // sadece ekrani ve isiklari yerlestiriyoruz.
         .padding(.horizontal, unit * 0.28)
-        .padding(.vertical, unit * 0.22)
-        .background(
-            RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
-                .fill(RealisticPalette.bezel)
-                .overlay(
-                    RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
-                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
-                )
-        )
+        .padding(.top, unit * 0.04)
+        .padding(.bottom, unit * 0.12)
     }
 
     private var screen: some View {
@@ -116,8 +113,8 @@ struct RealisticDashboardView: View {
                 let color = ledColor(index)
                 Circle()
                     .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.05))
-                    .frame(width: unit * 0.34, height: unit * 0.34)
-                    .shadow(color: lit ? color.opacity(0.85) : .clear, radius: unit * 0.14)
+                    .frame(width: unit * 0.3, height: unit * 0.3)
+                    .shadow(color: lit ? color.opacity(0.85) : .clear, radius: unit * 0.12)
                     .frame(maxWidth: .infinity)
             }
         }
