@@ -41,6 +41,12 @@ struct DashboardModel {
     var carPosition: Int = 0
     var currentLapInvalid: Bool = false
 
+    // CarDamage (paket 10)
+    var tyreWear: [Float] = [0, 0, 0, 0]
+    var damage: CarDamage?
+    /// Son alinan darbe; ekranda kisa sure gosterilir.
+    var damageAlert: DamageAlert?
+
     var gearLabel: String {
         switch gear {
         case -1: return "R"
@@ -112,6 +118,11 @@ struct DashboardModel {
         let seconds = (milliseconds % 60_000) / 1000
         let millis = milliseconds % 1000
         return String(format: "%d:%02d.%03d", minutes, seconds, millis)
+    }
+
+    mutating func apply(_ d: CarDamage) {
+        tyreWear = d.tyreWear
+        damage = d
     }
 
     mutating func apply(_ l: LapData) {

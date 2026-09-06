@@ -11,6 +11,7 @@ Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunuc
 - Dort kose lastik (yuzey + ic) ve fren diski sicakliklari, calisma araligina gore renkli
 - Tur suresi, tur numarasi, pozisyon ve onundeki araca delta
 - 2026 kurallari: **OVERTAKE** (manual override) ve **AERO X/Z** (aktif aero) — DRS yok
+- Lastik asinmasi ve hasar: darbe aninda hasar alan parca arac semasinda kirmizi yanar, birkac saniye sonra kaybolur
 - Pit limiter uyarisi
 - Ekran uyku kilidi kapali, sadece yatay
 
@@ -20,6 +21,7 @@ Ekrana dokunup secilir, yana kaydirarak da gecis yapilir; secim saklanir.
 
 | Tema | Gorunum |
 | --- | --- |
+| `PRO` | Varsayilan: devir yayinin icinde vites ve hiz, solda dort kose lastik (sicaklik + asinma), sagda batarya, overtake/aero rozetleri, pozisyon ve yakit |
 | `MODERN` | Bosch DDU tarzi, yuksek kontrastli temiz duzen |
 | `DOT MATRIX` | Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir |
 | `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
@@ -65,11 +67,11 @@ Header 29 byte, little-endian, packed. Kullanilan paketler:
 | 6 | Car Telemetry | 1448 | 59 byte |
 | 7 | Car Status | 1445 | 59 byte |
 | 2 | Lap Data | 1399 | 57 byte |
+| 10 | Car Damage | 1133 | 46 byte |
 | 16 | Car Telemetry 2 (aktif aero, overtake) | 269 | 10 byte |
 
 ## Sirada
 
 - Sektor sureleri ve en iyi tura gore canli delta (paket 2 + 11)
-- Lastik asinma ve hasar (paket 10), lastik basinci
 - ERS deploy modunun ekranda gosterilmesi
 - Takim renk temalari, ozellestirilebilir kutu yerlesimi

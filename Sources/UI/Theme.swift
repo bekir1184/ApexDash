@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Ekran duzeni secenekleri. Kullanici ekrana dokunup degistirir, secim saklanir.
 enum DashTheme: String, CaseIterable, Identifiable {
+    case pro
     case modern
     case dotMatrix
     case game
@@ -10,6 +11,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .pro: return "PRO"
         case .modern: return "MODERN"
         case .dotMatrix: return "DOT MATRIX"
         case .game: return "OYUN"
@@ -21,7 +23,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     var background: Color {
         switch self {
         case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
-        case .modern, .dotMatrix: return .black
+        case .pro, .modern, .dotMatrix: return .black
         }
     }
 
