@@ -6,7 +6,7 @@ struct F1DashApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DashboardView()
+            RootDashboardView()
                 .environmentObject(client)
                 .preferredColorScheme(.dark)
                 .onAppear {

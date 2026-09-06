@@ -99,6 +99,9 @@ final class TelemetryClient: ObservableObject {
         case .carTelemetry2:
             guard let t = CarTelemetry2(data: data, carIndex: idx) else { return }
             dash.apply(t)
+        case .lapData:
+            guard let l = LapData(data: data, carIndex: idx) else { return }
+            dash.apply(l)
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)

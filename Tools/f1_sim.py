@@ -21,6 +21,7 @@ RATE_HZ = 60
 HEADER_FMT = "<HBBBBBQfIIBB"          # 29 byte
 TELEMETRY_FMT = "<HfffBbHBBH4H4B4BB4f4B"   # 59 byte
 TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte
+LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte
 STATUS_FMT = "<BBBBBfffHHBBHBBBbfffBffffB"  # 59 byte
 
 MAX_RPM = 15000
@@ -49,7 +50,31 @@ def rev_bits(percent):
     return sum(1 << i for i in range(lit))
 
 
-def telemetry_packet(frame, speed, gear, rpm, throttle, brake):
+def lapdata_packet(frame, lap_time_ms, lap_num):
+    payload = b""
+    for car in range(CARS):
+        if car == PLAYER:
+            payload += struct.pack(
+                LAPDATA_FMT,
+                92_431, lap_time_ms,       # lastLapTime, currentLapTime
+                31_205, 0,                 # sektor 1
+                29_880, 0,                 # sektor 2
+                340, 0,                    # onundeki araca fark: +0.34
+                1_250, 0,                  # lidere fark
+                1500.0, 12000.0, 0.0,      # lapDistance, totalDistance, safetyCarDelta
+                4, lap_num, 0, 0, 1, 0,    # position, lap, pitStatus, pitStops, sector, invalid
+                0, 0, 0, 0, 0,             # penalties, warnings, corner cuts, pens
+                5, 4, 2,                   # gridPosition, driverStatus, resultStatus
+                0, 0, 0, 0,                # pitLaneTimerActive, pitLaneTime, pitStopTimer
+                312.5, 12,                 # speedTrap, speedTrapLap
+            )
+        else:
+            payload += bytes(57)
+    payload += struct.pack("<BB", 255, 255)
+    return header(2, frame) + payload
+
+
+def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, tyre_temp=98):
     percent = int(max(0, min(100, (rpm - IDLE_RPM) / (MAX_RPM - IDLE_RPM) * 100)))
     payload = b""
     for car in range(CARS):
@@ -58,7 +83,9 @@ def telemetry_packet(frame, speed, gear, rpm, throttle, brake):
                 TELEMETRY_FMT,
                 int(speed), throttle, 0.0, brake, 0, gear, int(rpm), 0,
                 percent, rev_bits(percent),
-                *([350] * 4), *([95] * 4), *([100] * 4), 110,
+                brake_temp + 40, brake_temp, brake_temp - 30, brake_temp - 60,
+                tyre_temp, tyre_temp + 6, tyre_temp - 4, tyre_temp + 12,
+                tyre_temp + 8, tyre_temp + 14, tyre_temp + 3, tyre_temp + 19, 110,
                 *([23.5] * 4), *([0] * 4),
             )
         else:
@@ -120,8 +147,15 @@ def main():
         throttle = 1.0 if phase < 0.72 else 0.0
         brake = 0.0 if phase < 0.72 else min(1.0, (phase - 0.72) * 6)
 
-        sock.sendto(telemetry_packet(frame, speed, gear, rpm, throttle, brake), (target, port))
+        brake_temp = int(260 + 640 * brake + 60 * math.sin(t))
+        tyre_temp = int(88 + 26 * phase + 6 * math.sin(t * 0.7))
+        sock.sendto(
+            telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp),
+            (target, port),
+        )
         if frame % 3 == 0:
+            lap_time = int((t % 92) * 1000)
+            sock.sendto(lapdata_packet(frame, lap_time, 26), (target, port))
             sock.sendto(status_packet(frame), (target, port))
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,

@@ -188,3 +188,47 @@ struct CarStatus {
         self.maxGears = Int(maxGears)
     }
 }
+
+/// Packet ID 2 - LapData (arac basina 57 byte, paket 1399 byte)
+struct LapData {
+    static let stride = 57
+
+    var lastLapTimeMS: Int = 0
+    var currentLapTimeMS: Int = 0
+    var deltaToCarInFrontMS: Int = 0
+    var deltaToCarInFrontMinutes: Int = 0
+    var carPosition: Int = 0
+    var currentLapNum: Int = 0
+    var sector: Int = 0
+    var currentLapInvalid: Bool = false
+
+    init?(data: Data, carIndex: Int) {
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
+        guard r.remaining >= Self.stride else { return nil }
+        guard let lastLap = r.uint32(),
+              let currentLap = r.uint32()
+        else { return nil }
+        r.skip(6)                                  // sektor 1 ve 2 sureleri
+        guard let frontMS = r.uint16(),
+              let frontMinutes = r.uint8()
+        else { return nil }
+        r.skip(3)                                  // deltaToRaceLeader
+        r.skip(12)                                 // lapDistance, totalDistance, safetyCarDelta
+        guard let position = r.uint8(),
+              let lapNum = r.uint8(),
+              r.uint8() != nil,                    // pitStatus
+              r.uint8() != nil,                    // numPitStops
+              let sector = r.uint8(),
+              let invalid = r.uint8()
+        else { return nil }
+
+        self.lastLapTimeMS = Int(lastLap)
+        self.currentLapTimeMS = Int(currentLap)
+        self.deltaToCarInFrontMS = Int(frontMS)
+        self.deltaToCarInFrontMinutes = Int(frontMinutes)
+        self.carPosition = Int(position)
+        self.currentLapNum = Int(lapNum)
+        self.sector = Int(sector)
+        self.currentLapInvalid = invalid == 1
+    }
+}
