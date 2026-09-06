@@ -23,8 +23,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     var background: Color {
         switch self {
         case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
-        case .realistic: return Color(red: 0.12, green: 0.13, blue: 0.09)
-        case .modern, .dotMatrix: return .black
+        case .modern, .dotMatrix, .realistic: return .black
         }
     }
 

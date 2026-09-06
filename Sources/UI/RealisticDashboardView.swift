@@ -1,41 +1,53 @@
 import SwiftUI
 
-/// Gercek F1 direksiyonlarindaki (Bosch / McLaren Applied tipi) ekranin
-/// taklidi: zeytin yesili LCD zemin, ustte koyu yazili durum bandi, solda hiz,
-/// ortada dev vites ve altinda batarya, sagda yakit, altta lastik sicakliklari.
+/// Gercek F1 direksiyon ekranlarinin (Bosch / McLaren Applied tipi) paleti.
+/// Pit limiter devredeyken ekranin tamami sariya doner, yazilar koyulasir -
+/// pit lane'de gercek araclarda oldugu gibi.
+enum RealisticPalette {
+    static let ground = Color(red: 0.055, green: 0.06, blue: 0.05)
+    static let limiterGround = Color(red: 0.71, green: 0.75, blue: 0.18)
+
+    static func ground(limiter: Bool) -> Color { limiter ? limiterGround : ground }
+    static func ink(limiter: Bool) -> Color {
+        limiter ? Color(red: 0.07, green: 0.08, blue: 0.03) : Color(red: 0.95, green: 0.96, blue: 0.90)
+    }
+    static func dim(limiter: Bool) -> Color {
+        limiter ? Color(red: 0.07, green: 0.08, blue: 0.03).opacity(0.6)
+                : Color(red: 0.58, green: 0.60, blue: 0.52)
+    }
+}
+
 struct RealisticDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
 
-    private let lcd = Color(red: 0.12, green: 0.13, blue: 0.09)
-    private let ink = Color(red: 0.87, green: 0.90, blue: 0.66)
-    private let band = Color(red: 0.62, green: 0.65, blue: 0.24)
-    private let dim = Color(red: 0.55, green: 0.58, blue: 0.40)
+    private var limiter: Bool { dash.pitLimiterOn }
+    private var ink: Color { RealisticPalette.ink(limiter: limiter) }
+    private var dim: Color { RealisticPalette.dim(limiter: limiter) }
+    private var rule: Color { ink.opacity(0.22) }
     private let alert = Color(red: 0.95, green: 0.42, blue: 0.16)
-
-    private var rule: Color { ink.opacity(0.28) }
 
     var body: some View {
         VStack(spacing: 0) {
             wheelLeds
-                .padding(.bottom, unit * 0.16)
+                .padding(.bottom, unit * 0.14)
 
             VStack(spacing: 0) {
-                statusBand
-                Divider().overlay(rule)
+                topRow
+                Rectangle().fill(rule).frame(height: 1)
                 mainRow
-                Divider().overlay(rule)
+                Rectangle().fill(rule).frame(height: 1)
                 bottomRow
                 ersBar
             }
-            .background(lcd)
+            .background(RealisticPalette.ground(limiter: limiter))
             .overlay(Rectangle().stroke(rule, lineWidth: 1))
         }
     }
 
     // MARK: - Direksiyon govdesindeki LED'ler
 
-    /// Fotograftaki gibi solda yesil, sagda mavi kume.
+    /// Solda yesil, sagda mavi kume - fotograftaki dizilim.
     private var wheelLeds: some View {
         HStack(spacing: unit * 0.16) {
             ForEach(0..<10, id: \.self) { index in
@@ -51,34 +63,41 @@ struct RealisticDashboardView: View {
         }
     }
 
-    // MARK: - Ust bant
+    // MARK: - Ust satir: delta, durum, tur suresi
 
-    /// Sol: ERS modu. Orta: en oncelikli uyari. Sag: tur suresi.
-    private var statusBand: some View {
+    private var topRow: some View {
         HStack(spacing: 0) {
-            Text(dash.ersModeText)
+            Text(verbatim: dash.deltaToCarInFrontMS > 0 ? dash.deltaToFrontText : "+0.00")
+                .foregroundStyle(limiter ? ink : deltaTint)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(bandStatus)
+            Text(status)
+                .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .center)
             Text(verbatim: dash.currentLapTimeText)
+                .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .font(.system(size: unit * 0.42, weight: .heavy, design: .monospaced))
-        .foregroundStyle(.black)
+        .font(.system(size: unit * 0.46, weight: .heavy, design: .monospaced))
         .padding(.horizontal, unit * 0.3)
-        .padding(.vertical, unit * 0.1)
-        .frame(maxWidth: .infinity)
-        .background(dash.pitLimiterOn ? alert : band)
+        .padding(.vertical, unit * 0.08)
     }
 
-    private var bandStatus: String {
-        if dash.pitLimiterOn { return "PIT LIMITER" }
+    private var status: String {
+        if limiter { return "PIT LIMITER" }
         if dash.aeroStraightMode { return "STRAIGHT" }
         if dash.aeroAvailable { return "AERO READY" }
-        return "LAP \(dash.currentLapNum)"
+        return dash.ersModeText
     }
 
-    // MARK: - Ana satir
+    private var deltaTint: Color {
+        switch dash.deltaTrend {
+        case ..<0: return Color(red: 0.45, green: 0.92, blue: 0.4)
+        case 1...: return alert
+        default: return ink
+        }
+    }
+
+    // MARK: - Ana satir: hiz, vites (altinda batarya), yakit
 
     private var mainRow: some View {
         HStack(spacing: 0) {
@@ -90,7 +109,8 @@ struct RealisticDashboardView: View {
             VStack(spacing: -unit * 0.12) {
                 Text(verbatim: dash.gearLabel)
                     .font(.system(size: unit * 2.9, weight: .black, design: .monospaced))
-                    .foregroundStyle(dash.shiftFlash ? Color(red: 0.98, green: 1.0, blue: 0.85) : ink)
+                    .foregroundStyle(dash.shiftFlash && !limiter
+                                     ? Color(red: 0.98, green: 1.0, blue: 0.85) : ink)
                     .animation(.easeOut(duration: 0.08), value: dash.shiftFlash)
                 Text(verbatim: "\(Int(dash.ersFraction * 100))")
                     .font(.system(size: unit * 0.6, weight: .heavy, design: .monospaced))
@@ -101,7 +121,7 @@ struct RealisticDashboardView: View {
             Rectangle().fill(rule).frame(width: 1)
 
             value(text: String(format: "%.1f", dash.fuelRemainingLaps), caption: "FUEL",
-                  tint: dash.fuelRemainingLaps < 0 ? alert : ink)
+                  tint: dash.fuelRemainingLaps < 0 && !limiter ? alert : ink)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxHeight: .infinity)
@@ -120,17 +140,17 @@ struct RealisticDashboardView: View {
         }
     }
 
-    // MARK: - Alt satir
+    // MARK: - Alt satir: lastikler ve pozisyon
 
     private var bottomRow: some View {
         HStack(spacing: 0) {
             tyrePair(front: 2, rear: 0)
             Rectangle().fill(rule).frame(width: 1)
             VStack(spacing: -unit * 0.05) {
-                Text(verbatim: dash.deltaToCarInFrontMS > 0 ? dash.deltaToFrontText : "--.--")
+                Text(verbatim: "P\(max(dash.carPosition, 1))")
                     .font(.system(size: unit * 0.7, weight: .heavy, design: .monospaced))
-                    .foregroundStyle(deltaTint)
-                Text(verbatim: "P\(max(dash.carPosition, 1))  ·  L\(dash.currentLapNum)")
+                    .foregroundStyle(ink)
+                Text(verbatim: "LAP \(dash.currentLapNum)")
                     .font(.system(size: unit * 0.32, weight: .heavy, design: .monospaced))
                     .foregroundStyle(dim)
             }
@@ -141,15 +161,7 @@ struct RealisticDashboardView: View {
         .frame(height: unit * 1.5)
     }
 
-    private var deltaTint: Color {
-        switch dash.deltaTrend {
-        case ..<0: return Color(red: 0.45, green: 0.92, blue: 0.4)
-        case 1...: return alert
-        default: return ink
-        }
-    }
-
-    /// Fotograftaki gibi kucuk, etiketsiz sicaklik kumesi: ustte lastik, altta fren.
+    /// Kucuk sicaklik kumesi: solda on/arka sol, sagda on/arka sag.
     private func tyrePair(front: Int, rear: Int) -> some View {
         VStack(spacing: unit * 0.06) {
             tyreLine(index: front, label: front == 2 ? "FL" : "FR")
@@ -167,20 +179,20 @@ struct RealisticDashboardView: View {
                 .foregroundStyle(dim)
             Text(verbatim: "\(surface)")
                 .font(.system(size: unit * 0.46, weight: .heavy, design: .monospaced))
-                .foregroundStyle(TempScale.tyre(surface))
+                .foregroundStyle(limiter ? ink : TempScale.tyre(surface))
             Text(verbatim: "\(brake)")
                 .font(.system(size: unit * 0.32, weight: .heavy, design: .monospaced))
                 .foregroundStyle(dim)
         }
     }
 
-    /// Ekranin en altindaki ince batarya seridi.
+    /// En alttaki ince batarya seridi.
     private var ersBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Rectangle().fill(Color.black.opacity(0.5))
+                Rectangle().fill(ink.opacity(0.12))
                 Rectangle()
-                    .fill(dash.ersFraction < 0.2 ? alert : band)
+                    .fill(dash.ersFraction < 0.2 ? alert : Color(red: 0.62, green: 0.85, blue: 0.2))
                     .frame(width: geo.size.width * dash.ersFraction)
             }
         }

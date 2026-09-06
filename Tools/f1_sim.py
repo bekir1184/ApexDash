@@ -109,13 +109,13 @@ def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
     return header(16, frame) + payload
 
 
-def status_packet(frame, ers=4_000_000.0):
+def status_packet(frame, ers=4_000_000.0, limiter=0):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
             payload += struct.pack(
                 STATUS_FMT,
-                1, 0, 1, 55, 0,            # tc, abs, fuelMix, brakeBias, pitLimiter
+                1, 0, 1, 55, limiter,      # tc, abs, fuelMix, brakeBias, pitLimiter
                 90.0, 110.0, 12.5,         # fuel
                 MAX_RPM, IDLE_RPM, 8,      # maxRPM, idleRPM, maxGears
                 0, 0,                      # drsAllowed, drsActivationDistance
@@ -158,7 +158,9 @@ def main():
             delta_ms = int(1200 + 900 * math.sin(t * 0.35))
             sock.sendto(lapdata_packet(frame, lap_time, 26, delta_ms), (target, port))
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
-            sock.sendto(status_packet(frame, ers), (target, port))
+            # her 15 saniyede 5 saniyeligine pit limiter
+            limiter = 1 if (t % 15) < 5 else 0
+            sock.sendto(status_packet(frame, ers, limiter), (target, port))
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,
                                   overtake_active=0.45 < phase < 0.6,
