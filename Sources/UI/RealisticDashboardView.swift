@@ -51,9 +51,9 @@ struct RealisticDashboardView: View {
     /// yayilir, ortada bosluk kalir.
     private var wheelLeds: some View {
         HStack(spacing: 0) {
-            ledCluster(range: 0..<5, color: Color(red: 0.24, green: 0.92, blue: 0.35))
-            Spacer(minLength: unit * 1.6)
-            ledCluster(range: 5..<10, color: Color(red: 0.35, green: 0.55, blue: 1.0))
+            ledCluster(range: 0..<7, color: Color(red: 0.24, green: 0.92, blue: 0.35))
+            Spacer(minLength: unit * 0.8)
+            ledCluster(range: 7..<15, color: Color(red: 0.35, green: 0.55, blue: 1.0))
         }
         .padding(.horizontal, unit * 0.3)
     }
@@ -61,11 +61,12 @@ struct RealisticDashboardView: View {
     private func ledCluster(range: Range<Int>, color: Color) -> some View {
         HStack(spacing: 0) {
             ForEach(range, id: \.self) { index in
-                let lit = dash.rpmFraction * 10 > Double(index)
+                // Oyunun kendi LED desenini kullaniyoruz: 15 bit, soldan saga.
+                let lit = dash.revLightsBits & (1 << UInt16(index)) != 0
                 Circle()
                     .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.06))
-                    .frame(width: unit * 0.36, height: unit * 0.36)
-                    .shadow(color: lit ? color.opacity(0.8) : .clear, radius: unit * 0.14)
+                    .frame(width: unit * 0.46, height: unit * 0.46)
+                    .shadow(color: lit ? color.opacity(0.8) : .clear, radius: unit * 0.16)
                     .frame(maxWidth: .infinity)
             }
         }
