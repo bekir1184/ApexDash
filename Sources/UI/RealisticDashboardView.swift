@@ -30,23 +30,33 @@ struct RealisticDashboardView: View {
     private let alert = Color(red: 0.95, green: 0.42, blue: 0.16)
 
     var body: some View {
-        VStack(spacing: unit * 0.06) {
-            // Serit ekranin en ust kenarina, guvenli alanin disina tasar:
-            // uzerinde yazi olmadigi icin Dynamic Island'in ustunden gecebilir.
+        VStack(spacing: unit * 0.16) {
             wheelLeds
-                .padding(.horizontal, -unit * 1.6)
 
-            HStack(spacing: unit * 0.22) {
-                sideLights
-                screen
-                sideLights
-            }
+            screen
+                // Bayrak isiklari cercevenin disina, ekranin iki kenarina
+                // tasindi: uzerlerinde yazi olmadigi icin Dynamic Island'in
+                // ustunde durabilirler ve LCD tum genisligi kullanir.
+                // Dikeyde ada hizasindan kacirilir: ada donanim oldugu icin
+                // tam onune denk gelen isik gorunmez.
+                .overlay(alignment: .topLeading) {
+                    sideLights.offset(x: -unit * 1.15, y: unit * 0.35)
+                }
+                .overlay(alignment: .topTrailing) {
+                    sideLights.offset(x: unit * 1.15, y: unit * 0.35)
+                }
         }
-        // Govde zemini kok gorunumden gelir ve tum ekrani kaplar; burada
-        // sadece ekrani ve isiklari yerlestiriyoruz.
+        // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
         .padding(.horizontal, unit * 0.28)
-        .padding(.top, unit * 0.04)
-        .padding(.bottom, unit * 0.12)
+        .padding(.vertical, unit * 0.22)
+        .background(
+            RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
+                .fill(RealisticPalette.bezel)
+                .overlay(
+                    RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
+                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                )
+        )
     }
 
     private var screen: some View {
@@ -75,7 +85,7 @@ struct RealisticDashboardView: View {
             let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.3) % 2 == 0
             let state = flagState
             VStack(spacing: unit * 0.2) {
-                ForEach(0..<4, id: \.self) { _ in
+                ForEach(0..<3, id: \.self) { _ in
                     Circle()
                         .fill(state.color.opacity(state.blinking && !phase ? 0.12 : 1))
                         .frame(width: unit * 0.34, height: unit * 0.34)
@@ -113,8 +123,8 @@ struct RealisticDashboardView: View {
                 let color = ledColor(index)
                 Circle()
                     .fill(lit || dash.shiftFlash ? color : Color.white.opacity(0.05))
-                    .frame(width: unit * 0.3, height: unit * 0.3)
-                    .shadow(color: lit ? color.opacity(0.85) : .clear, radius: unit * 0.12)
+                    .frame(width: unit * 0.34, height: unit * 0.34)
+                    .shadow(color: lit ? color.opacity(0.85) : .clear, radius: unit * 0.14)
                     .frame(maxWidth: .infinity)
             }
         }
