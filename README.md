@@ -18,6 +18,8 @@ Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunuc
 ## Tasarim temalari
 
 Ekrana dokunup secilir, yana kaydirarak da gecis yapilir; secim saklanir.
+Ayni cubuktaki **TR / EN** dugmesi arayuz dilini degistirir (gosterge etiketleri
+her iki dilde de ayni kalir).
 
 | Tema | Gorunum |
 | --- | --- |

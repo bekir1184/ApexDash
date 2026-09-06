@@ -9,15 +9,6 @@ enum DashTheme: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
-        switch self {
-        case .modern: return "MODERN"
-        case .dotMatrix: return "DOT MATRIX"
-        case .realistic: return "REALISTIC"
-        case .game: return "OYUN"
-        }
-    }
-
     /// Ekranin tamamini kaplayan zemin rengi; icerik guvenli alanda kalirken
     /// panel kenardan kenara dolu gorunur.
     var background: Color {

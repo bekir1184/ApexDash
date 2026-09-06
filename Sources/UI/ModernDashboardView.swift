@@ -4,6 +4,7 @@ import SwiftUI
 struct ModernDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
+    let strings: Strings
 
     var body: some View {
         VStack(spacing: unit * 0.4) {
@@ -17,7 +18,8 @@ struct ModernDashboardView: View {
                 TyreTempsView(tyreSurface: dash.tyreSurfaceTemps,
                               tyreInner: dash.tyreInnerTemps,
                               brakes: dash.brakeTemps,
-                              unit: unit)
+                              unit: unit,
+                              innerLabel: strings.tyreInner)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .frame(maxHeight: .infinity)

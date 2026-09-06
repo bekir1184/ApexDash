@@ -7,6 +7,7 @@ struct TyreTempsView: View {
     let tyreInner: [Int]
     let brakes: [Int]
     var unit: CGFloat
+    var innerLabel: String
     var compact: Bool = false
 
     private enum Corner: Int, CaseIterable {
@@ -50,7 +51,7 @@ struct TyreTempsView: View {
                 .font(.system(size: unit * 0.42, weight: .black, design: .monospaced))
                 .foregroundStyle(TempScale.tyre(surface))
             if !compact {
-                Text(verbatim: "\(inner)° iç")
+                Text(verbatim: "\(inner)° \(innerLabel)")
                     .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
                     .foregroundStyle(TempScale.tyre(inner).opacity(0.6))
             }

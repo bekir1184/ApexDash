@@ -3,10 +3,13 @@ import SwiftUI
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
+    @AppStorage("appLanguage") private var languageID: String = AppLanguage.turkish.rawValue
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
+    private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .turkish }
+    private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
 
     var body: some View {
@@ -78,7 +81,7 @@ struct RootDashboardView: View {
     @ViewBuilder
     private func content(unit: CGFloat) -> some View {
         switch theme {
-        case .modern: ModernDashboardView(dash: dash, unit: unit)
+        case .modern: ModernDashboardView(dash: dash, unit: unit, strings: strings)
         case .dotMatrix: DotMatrixDashboardView(dash: dash, unit: unit)
         case .realistic: RealisticDashboardView(dash: dash, unit: unit)
         case .game: GameDashboardView(dash: dash, unit: unit)
@@ -92,7 +95,7 @@ struct RootDashboardView: View {
                     themeID = option.rawValue
                     revealPicker()
                 } label: {
-                    Text(option.title)
+                    Text(strings.themeTitle(option))
                         .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
                         .foregroundStyle(option == theme ? .black : .white.opacity(0.7))
                         .padding(.horizontal, unit * 0.3)
@@ -103,6 +106,19 @@ struct RootDashboardView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            Button {
+                languageID = language.next.rawValue
+                revealPicker()
+            } label: {
+                Text(verbatim: language.label)
+                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, unit * 0.3)
+                    .padding(.vertical, unit * 0.14)
+                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
         }
         .padding(unit * 0.14)
         .background(Capsule().fill(.black.opacity(0.85)))
@@ -136,7 +152,7 @@ struct RootDashboardView: View {
                 .font(.system(size: 22, weight: .black, design: .monospaced))
                 .foregroundStyle(.white)
             VStack(alignment: .leading, spacing: 6) {
-                Text("Oyunda: Ayarlar › Telemetri")
+                Text(verbatim: strings.settingsPath)
                 Text("UDP Telemetry: On")
                 Text("UDP Broadcast Mode: Off")
                 Text(verbatim: "UDP IP Address: \(client.localIP)")
@@ -146,7 +162,7 @@ struct RootDashboardView: View {
             }
             .font(.system(size: 15, weight: .semibold, design: .monospaced))
             .foregroundStyle(.white.opacity(0.65))
-            Text("Tasarimi degistirmek icin ekrana dokun veya yana kaydir")
+            Text(verbatim: strings.themeHint)
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
         }
@@ -156,10 +172,10 @@ struct RootDashboardView: View {
 
     private var statusTitle: String {
         switch client.status {
-        case .idle: return "BAGLANTI KAPALI"
-        case .listening: return "VERI BEKLENIYOR"
+        case .idle: return strings.connectionOff
+        case .listening: return strings.waitingForData
         case .receiving: return ""
-        case .failed(let message): return "HATA: \(message)"
+        case .failed(let message): return strings.failure(message)
         }
     }
 }
