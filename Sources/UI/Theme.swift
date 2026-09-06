@@ -4,6 +4,7 @@ import SwiftUI
 enum DashTheme: String, CaseIterable, Identifiable {
     case modern
     case dotMatrix
+    case realistic
     case game
 
     var id: String { rawValue }
@@ -12,6 +13,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
         switch self {
         case .modern: return "MODERN"
         case .dotMatrix: return "DOT MATRIX"
+        case .realistic: return "REALISTIC"
         case .game: return "OYUN"
         }
     }
@@ -21,6 +23,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     var background: Color {
         switch self {
         case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
+        case .realistic: return Color(red: 0.12, green: 0.13, blue: 0.09)
         case .modern, .dotMatrix: return .black
         }
     }

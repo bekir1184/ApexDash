@@ -55,7 +55,7 @@ struct RootDashboardView: View {
     private func themeBackground(unit: CGFloat) -> some View {
         switch theme {
         case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
-        case .modern, .game: theme.background
+        case .modern, .game, .realistic: theme.background
         }
     }
 
@@ -80,6 +80,7 @@ struct RootDashboardView: View {
         switch theme {
         case .modern: ModernDashboardView(dash: dash, unit: unit)
         case .dotMatrix: DotMatrixDashboardView(dash: dash, unit: unit)
+        case .realistic: RealisticDashboardView(dash: dash, unit: unit)
         case .game: GameDashboardView(dash: dash, unit: unit)
         }
     }
