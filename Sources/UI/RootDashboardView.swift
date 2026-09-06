@@ -51,7 +51,12 @@ struct RootDashboardView: View {
         }
         // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
         .ignoresSafeArea(edges: .vertical)
-        .overlay { shiftFlashOverlay }
+        // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
+        .overlay {
+            if theme != .realistic {
+                ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
+            }
+        }
         .overlay { if client.status != .receiving { waitingOverlay } }
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
@@ -67,22 +72,6 @@ struct RootDashboardView: View {
         // LCD'nin kendisinde yanar, gercek araclardaki gibi.
         case .realistic: RealisticPalette.bezel
         case .modern, .game: theme.background
-        }
-    }
-
-    /// Vites degistirme aninda tum ekran, gercek direksiyonlardaki gibi yanip soner.
-    @ViewBuilder
-    private var shiftFlashOverlay: some View {
-        if dash.shiftFlash {
-            TimelineView(.periodic(from: .now, by: 0.07)) { context in
-                let on = Int(context.date.timeIntervalSinceReferenceDate / 0.07) % 2 == 0
-                Rectangle()
-                    .fill(Color(red: 0.45, green: 0.4, blue: 1.0))
-                    .opacity(on ? 0.45 : 0.0)
-                    .blendMode(.plusLighter)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-            }
         }
     }
 

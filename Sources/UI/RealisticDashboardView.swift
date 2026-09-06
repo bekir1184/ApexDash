@@ -78,6 +78,7 @@ struct RealisticDashboardView: View {
             ersBar
         }
         .background(RealisticPalette.ground(limiter: limiter))
+        .overlay { ShiftFlashOverlay(active: dash.shiftFlash) }
         .clipShape(RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous)
