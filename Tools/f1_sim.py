@@ -109,7 +109,7 @@ def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
     return header(16, frame) + payload
 
 
-def status_packet(frame):
+def status_packet(frame, ers=4_000_000.0):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
@@ -120,7 +120,7 @@ def status_packet(frame):
                 MAX_RPM, IDLE_RPM, 8,      # maxRPM, idleRPM, maxGears
                 0, 0,                      # drsAllowed, drsActivationDistance
                 18, 18, 4, 1,              # actual/visual compound, tyre age, fia flag
-                0.0, 0.0, 4_000_000.0,     # ICE, MGUK, ers store
+                0.0, 0.0, ers,             # ICE, MGUK, ers store
                 2,                         # ers deploy mode
                 0.0, 0.0, 0.0, 0.0,        # harvest/deploy
                 0,                         # networkPaused
@@ -156,7 +156,8 @@ def main():
         if frame % 3 == 0:
             lap_time = int((t % 92) * 1000)
             sock.sendto(lapdata_packet(frame, lap_time, 26), (target, port))
-            sock.sendto(status_packet(frame), (target, port))
+            ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
+            sock.sendto(status_packet(frame, ers), (target, port))
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,
                                   overtake_active=0.45 < phase < 0.6,
