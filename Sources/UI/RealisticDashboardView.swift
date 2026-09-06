@@ -45,13 +45,27 @@ struct RealisticDashboardView: View {
         .padding(.horizontal, unit * 0.18)
         .padding(.vertical, unit * 0.22)
         .background(
-            RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
-                .fill(RealisticPalette.bezel)
-                .overlay(
-                    RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
-                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+            RoundedRectangle(cornerRadius: unit * 0.42, style: .continuous)
+                .fill(
+                    LinearGradient(colors: [Color(red: 0.13, green: 0.14, blue: 0.15),
+                                            RealisticPalette.bezel,
+                                            Color(red: 0.04, green: 0.04, blue: 0.05)],
+                                   startPoint: .top, endPoint: .bottom)
                 )
+                // Govdenin dis kenari: ustte parlak, altta koyu bir pah.
+                .overlay(
+                    RoundedRectangle(cornerRadius: unit * 0.42, style: .continuous)
+                        .stroke(
+                            LinearGradient(colors: [Color.white.opacity(0.22),
+                                                    Color.white.opacity(0.04),
+                                                    Color.black.opacity(0.6)],
+                                           startPoint: .top, endPoint: .bottom),
+                            lineWidth: unit * 0.07
+                        )
+                )
+                .shadow(color: .black.opacity(0.8), radius: unit * 0.3, y: unit * 0.1)
         )
+        .padding(unit * 0.1)
     }
 
     private var screen: some View {
@@ -89,6 +103,9 @@ struct RealisticDashboardView: View {
                 }
             }
             .frame(width: unit * 0.34)
+            // Isiklar ekranin ust hizasina yakin durur.
+            .frame(maxHeight: .infinity, alignment: .top)
+            .padding(.top, unit * 0.5)
         }
     }
 
