@@ -19,12 +19,14 @@ struct RootDashboardView: View {
 
                 content(unit: unit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, unit * 0.08)
+                    .padding(.vertical, unit * 0.16)
                     // Gercekci temada govde cercevesi yatay guvenli alanin
                     // disina, Dynamic Island bandinin uzerine tasar; orada
                     // sadece isiklar var, yazi yok.
+                    // Govde guvenli alanin disina tasar ama cihaz kenarina
+                    // dayanmaz: dis pah her yandan gorunsun diye biraz icerde kalir.
                     .padding(.horizontal, theme == .realistic
-                             ? -max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing)
+                             ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
                              : 0)
 
                 if showsThemePicker {
