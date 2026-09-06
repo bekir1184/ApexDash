@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Gercek direksiyon LCD'lerindeki nokta-matris dokusu: icerigin uzerine
 /// duzenli bir nokta izgarasi delinir, boylece her sekil piksellere ayrilir.
+/// Sonmus noktalar burada cizilmez; onlari `DotGridBackground` ekranin
+/// tamamina serer, boylece panelin ici ile kenarlari ayni parlaklikta kalir.
 struct DotMatrixEffect: ViewModifier {
     var pitch: CGFloat = 5
     /// Noktanin hucre icinde kapladigi oran. Yuksek deger = daha parlak panel.
@@ -40,25 +42,6 @@ struct DotMatrixEffect: ViewModifier {
                 .allowsHitTesting(false)
             }
             .compositingGroup()
-            // Sonmus LED'lerin hafif parıltısı: panel karanlikken bile matris dokusu görünür.
-            .overlay {
-                Canvas { context, size in
-                    let dot = pitch * dotRatio
-                    var y: CGFloat = 0
-                    while y < size.height {
-                        var x: CGFloat = 0
-                        while x < size.width {
-                            context.fill(Path(CGRect(x: x + (pitch - dot), y: y + (pitch - dot),
-                                                     width: dot, height: dot)),
-                                         with: .color(.white.opacity(0.07)))
-                            x += pitch
-                        }
-                        y += pitch
-                    }
-                }
-                .blendMode(.plusLighter)
-                .allowsHitTesting(false)
-            }
     }
 }
 
