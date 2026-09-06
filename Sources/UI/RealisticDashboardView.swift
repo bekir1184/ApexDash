@@ -33,21 +33,16 @@ struct RealisticDashboardView: View {
         VStack(spacing: unit * 0.16) {
             wheelLeds
 
-            screen
-                // Bayrak isiklari cercevenin disina, ekranin iki kenarina
-                // tasindi: uzerlerinde yazi olmadigi icin Dynamic Island'in
-                // ustunde durabilirler ve LCD tum genisligi kullanir.
-                // Dikeyde ada hizasindan kacirilir: ada donanim oldugu icin
-                // tam onune denk gelen isik gorunmez.
-                .overlay(alignment: .topLeading) {
-                    sideLights.offset(x: -unit * 1.15, y: unit * 0.35)
-                }
-                .overlay(alignment: .topTrailing) {
-                    sideLights.offset(x: unit * 1.15, y: unit * 0.35)
-                }
+            // Bayrak isiklari da devir seridi gibi govde cercevesinin uzerinde,
+            // ekranin iki yaninda durur.
+            HStack(spacing: unit * 0.16) {
+                sideLights
+                screen
+                sideLights
+            }
         }
         // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
-        .padding(.horizontal, unit * 0.28)
+        .padding(.horizontal, unit * 0.18)
         .padding(.vertical, unit * 0.22)
         .background(
             RoundedRectangle(cornerRadius: unit * 0.3, style: .continuous)
@@ -84,15 +79,16 @@ struct RealisticDashboardView: View {
         TimelineView(.periodic(from: .now, by: 0.3)) { context in
             let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.3) % 2 == 0
             let state = flagState
-            VStack(spacing: unit * 0.2) {
+            VStack(spacing: unit * 0.26) {
                 ForEach(0..<3, id: \.self) { _ in
                     Circle()
                         .fill(state.color.opacity(state.blinking && !phase ? 0.12 : 1))
-                        .frame(width: unit * 0.34, height: unit * 0.34)
+                        .frame(width: unit * 0.3, height: unit * 0.3)
                         .shadow(color: state.color.opacity(state.color == off ? 0 : 0.85),
-                                radius: unit * 0.16)
+                                radius: unit * 0.14)
                 }
             }
+            .frame(width: unit * 0.34)
         }
     }
 
