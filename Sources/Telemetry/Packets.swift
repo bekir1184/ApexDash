@@ -174,6 +174,8 @@ struct CarStatus {
     /// ERS deposundaki enerji (Joule). Tam depo 4 MJ.
     var ersStoreEnergy: Float = 0
     var ersDeployMode: Int = 0
+    /// -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
+    var fiaFlag: Int = -1
 
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
@@ -186,7 +188,8 @@ struct CarStatus {
               let idleRPM = r.uint16(),
               let maxGears = r.uint8()
         else { return nil }
-        r.skip(7)                            // drsAllowed, drsActivationDistance, lastikler, bayrak
+        r.skip(6)                            // drsAllowed, drsActivationDistance, lastik bilgileri
+        guard let flag = r.int8() else { return nil }
         r.skip(8)                            // enginePowerICE, enginePowerMGUK
         guard let ersStore = r.float(),
               let deployMode = r.uint8()
@@ -199,6 +202,7 @@ struct CarStatus {
         self.maxGears = Int(maxGears)
         self.ersStoreEnergy = ersStore
         self.ersDeployMode = Int(deployMode)
+        self.fiaFlag = Int(flag)
     }
 }
 

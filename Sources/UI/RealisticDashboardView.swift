@@ -33,20 +33,11 @@ struct RealisticDashboardView: View {
         VStack(spacing: unit * 0.16) {
             wheelLeds
 
-            VStack(spacing: 0) {
-                topRow
-                Rectangle().fill(rule).frame(height: 1)
-                mainRow
-                Rectangle().fill(rule).frame(height: 1)
-                bottomRow
-                ersBar
+            HStack(spacing: unit * 0.22) {
+                sideLights
+                screen
+                sideLights
             }
-            .background(RealisticPalette.ground(limiter: limiter))
-            .clipShape(RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous)
-                    .stroke(Color.black.opacity(0.9), lineWidth: unit * 0.1)
-            )
         }
         // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
         .padding(.horizontal, unit * 0.28)
@@ -59,6 +50,58 @@ struct RealisticDashboardView: View {
                         .stroke(Color.white.opacity(0.07), lineWidth: 1)
                 )
         )
+    }
+
+    private var screen: some View {
+        VStack(spacing: 0) {
+            topRow
+            Rectangle().fill(rule).frame(height: 1)
+            mainRow
+            Rectangle().fill(rule).frame(height: 1)
+            bottomRow
+            ersBar
+        }
+        .background(RealisticPalette.ground(limiter: limiter))
+        .clipShape(RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous)
+                .stroke(Color.black.opacity(0.9), lineWidth: unit * 0.1)
+        )
+    }
+
+    // MARK: - Yan uyari isiklari
+
+    /// Ekranin iki yanindaki dikey kume: FIA bayraklarini gosterir. Tur
+    /// gecersizse (sayilmiyorsa) yesil isik yanip soner.
+    private var sideLights: some View {
+        TimelineView(.periodic(from: .now, by: 0.3)) { context in
+            let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.3) % 2 == 0
+            let state = flagState
+            VStack(spacing: unit * 0.2) {
+                ForEach(0..<4, id: \.self) { _ in
+                    Circle()
+                        .fill(state.color.opacity(state.blinking && !phase ? 0.12 : 1))
+                        .frame(width: unit * 0.34, height: unit * 0.34)
+                        .shadow(color: state.color.opacity(state.color == off ? 0 : 0.85),
+                                radius: unit * 0.16)
+                }
+            }
+        }
+    }
+
+    private var off: Color { Color.white.opacity(0.05) }
+
+    /// Oncelik: sari > mavi > gecersiz tur (yesil yanip soner) > yesil > kapali.
+    private var flagState: (color: Color, blinking: Bool) {
+        switch dash.fiaFlag {
+        case 3: return (Color(red: 1.0, green: 0.85, blue: 0.1), true)
+        case 2: return (Color(red: 0.25, green: 0.5, blue: 1.0), true)
+        default: break
+        }
+        let green = Color(red: 0.2, green: 0.92, blue: 0.3)
+        if dash.currentLapInvalid { return (green, true) }
+        if dash.fiaFlag == 1 { return (green, false) }
+        return (off, false)
     }
 
     // MARK: - Direksiyon govdesindeki LED'ler

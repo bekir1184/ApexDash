@@ -109,7 +109,7 @@ def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
     return header(16, frame) + payload
 
 
-def status_packet(frame, ers=4_000_000.0, limiter=0):
+def status_packet(frame, ers=4_000_000.0, limiter=0, flag=1):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
@@ -119,7 +119,7 @@ def status_packet(frame, ers=4_000_000.0, limiter=0):
                 90.0, 110.0, 12.5,         # fuel
                 MAX_RPM, IDLE_RPM, 8,      # maxRPM, idleRPM, maxGears
                 0, 0,                      # drsAllowed, drsActivationDistance
-                18, 18, 4, 1,              # actual/visual compound, tyre age, fia flag
+                18, 18, 4, flag,           # actual/visual compound, tyre age, fia flag
                 0.0, 0.0, ers,             # ICE, MGUK, ers store
                 2,                         # ers deploy mode
                 0.0, 0.0, 0.0, 0.0,        # harvest/deploy
@@ -160,7 +160,10 @@ def main():
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
             # her 15 saniyede 5 saniyeligine pit limiter
             limiter = 1 if (t % 15) < 5 else 0
-            sock.sendto(status_packet(frame, ers, limiter), (target, port))
+            # bayraklar: 10 sn yesil, 5 sn sari, 5 sn mavi
+            cycle = t % 20
+            flag = 3 if cycle < 5 else (2 if cycle < 10 else 1)
+            sock.sendto(status_packet(frame, ers, limiter, flag), (target, port))
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,
                                   overtake_active=0.45 < phase < 0.6,

@@ -25,6 +25,8 @@ struct DashboardModel {
     var ersStoreEnergy: Float = 0
     var ersDeployMode: Int = 0
     var fuelRemainingLaps: Float = 0
+    /// FIA bayragi: -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
+    var fiaFlag: Int = -1
 
     // CarTelemetry2 (paket 16) - 2026 kurallari
     var aeroStraightMode: Bool = false
@@ -133,6 +135,7 @@ struct DashboardModel {
         ersStoreEnergy = s.ersStoreEnergy
         ersDeployMode = s.ersDeployMode
         fuelRemainingLaps = s.fuelRemainingLaps
+        fiaFlag = s.fiaFlag
     }
 
     mutating func apply(_ t: CarTelemetry2) {
