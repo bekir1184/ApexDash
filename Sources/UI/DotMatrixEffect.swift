@@ -4,9 +4,21 @@ import SwiftUI
 /// duzenli bir nokta izgarasi delinir, boylece her sekil piksellere ayrilir.
 struct DotMatrixEffect: ViewModifier {
     var pitch: CGFloat = 5
-    var dotRatio: CGFloat = 0.62
+    /// Noktanin hucre icinde kapladigi oran. Yuksek deger = daha parlak panel.
+    var dotRatio: CGFloat = 0.8
 
     func body(content: Content) -> some View {
+        dotted(content)
+            // Gercek LED panellerdeki hafif tasma: noktali katmanin bulanik bir
+            // kopyasi altina konarak parlaklik artirilir.
+            .background {
+                dotted(content)
+                    .blur(radius: pitch * 0.9)
+                    .brightness(0.06)
+            }
+    }
+
+    private func dotted(_ content: Content) -> some View {
         content
             .overlay {
                 Canvas { context, size in
@@ -38,7 +50,7 @@ struct DotMatrixEffect: ViewModifier {
                         while x < size.width {
                             context.fill(Path(CGRect(x: x + (pitch - dot), y: y + (pitch - dot),
                                                      width: dot, height: dot)),
-                                         with: .color(.white.opacity(0.05)))
+                                         with: .color(.white.opacity(0.07)))
                             x += pitch
                         }
                         y += pitch

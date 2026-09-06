@@ -10,7 +10,7 @@ struct DotMatrixDashboardView: View {
     private let panelStroke = Color.white.opacity(0.55)
 
     var body: some View {
-        VStack(spacing: unit * 0.3) {
+        VStack(spacing: unit * 0.2) {
             banner
             HStack(alignment: .top, spacing: unit * 0.3) {
                 leftStack
@@ -20,9 +20,9 @@ struct DotMatrixDashboardView: View {
             .frame(maxHeight: .infinity)
             cornerStrip
         }
-        .padding(unit * 0.25)
+        .padding(unit * 0.1)
         .background(Color.black)
-        .dotMatrix(pitch: max(2.5, unit * 0.07))
+        .dotMatrix(pitch: max(2, unit * 0.055))
     }
 
     // MARK: - Ust bant

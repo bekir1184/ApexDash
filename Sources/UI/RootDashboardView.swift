@@ -11,19 +11,20 @@ struct RootDashboardView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let unit = min(geo.size.width / 16, geo.size.height / 9)
+            // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
+            let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
             ZStack(alignment: .bottom) {
                 content(unit: unit)
-                    .padding(.horizontal, unit * 0.5)
-                    .padding(.vertical, unit * 0.4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.vertical, unit * 0.08)
 
                 if showsThemePicker {
-                    themePicker(unit: unit)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                } else {
-                    footer(unit: unit)
-                        .padding(.horizontal, unit * 0.6)
-                        .padding(.bottom, unit * 0.1)
+                    VStack(spacing: unit * 0.15) {
+                        themePicker(unit: unit)
+                        footer(unit: unit)
+                    }
+                    .padding(.horizontal, unit * 0.6)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .contentShape(Rectangle())
@@ -37,7 +38,9 @@ struct RootDashboardView: View {
                     }
             )
         }
-        .background(Color.black)
+        .background(theme.background.ignoresSafeArea())
+        // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
+        .ignoresSafeArea(edges: .vertical)
         .overlay { if client.status != .receiving { waitingOverlay } }
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
@@ -94,7 +97,7 @@ struct RootDashboardView: View {
             Text(verbatim: client.localIP)
         }
         .font(.system(size: unit * 0.22, weight: .semibold, design: .monospaced))
-        .foregroundStyle(.white.opacity(0.28))
+        .foregroundStyle(.white.opacity(0.22))
     }
 
     private var waitingOverlay: some View {

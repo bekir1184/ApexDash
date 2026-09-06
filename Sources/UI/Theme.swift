@@ -16,6 +16,15 @@ enum DashTheme: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Ekranin tamamini kaplayan zemin rengi; icerik guvenli alanda kalirken
+    /// panel kenardan kenara dolu gorunur.
+    var background: Color {
+        switch self {
+        case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
+        case .modern, .dotMatrix: return .black
+        }
+    }
+
     var next: DashTheme {
         let all = Self.allCases
         let index = all.firstIndex(of: self) ?? 0

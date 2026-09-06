@@ -51,7 +51,7 @@ struct GameDashboardView: View {
             let w = geo.size.width
             let h = geo.size.height
             ZStack {
-                RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous).fill(panel)
+                Rectangle().fill(panel)
                 GameScreenLines().stroke(line, lineWidth: 1.2)
 
                 // Sol ust: hiz
@@ -96,7 +96,7 @@ struct GameDashboardView: View {
                         .font(.system(size: h * 0.15, weight: .bold, design: .monospaced))
                         .foregroundStyle(cyan)
                 }
-                cell(x: 0.26, y: 0.24, w: 0.48, h: 0.36, in: geo) {
+                cell(x: 0.26, y: 0.27, w: 0.48, h: 0.33, in: geo) {
                     Text(verbatim: dash.gearLabel)
                         .font(.system(size: h * 0.38, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
@@ -131,11 +131,6 @@ struct GameDashboardView: View {
                 ersBand(width: w * 0.97, height: h * 0.15)
                     .position(x: w * 0.5, y: h * 0.885)
             }
-            .clipShape(RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous)
-                    .stroke(Color.black.opacity(0.8), lineWidth: unit * 0.08)
-            )
         }
     }
 
