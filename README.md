@@ -5,11 +5,11 @@ Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunuc
 
 ## Neler var
 
-- 15 LED'lik devir seridi (`m_revLightsBitValue`) + shift flash
+- 15 LED'lik devir seridi (`m_revLightsBitValue`); shift noktasinda tum ekran yanip soner
 - Dev vites gostergesi, hiz, RPM ve RPM bari
 - Gaz / fren cubuklari
 - Dort kose lastik (yuzey + ic) ve fren diski sicakliklari, calisma araligina gore renkli
-- Tur suresi, tur numarasi, pozisyon ve onundeki araca delta
+- Tur suresi ve yaninda onundeki araca delta: yaklasiyorsa yesil, uzaklasiyorsa kirmizi
 - 2026 kurallari: **OVERTAKE** (manual override) ve **AERO X/Z** (aktif aero) — DRS yok
 - Pit limiter uyarisi
 - Ekran uyku kilidi kapali, sadece yatay
@@ -21,7 +21,7 @@ Ekrana dokunup secilir, yana kaydirarak da gecis yapilir; secim saklanir.
 | Tema | Gorunum |
 | --- | --- |
 | `MODERN` | Bosch DDU tarzi, yuksek kontrastli temiz duzen |
-| `DOT MATRIX` | **Varsayilan.** Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir. Ustte iki gosterge: sari **BATTERY** (arka plani sarj oraninda dolar, depo dolunca yanip soner) ve mor **STRAIGHT MODE** (aktif aero hazir olup gecilmediyse yanip soner, gecilince tam yanar) |
+| `DOT MATRIX` | **Varsayilan.** Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir. Ustte iki gosterge: sari **BATTERY** (arka plani sarj oraninda dolar, depo dolunca yanip soner) ve mor **STRAIGHT MODE** (aktif aero hazir olup gecilmediyse yanip soner, gecilince tam yanar). Nokta dokusu ekranin tamamini kaplar |
 | `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
 
 ## Oyun ayarlari (Ayarlar › Telemetri)

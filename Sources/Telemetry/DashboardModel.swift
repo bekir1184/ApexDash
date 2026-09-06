@@ -37,6 +37,8 @@ struct DashboardModel {
     var currentLapTimeMS: Int = 0
     var lastLapTimeMS: Int = 0
     var deltaToCarInFrontMS: Int = 0
+    /// Onundeki araca farkin yonu: -1 yaklasiyor, +1 uzaklasiyor, 0 sabit.
+    var deltaTrend: Int = 0
     var currentLapNum: Int = 0
     var carPosition: Int = 0
     var currentLapInvalid: Bool = false

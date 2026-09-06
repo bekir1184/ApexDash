@@ -14,6 +14,9 @@ struct RootDashboardView: View {
             // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
             ZStack(alignment: .bottom) {
+                themeBackground(unit: unit)
+                    .ignoresSafeArea()
+
                 content(unit: unit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, unit * 0.08)
@@ -38,12 +41,38 @@ struct RootDashboardView: View {
                     }
             )
         }
-        .background(theme.background.ignoresSafeArea())
         // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
         .ignoresSafeArea(edges: .vertical)
+        .overlay { shiftFlashOverlay }
         .overlay { if client.status != .receiving { waitingOverlay } }
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
+    }
+
+    /// Tema zemini ekranin tamamini kaplar; nokta dokusu Dynamic Island'in
+    /// altinda da devam ettigi icin panel her yerde ayni gorunur.
+    @ViewBuilder
+    private func themeBackground(unit: CGFloat) -> some View {
+        switch theme {
+        case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
+        case .modern, .game: theme.background
+        }
+    }
+
+    /// Vites degistirme aninda tum ekran, gercek direksiyonlardaki gibi yanip soner.
+    @ViewBuilder
+    private var shiftFlashOverlay: some View {
+        if dash.shiftFlash {
+            TimelineView(.periodic(from: .now, by: 0.07)) { context in
+                let on = Int(context.date.timeIntervalSinceReferenceDate / 0.07) % 2 == 0
+                Rectangle()
+                    .fill(Color(red: 0.45, green: 0.4, blue: 1.0))
+                    .opacity(on ? 0.45 : 0.0)
+                    .blendMode(.plusLighter)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+        }
     }
 
     @ViewBuilder

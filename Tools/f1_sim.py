@@ -50,7 +50,7 @@ def rev_bits(percent):
     return sum(1 << i for i in range(lit))
 
 
-def lapdata_packet(frame, lap_time_ms, lap_num):
+def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
@@ -59,7 +59,7 @@ def lapdata_packet(frame, lap_time_ms, lap_num):
                 92_431, lap_time_ms,       # lastLapTime, currentLapTime
                 31_205, 0,                 # sektor 1
                 29_880, 0,                 # sektor 2
-                340, 0,                    # onundeki araca fark: +0.34
+                delta_ms, 0,               # onundeki araca fark
                 1_250, 0,                  # lidere fark
                 1500.0, 12000.0, 0.0,      # lapDistance, totalDistance, safetyCarDelta
                 4, lap_num, 0, 0, 1, 0,    # position, lap, pitStatus, pitStops, sector, invalid
@@ -155,7 +155,8 @@ def main():
         )
         if frame % 3 == 0:
             lap_time = int((t % 92) * 1000)
-            sock.sendto(lapdata_packet(frame, lap_time, 26), (target, port))
+            delta_ms = int(1200 + 900 * math.sin(t * 0.35))
+            sock.sendto(lapdata_packet(frame, lap_time, 26, delta_ms), (target, port))
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
             sock.sendto(status_packet(frame, ers), (target, port))
             sock.sendto(

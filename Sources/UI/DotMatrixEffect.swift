@@ -67,3 +67,28 @@ extension View {
         modifier(DotMatrixEffect(pitch: pitch))
     }
 }
+
+/// Sonmus LED'lerden olusan zemin. Icerik guvenli alanda kalsa da doku
+/// ekranin tamamini - Dynamic Island'in altini da - kaplar.
+struct DotGridBackground: View {
+    var pitch: CGFloat = 5
+    var dotRatio: CGFloat = 0.8
+
+    var body: some View {
+        Canvas { context, size in
+            let dot = pitch * dotRatio
+            var y: CGFloat = 0
+            while y < size.height {
+                var x: CGFloat = 0
+                while x < size.width {
+                    context.fill(Path(CGRect(x: x + (pitch - dot), y: y + (pitch - dot),
+                                             width: dot, height: dot)),
+                                 with: .color(.white.opacity(0.07)))
+                    x += pitch
+                }
+                y += pitch
+            }
+        }
+        .background(Color.black)
+    }
+}

@@ -30,7 +30,6 @@ struct DotMatrixDashboardView: View {
             bottomRow
         }
         .padding(unit * 0.1)
-        .background(Color.black)
         .dotMatrix(pitch: max(2, unit * 0.055))
     }
 
@@ -58,7 +57,7 @@ struct DotMatrixDashboardView: View {
         return TimelineView(.periodic(from: .now, by: 0.35)) { context in
             let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.35) % 2 == 0
             banner(text: "STRAIGHT MODE",
-                   detail: engaged ? "Z" : "X",
+                   detail: "",
                    color: aeroMagenta,
                    filled: engaged || (waiting && phase),
                    dimmed: !engaged && !waiting,
@@ -73,9 +72,11 @@ struct DotMatrixDashboardView: View {
         return HStack(spacing: unit * 0.16) {
             Text(text)
                 .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
-            Text(verbatim: detail)
-                .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
-                .opacity(0.9)
+            if !detail.isEmpty {
+                Text(verbatim: detail)
+                    .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
+                    .opacity(0.9)
+            }
         }
         .foregroundStyle(foreground)
         .frame(maxWidth: .infinity)
@@ -133,7 +134,6 @@ struct DotMatrixDashboardView: View {
 
     private var leftStack: some View {
         VStack(spacing: unit * 0.14) {
-            panel(value: dash.deltaToFrontText, caption: "DELTA 1", tint: .white)
             panel(value: "\(dash.averageBrakeTemp)°", caption: "BRAKE",
                   tint: TempScale.brake(dash.averageBrakeTemp))
             panel(value: String(format: "%.1f", dash.fuelRemainingLaps), caption: "FUEL",
@@ -266,13 +266,29 @@ struct DotMatrixDashboardView: View {
         }
     }
 
+    /// Yaklasiyorsak yesil, uzaklasiyorsak kirmizi, sabitse notr.
+    private var deltaColor: Color {
+        switch dash.deltaTrend {
+        case ..<0: return green
+        case 1...: return Color(red: 1.0, green: 0.28, blue: 0.24)
+        default: return .white.opacity(0.75)
+        }
+    }
+
     // MARK: - Alt satir
 
     private var bottomRow: some View {
         HStack(spacing: unit * 0.16) {
-            Text(verbatim: dash.currentLapTimeText)
-                .font(.system(size: unit * 0.72, weight: .black, design: .monospaced))
-                .foregroundStyle(dash.currentLapInvalid ? Color(red: 1, green: 0.4, blue: 0.4) : .white)
+            HStack(alignment: .firstTextBaseline, spacing: unit * 0.25) {
+                Text(verbatim: dash.currentLapTimeText)
+                    .font(.system(size: unit * 0.72, weight: .black, design: .monospaced))
+                    .foregroundStyle(dash.currentLapInvalid ? Color(red: 1, green: 0.4, blue: 0.4) : .white)
+                if dash.deltaToCarInFrontMS > 0 {
+                    Text(verbatim: dash.deltaToFrontText)
+                        .font(.system(size: unit * 0.44, weight: .black, design: .monospaced))
+                        .foregroundStyle(deltaColor)
+                }
+            }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, unit * 0.08)
                 .overlay(

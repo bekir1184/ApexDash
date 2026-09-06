@@ -26,6 +26,7 @@ final class TelemetryClient: ObservableObject {
     private var listener: NWListener?
     private var connections: [NWConnection] = []
     private var lastPacketDate: Date?
+    private var deltaSample: (value: Int, date: Date)?
     private var packetCounter = 0
     private var tickTimer: Timer?
 
@@ -102,12 +103,30 @@ final class TelemetryClient: ObservableObject {
         case .lapData:
             guard let l = LapData(data: data, carIndex: idx) else { return }
             dash.apply(l)
+            updateDeltaTrend(l.deltaToCarInFrontMS)
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
         default:
             break
         }
+    }
+
+    /// Farki saniyede bir orneklyip yonunu cikarir; 50 ms'lik oynamalar sayilmaz.
+    private func updateDeltaTrend(_ current: Int) {
+        guard current > 0 else {
+            dash.deltaTrend = 0
+            deltaSample = nil
+            return
+        }
+        guard let sample = deltaSample else {
+            deltaSample = (current, Date())
+            return
+        }
+        guard Date().timeIntervalSince(sample.date) >= 1 else { return }
+        let change = current - sample.value
+        dash.deltaTrend = abs(change) < 50 ? 0 : (change < 0 ? -1 : 1)
+        deltaSample = (current, Date())
     }
 
     private func startTicker() {
