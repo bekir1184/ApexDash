@@ -9,6 +9,7 @@ struct WaitingView: View {
     let localIP: String
     let port: UInt16
     let unit: CGFloat
+    let onOpenSetup: () -> Void
 
     /// Bes kolon yanar (5 sn), hepsi bir sure yanik kalir, sonra soner.
     private let cycle: Double = 7.5
@@ -94,9 +95,21 @@ struct WaitingView: View {
             }
             .foregroundStyle(.white.opacity(0.6))
 
-            Text(verbatim: strings.themeHint)
-                .foregroundStyle(.white.opacity(0.32))
-                .padding(.top, unit * 0.06)
+            HStack(spacing: unit * 0.3) {
+                Button(action: onOpenSetup) {
+                    Text(strings.setupButton)
+                        .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, unit * 0.3)
+                        .padding(.vertical, unit * 0.12)
+                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                }
+                .buttonStyle(.plain)
+
+                Text(verbatim: strings.themeHint)
+                    .foregroundStyle(.white.opacity(0.32))
+            }
+            .padding(.top, unit * 0.12)
         }
         .font(.system(size: unit * 0.28, weight: .semibold, design: .monospaced))
     }

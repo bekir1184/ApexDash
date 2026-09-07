@@ -37,6 +37,23 @@ struct Strings {
     }
     var tyreInner: String { pick("iç", "in") }
 
+    var setupTitle: String { pick("KURULUM", "SETUP") }
+    var setupIntro: String {
+        pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",
+             "The game sends telemetry to this phone. Enter these values in the game exactly.")
+    }
+    var portLabel: String { pick("DINLENEN PORT", "LISTENING PORT") }
+    var phoneAddress: String { pick("BU TELEFONUN IP ADRESI", "THIS PHONE'S IP ADDRESS") }
+    var gameSettings: String { pick("OYUNDA: AYARLAR › TELEMETRI", "IN GAME: SETTINGS › TELEMETRY") }
+    var broadcastNote: String {
+        pick("Broadcast kapali kalmali: iOS yayin trafigini ancak Apple onayli bir yetkiyle alabilir.",
+             "Broadcast must stay off: iOS only receives broadcast traffic with an Apple-approved entitlement.")
+    }
+    var startButton: String { pick("BASLA", "START") }
+    var setupButton: String { pick("KURULUMU AC", "OPEN SETUP") }
+    var copied: String { pick("KOPYALANDI", "COPIED") }
+    var copy: String { pick("KOPYALA", "COPY") }
+
     func themeTitle(_ theme: DashTheme) -> String {
         switch theme {
         case .modern: return "MODERN"

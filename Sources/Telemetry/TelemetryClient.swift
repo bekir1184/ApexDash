@@ -21,7 +21,7 @@ final class TelemetryClient: ObservableObject {
         case failed(String)
     }
 
-    let port: NWEndpoint.Port
+    private(set) var port: NWEndpoint.Port
 
     private var listener: NWListener?
     private var connections: [NWConnection] = []
@@ -33,6 +33,15 @@ final class TelemetryClient: ObservableObject {
     init(port: UInt16 = 20777) {
         self.port = NWEndpoint.Port(rawValue: port)!
         self.localIP = Self.currentWiFiAddress() ?? "-"
+    }
+
+    /// Port degisince dinleyici yeniden kurulur.
+    func update(port newPort: UInt16) {
+        guard newPort != port.rawValue, let endpoint = NWEndpoint.Port(rawValue: newPort) else { return }
+        let wasRunning = listener != nil
+        stop()
+        port = endpoint
+        if wasRunning { start() }
     }
 
     func start() {

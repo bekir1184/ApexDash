@@ -29,6 +29,13 @@ her iki dilde de ayni kalir).
 | `REALISTIC` | Gercek F1 direksiyon ekraninin (Bosch / McLaren Applied tipi) taklidi: koyu zemin, ustte delta / durum / tur suresi, solda hiz, ortada dev vites ve altinda batarya, sagda yakit, altta lastik ve fren sicakliklari, en altta batarya seridi. Ekran, LED seridini tasiyan bir govde cercevesinin icinde oturur; iki yanindaki dikey kumeler FIA bayraklarini gosterir (sari ve mavi yanip soner, tur sayilmiyorsa yesil yanip soner). **Pit limiter devredeyken LCD sariya doner**, gercek araclardaki gibi |
 | `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
 
+## Kurulum ekrani
+
+Ilk acilista cikar; bekleme ekranindaki **KURULUMU AC / OPEN SETUP** dugmesiyle
+her zaman geri gelir. Dinlenen portu buradan degistirirsin (dinleyici aninda
+yeniden kurulur), telefonun IP adresini kopyalarsin ve oyunda girilecek butun
+degerler karsi sutunda yazar.
+
 ## Bekleme ekrani
 
 Veri gelene kadar pistteki baslangic isiklari yanar: bes kolon soldan saga
@@ -42,7 +49,7 @@ gereken ayarlar ve telefonun IP adresi yazar.
 | UDP Telemetry | On |
 | UDP Broadcast Mode | **Off** |
 | UDP IP Address | iPhone'un IP'si (uygulama sag altta gosterir) |
-| UDP Port | 20777 |
+| UDP Port | 20777 (uygulamadaki kurulum ekraninda degistirilebilir) |
 | UDP Send Rate | 60 Hz |
 | UDP Format | 2026 |
 | Your Telemetry | Public |

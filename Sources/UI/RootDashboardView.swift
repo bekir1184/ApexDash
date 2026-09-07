@@ -4,6 +4,9 @@ struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
     @AppStorage("appLanguage") private var languageID: String = AppLanguage.systemDefault.rawValue
+    @AppStorage("udpPort") private var udpPort: Int = 20777
+    @AppStorage("didCompleteSetup") private var didCompleteSetup = false
+    @State private var showsSetup = false
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
@@ -42,9 +45,28 @@ struct RootDashboardView: View {
                 }
             }
             .overlay {
-                if client.status != .receiving {
+                if client.status != .receiving && !showsSetup {
                     waitingOverlay(unit: unit)
                 }
+            }
+            .overlay {
+                if showsSetup {
+                    SetupView(port: $udpPort,
+                              strings: strings,
+                              localIP: client.localIP,
+                              unit: unit) {
+                        didCompleteSetup = true
+                        showsSetup = false
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .onAppear {
+                client.update(port: UInt16(udpPort))
+                if !didCompleteSetup { showsSetup = true }
+            }
+            .onChange(of: udpPort) { _, new in
+                client.update(port: UInt16(new))
             }
             .contentShape(Rectangle())
             .onTapGesture { revealPicker() }
@@ -156,7 +178,9 @@ struct RootDashboardView: View {
                     strings: strings,
                     localIP: client.localIP,
                     port: client.port.rawValue,
-                    unit: unit)
+                    unit: unit) {
+            withAnimation(.easeOut(duration: 0.2)) { showsSetup = true }
+        }
     }
 
     private var statusTitle: String {
