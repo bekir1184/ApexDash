@@ -32,12 +32,9 @@ her iki dilde de ayni kalir).
 ## Kurulum ekrani
 
 Ilk acilista cikar; bekleme ekranindaki **KURULUMU AC / OPEN SETUP** dugmesiyle
-her zaman geri gelir. Ekranin kendisi bir direksiyondur: ustte devir seridi, ortada ayarlarin
-gectigi LCD, iki yanda yuvarlak dugmeler ve altta dondurmeli anahtarlar.
-Portu yanlardaki PORT −/+ dugmeleriyle ya da LCD'de secili duran satira
-dokunup klavyeyle degistirirsin; dinleyici aninda yeniden kurulur. Telefonun
-IP adresi ve oyunda girilecek butun degerler ayni ekranda yazar, kirmizi GO
-dugmesi kurulumu bitirir.
+her zaman geri gelir. Dinlenen portu buradan degistirirsin (dinleyici aninda
+yeniden kurulur), telefonun IP adresini kopyalarsin ve oyunda girilecek butun
+degerler karsi sutunda yazar.
 
 ## Bekleme ekrani
 

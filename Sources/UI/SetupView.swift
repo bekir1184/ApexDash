@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Kurulum ekrani, direksiyonun kendisi gibi gorunur: ustte devir seridi,
-/// ortada ayarlarin gectigi LCD, iki yanda dugmeler, altta dondurmeli
-/// anahtarlar. Port bu dugmelerle ya da LCD'deki satira dokunup klavyeyle
-/// degistirilir.
+/// Ilk acilista ve bekleme ekranindaki dugmeyle acilan kurulum ekrani.
+/// Port hem burada dinlenir hem de oyuna ayni deger girilir; telefonun IP
+/// adresi de buradan kopyalanir.
 struct SetupView: View {
     @Binding var port: Int
     let strings: Strings
@@ -14,166 +13,95 @@ struct SetupView: View {
     @State private var portText: String = ""
     @FocusState private var portFocused: Bool
 
-    private let amber = Color(red: 0.97, green: 0.82, blue: 0.16)
-    private let red = Color(red: 0.85, green: 0.11, blue: 0.12)
-    private let cyan = Color(red: 0.35, green: 0.85, blue: 0.95)
+    private let accent = Color(red: 0.95, green: 0.85, blue: 0.15)
 
     var body: some View {
-        ZStack {
-            CarbonBackground(pitch: max(6, unit * 0.22))
-                .ignoresSafeArea()
-                .contentShape(Rectangle())
-                .onTapGesture { portFocused = false }
+        VStack(alignment: .leading, spacing: unit * 0.26) {
+            Text(strings.setupTitle)
+                .font(.system(size: unit * 0.5, weight: .black, design: .monospaced))
+                .foregroundStyle(.white)
+                .tracking(4)
 
-            VStack(spacing: unit * 0.16) {
-                ledStrip
+            Text(verbatim: strings.setupIntro)
+                .font(.system(size: unit * 0.3, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.6))
+                .fixedSize(horizontal: false, vertical: true)
 
-                HStack(alignment: .center, spacing: unit * 0.28) {
-                    leftCluster
-                    lcd
-                    rightCluster
-                }
-
-                dials
+            HStack(alignment: .top, spacing: unit * 0.5) {
+                phonePanel
+                gamePanel
             }
-            .padding(.horizontal, unit * 0.3)
-            .padding(.vertical, unit * 0.2)
+
+            Text(verbatim: strings.broadcastNote)
+                .font(.system(size: unit * 0.24, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: onDone) {
+                Text(strings.startButton)
+                    .font(.system(size: unit * 0.36, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, unit * 0.2)
+                    .background(Capsule().fill(accent))
+            }
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, unit * 0.7)
+        .padding(.vertical, unit * 0.45)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .contentShape(Rectangle())
+        .onTapGesture { portFocused = false }
         .onAppear { portText = "\(port)" }
     }
 
-    // MARK: - Govde uzerindeki isikler
+    // MARK: - Telefon tarafi
 
-    private var ledStrip: some View {
-        HStack(spacing: 0) {
-            ForEach(0..<15, id: \.self) { index in
-                let color: Color = index < 5
-                    ? Color(red: 0.18, green: 0.92, blue: 0.32)
-                    : (index < 10 ? Color(red: 1.0, green: 0.2, blue: 0.16)
-                                  : Color(red: 0.5, green: 0.42, blue: 1.0))
-                Circle()
-                    .fill(color.opacity(0.22))
-                    .frame(width: unit * 0.26, height: unit * 0.26)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
+    private var phonePanel: some View {
+        VStack(alignment: .leading, spacing: unit * 0.25) {
+            label(strings.portLabel)
+            HStack(spacing: unit * 0.18) {
+                TextField("20777", text: $portText)
+                    .keyboardType(.numberPad)
+                    .focused($portFocused)
+                    .textFieldStyle(.plain)
+                .font(.system(size: unit * 0.6, weight: .black, design: .monospaced))
+                .foregroundStyle(.white)
+                .padding(.horizontal, unit * 0.25)
+                .padding(.vertical, unit * 0.12)
+                .background(
+                    RoundedRectangle(cornerRadius: unit * 0.14, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                )
+                    .onChange(of: portText) { _, new in
+                        let digits = String(new.filter(\.isNumber).prefix(5))
+                        if digits != new { portText = digits }
+                        if let value = Int(digits), (1024...65535).contains(value) { port = value }
+                    }
 
-    // MARK: - Ekran
+                stepButton("−") { adjustPort(-1) }
+                stepButton("+") { adjustPort(1) }
 
-    private var lcd: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(strings.setupTitle)
-                    .tracking(4)
-                Spacer()
-                Text(verbatim: "F1 26 · UDP")
-            }
-            .font(.system(size: unit * 0.3, weight: .black, design: .monospaced))
-            .foregroundStyle(.black)
-            .padding(.horizontal, unit * 0.24)
-            .padding(.vertical, unit * 0.08)
-            .frame(maxWidth: .infinity)
-            .background(amber)
-
-            VStack(spacing: unit * 0.06) {
-                portRow
-                row(strings.phoneAddress, localIP, tint: .white)
-                Rectangle().fill(Color.white.opacity(0.14)).frame(height: 1)
-                    .padding(.vertical, unit * 0.04)
-                row("UDP TELEMETRY", "ON")
-                row("UDP BROADCAST", "OFF")
-                row("UDP SEND RATE", "60 HZ")
-                row("UDP FORMAT", "2026")
-                row("YOUR TELEMETRY", "PUBLIC")
-            }
-            .padding(.horizontal, unit * 0.24)
-            .padding(.vertical, unit * 0.12)
-
-            Text(verbatim: strings.broadcastNote)
-                .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.35))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, unit * 0.24)
-                .padding(.bottom, unit * 0.12)
-        }
-        .background(Color(red: 0.055, green: 0.06, blue: 0.05))
-        .clipShape(RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: unit * 0.12, style: .continuous)
-                .stroke(Color.black.opacity(0.9), lineWidth: unit * 0.1)
-        )
-    }
-
-    /// LCD'de secili duran satir: dokununca klavye acilir.
-    private var portRow: some View {
-        HStack(spacing: unit * 0.16) {
-            Text(strings.portLabel)
-                .foregroundStyle(.black.opacity(0.75))
-                .lineLimit(1)
-            Spacer(minLength: unit * 0.2)
-            TextField("20777", text: $portText)
-                .keyboardType(.numberPad)
-                .focused($portFocused)
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.trailing)
-                .foregroundStyle(.black)
-                .frame(width: unit * 2.2)
-                .onChange(of: portText) { _, new in
-                    let digits = String(new.filter(\.isNumber).prefix(5))
-                    if digits != new { portText = digits }
-                    if let value = Int(digits), (1024...65535).contains(value) { port = value }
+                if portFocused {
+                    Button { portFocused = false } label: {
+                        Text(verbatim: "OK")
+                            .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, unit * 0.24)
+                            .padding(.vertical, unit * 0.14)
+                            .background(Capsule().fill(accent))
+                    }
+                    .buttonStyle(.plain)
                 }
-            if portFocused {
-                Button { portFocused = false } label: {
-                    Text(verbatim: "OK")
-                        .font(.system(size: unit * 0.22, weight: .black, design: .monospaced))
-                        .foregroundStyle(amber)
-                        .padding(.horizontal, unit * 0.18)
-                        .padding(.vertical, unit * 0.06)
-                        .background(Capsule().fill(.black))
-                }
-                .buttonStyle(.plain)
             }
-        }
-        .font(.system(size: unit * 0.34, weight: .black, design: .monospaced))
-        .padding(.horizontal, unit * 0.16)
-        .padding(.vertical, unit * 0.08)
-        .background(RoundedRectangle(cornerRadius: unit * 0.08, style: .continuous).fill(amber))
-    }
 
-    private func row(_ name: String, _ value: String, tint: Color? = nil) -> some View {
-        HStack(spacing: unit * 0.16) {
-            Text(verbatim: name)
-                .foregroundStyle(.white.opacity(0.5))
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-            Text(verbatim: value)
-                .foregroundStyle(tint ?? cyan)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+            label(strings.phoneAddress)
+            Text(verbatim: localIP)
+                .font(.system(size: unit * 0.5, weight: .black, design: .monospaced))
+                .foregroundStyle(accent)
         }
-        .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
-    }
-
-    // MARK: - Dugmeler
-
-    private var leftCluster: some View {
-        VStack(spacing: unit * 0.22) {
-            WheelButton(title: "−", caption: "PORT", color: cyan, unit: unit) { adjustPort(-1) }
-            WheelButton(title: "N", caption: "NEUTRAL", color: Color(white: 0.75), unit: unit) {
-                portFocused = false
-            }
-        }
-    }
-
-    private var rightCluster: some View {
-        VStack(spacing: unit * 0.22) {
-            WheelButton(title: "+", caption: "PORT", color: cyan, unit: unit) { adjustPort(1) }
-            WheelButton(title: "GO", caption: strings.startButton, color: red, unit: unit, action: onDone)
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func adjustPort(_ delta: Int) {
@@ -183,13 +111,54 @@ struct SetupView: View {
         portText = "\(value)"
     }
 
-    // MARK: - Dondurmeli anahtarlar
-
-    private var dials: some View {
-        HStack(spacing: unit * 0.5) {
-            RotaryDial(label: "STRAT", positions: 12, value: 3, color: amber, unit: unit)
-            RotaryDial(label: "DIFF", positions: 12, value: 7, color: red, unit: unit)
-            RotaryDial(label: "BBAL", positions: 12, value: 10, color: cyan, unit: unit)
+    private func stepButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(verbatim: symbol)
+                .font(.system(size: unit * 0.4, weight: .black, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.85))
+                .frame(width: unit * 0.6, height: unit * 0.6)
+                .background(Circle().fill(Color.white.opacity(0.1)))
+                .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
         }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Oyun tarafi
+
+    private var gamePanel: some View {
+        VStack(alignment: .leading, spacing: unit * 0.12) {
+            label(strings.gameSettings)
+            row("UDP Telemetry", "On")
+            row("UDP Broadcast Mode", "Off")
+            row("UDP IP Address", localIP)
+            row("UDP Port", "\(port)")
+            row("UDP Send Rate", "60 Hz")
+            row("UDP Format", "2026")
+            row("Your Telemetry", "Public")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(unit * 0.3)
+        .background(
+            RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous)
+                .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+        )
+    }
+
+    private func row(_ name: String, _ value: String) -> some View {
+        HStack {
+            Text(verbatim: name)
+                .foregroundStyle(.white.opacity(0.6))
+            Spacer(minLength: unit * 0.3)
+            Text(verbatim: value)
+                .foregroundStyle(accent)
+        }
+        .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
+    }
+
+    private func label(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: unit * 0.24, weight: .heavy, design: .monospaced))
+            .foregroundStyle(.white.opacity(0.4))
+            .tracking(2)
     }
 }

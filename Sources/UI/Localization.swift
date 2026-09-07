@@ -51,8 +51,7 @@ struct Strings {
     }
     var startButton: String { pick("BASLA", "START") }
     var setupButton: String { pick("KURULUMU AC", "OPEN SETUP") }
-    var copied: String { pick("KOPYALANDI", "COPIED") }
-    var copy: String { pick("KOPYALA", "COPY") }
+
 
     func themeTitle(_ theme: DashTheme) -> String {
         switch theme {
