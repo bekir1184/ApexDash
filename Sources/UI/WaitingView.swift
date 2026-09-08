@@ -9,6 +9,8 @@ struct WaitingView: View {
     let localIP: String
     let port: UInt16
     let unit: CGFloat
+    /// Ag degisiminde IP degistiyse eski adres; yoksa nil.
+    let previousIP: String?
     let onOpenSetup: () -> Void
 
     /// Bes kolon yanar (5 sn), hepsi bir sure yanik kalir, sonra soner.
@@ -20,6 +22,15 @@ struct WaitingView: View {
                 let phase = context.date.timeIntervalSinceReferenceDate
                     .truncatingRemainder(dividingBy: cycle)
                 lights(litColumns: litColumns(phase: phase))
+            }
+
+            if let previousIP {
+                Text(verbatim: strings.addressChanged(from: previousIP, to: localIP))
+                    .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, unit * 0.3)
+                    .padding(.vertical, unit * 0.12)
+                    .background(Capsule().fill(Color(red: 0.97, green: 0.72, blue: 0.12)))
             }
 
             Text(title)

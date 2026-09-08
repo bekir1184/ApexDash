@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F1Dash · Tur Analizi</title>
+<style>
+  :root {
+    --bg: #08090b;
+    --panel: #101218;
+    --line: rgba(255,255,255,.09);
+    --ink: #f2f4f6;
+    --dim: #8b91a1;
+    --purple: #b45cff;
+    --green: #3ce85a;
+    --yellow: #f5d92b;
+    --red: #ff4438;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  h1 { font-size: 22px; letter-spacing: 4px; margin: 0; }
+  header span { color: var(--dim); font-size: 12px; letter-spacing: 2px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .card b { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); font-weight: 700; }
+  .card u { display: block; font-size: 26px; text-decoration: none; margin-top: 6px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; min-width: 520px; }
+  th, td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--dim); font-size: 11px; letter-spacing: 2px; font-weight: 700; }
+  th:first-child, td:first-child { text-align: left; }
+  tr.best td { background: rgba(180,92,255,.10); }
+  .purple { color: var(--purple); } .green { color: var(--green); }
+  .yellow { color: var(--yellow); } .red { color: var(--red); }
+  .chart { margin-top: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .drop { margin-top: 22px; border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--dim); }
+  .drop input { display: none; }
+  .drop label { color: var(--ink); text-decoration: underline; cursor: pointer; }
+  .empty { color: var(--dim); margin-top: 26px; }
+  footer { margin-top: 40px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>F1DASH</h1>
+    <span id="subtitle">TUR ANALİZİ</span>
+  </header>
+
+  <div id="content"></div>
+
+  <div class="drop" id="drop">
+    Telefondan paylaştığın CSV dosyasını buraya bırak ya da
+    <label for="file">dosya seç</label>.
+    <input id="file" type="file" accept=".csv,text/csv">
+  </div>
+
+  <footer>Veri telefonundan geliyor; hiçbir yere yüklenmiyor, tarayıcıda işleniyor.</footer>
+</div>
+
+<script>
+const fmtLap = ms => {
+  if (!ms) return "--";
+  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000), t = ms % 1000;
+  return `${m}:${String(s).padStart(2, "0")}.${String(t).padStart(3, "0")}`;
+};
+const fmtSector = ms => ms ? (ms / 1000).toFixed(3) : "--";
+
+/** QR bagindaki kompakt bicim: lap:time:s1:s2:s3 , ile ayrilir. */
+function parseHash(hash) {
+  const raw = new URLSearchParams(hash.replace(/^#/, "")).get("l");
+  if (!raw) return null;
+  return raw.split(",").filter(Boolean).map(entry => {
+    const [lap, time, s1, s2, s3] = entry.split(":").map(Number);
+    return { lap, time, sectors: [s1, s2, s3] };
+  });
+}
+
+function parseCSV(text) {
+  const rows = text.trim().split(/\r?\n/);
+  const header = rows.shift().split(",").map(h => h.trim().toLowerCase());
+  const index = name => header.indexOf(name);
+  return rows.map(row => {
+    const cells = row.split(",");
+    return {
+      lap: Number(cells[index("lap")]),
+      time: Number(cells[index("time_ms")]),
+      sectors: [
+        Number(cells[index("sector1_ms")]),
+        Number(cells[index("sector2_ms")]),
+        Number(cells[index("sector3_ms")])
+      ]
+    };
+  }).filter(lap => lap.time > 0);
+}
+
+function render(laps) {
+  const content = document.getElementById("content");
+  if (!laps || !laps.length) {
+    content.innerHTML = `<p class="empty">Henüz veri yok. Telefondaki tur listesinden QR'ı okut ya da CSV'yi aşağıya bırak.</p>`;
+    return;
+  }
+
+  const best = Math.min(...laps.map(l => l.time));
+  const bestSectors = [0, 1, 2].map(i => Math.min(...laps.map(l => l.sectors[i] || Infinity)));
+  const average = laps.reduce((sum, l) => sum + l.time, 0) / laps.length;
+  const theoretical = bestSectors.every(Number.isFinite) ? bestSectors.reduce((a, b) => a + b, 0) : 0;
+
+  const cards = `
+    <div class="cards">
+      <div class="card"><b>TUR SAYISI</b><u>${laps.length}</u></div>
+      <div class="card"><b>EN İYİ TUR</b><u class="purple">${fmtLap(best)}</u></div>
+      <div class="card"><b>ORTALAMA</b><u>${fmtLap(Math.round(average))}</u></div>
+      <div class="card"><b>TEORİK EN İYİ</b><u class="green">${fmtLap(theoretical)}</u></div>
+    </div>`;
+
+  const rows = laps.map(lap => {
+    const cells = lap.sectors.map((value, i) => {
+      const cls = !value ? "" : value === bestSectors[i] ? "purple" : "";
+      return `<td class="${cls}">${fmtSector(value)}</td>`;
+    }).join("");
+    const gap = lap.time === best ? "" : `+${((lap.time - best) / 1000).toFixed(3)}`;
+    return `<tr class="${lap.time === best ? "best" : ""}">
+      <td>${lap.lap}</td>
+      <td class="${lap.time === best ? "purple" : ""}">${fmtLap(lap.time)}</td>
+      ${cells}
+      <td class="${gap ? "yellow" : ""}">${gap}</td>
+    </tr>`;
+  }).join("");
+
+  const table = `<div class="scroll"><table>
+    <tr><th>TUR</th><th>SÜRE</th><th>S1</th><th>S2</th><th>S3</th><th>FARK</th></tr>
+    ${rows}
+  </table></div>`;
+
+  content.innerHTML = cards + chart(laps, best) + table;
+}
+
+/** Tur surelerini basit bir SVG cizgi grafigi olarak gosterir. */
+function chart(laps, best) {
+  const width = 940, height = 200, pad = 30;
+  const times = laps.map(l => l.time);
+  const min = Math.min(...times), max = Math.max(...times);
+  const span = Math.max(max - min, 1);
+  const x = i => pad + (laps.length === 1 ? 0 : i * (width - pad * 2) / (laps.length - 1));
+  // Y ekseni sure: hizli turlar asagida, yavaslayinca cizgi yukari cikar.
+  const y = t => height - pad - (max - t) / span * (height - pad * 2);
+  const points = laps.map((lap, i) => `${x(i)},${y(lap.time)}`).join(" ");
+  const dots = laps.map((lap, i) =>
+    `<circle cx="${x(i)}" cy="${y(lap.time)}" r="3.5" fill="${lap.time === best ? "#b45cff" : "#3ce85a"}"/>`
+  ).join("");
+  return `<div class="chart"><svg viewBox="0 0 ${width} ${height}" width="100%" height="200">
+      <polyline points="${points}" fill="none" stroke="#3ce85a" stroke-width="2" opacity=".7"/>
+      ${dots}
+    </svg></div>`;
+}
+
+const drop = document.getElementById("drop");
+const file = document.getElementById("file");
+const readFile = f => f.text().then(text => render(parseCSV(text)));
+file.addEventListener("change", e => e.target.files[0] && readFile(e.target.files[0]));
+drop.addEventListener("dragover", e => e.preventDefault());
+drop.addEventListener("drop", e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+});
+
+render(parseHash(location.hash));
+window.addEventListener("hashchange", () => render(parseHash(location.hash)));
+</script>
+</body>
+</html>

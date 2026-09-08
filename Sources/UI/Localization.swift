@@ -37,6 +37,22 @@ struct Strings {
     }
     var tyreInner: String { pick("iç", "in") }
 
+    var lapsTitle: String { pick("TURLAR", "LAPS") }
+    var noLaps: String {
+        pick("Henuz tamamlanmis tur yok.", "No completed laps yet.")
+    }
+    var shareCSV: String { pick("CSV PAYLAS", "SHARE CSV") }
+    var scanForWeb: String {
+        pick("Turlari sitede gormek icin okut", "Scan to open these laps on the web")
+    }
+    var close: String { pick("KAPAT", "CLOSE") }
+    var lapsButton: String { pick("TURLAR", "LAPS") }
+
+    func addressChanged(from old: String, to new: String) -> String {
+        pick("IP DEGISTI: \(old) → \(new). Oyundaki adresi guncelle.",
+             "IP CHANGED: \(old) → \(new). Update the address in the game.")
+    }
+
     var setupTitle: String { pick("KURULUM", "SETUP") }
     var setupIntro: String {
         pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",

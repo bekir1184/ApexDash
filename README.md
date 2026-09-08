@@ -11,6 +11,8 @@ Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunuc
 - Dort kose lastik (yuzey + ic) ve fren diski sicakliklari, calisma araligina gore renkli
 - Tur suresi ve yaninda onundeki araca delta: yaklasiyorsa yesil, uzaklasiyorsa kirmizi
 - 2026 kurallari: **OVERTAKE** (manual override) ve **AERO X/Z** (aktif aero) — DRS yok
+- En iyi tura gore canli delta ve renk kodlu sektor sureleri
+- Wi-Fi degisince otomatik yeniden baglanma; IP degistiyse bekleme ekraninda uyari
 - FIA bayraklari (`m_vehicleFiaFlags`) ve gecersiz tur uyarisi
 - Pit limiter uyarisi
 - Ekran uyku kilidi kapali, sadece yatay
@@ -84,6 +86,15 @@ Header 29 byte, little-endian, packed. Kullanilan paketler:
 | 7 | Car Status | 1445 | 59 byte |
 | 2 | Lap Data | 1399 | 57 byte |
 | 16 | Car Telemetry 2 (aktif aero, overtake) | 269 | 10 byte |
+
+## Tur kaydi ve web
+
+Tamamlanan turlar sektor sureleriyle saklanir. Tema cubugundaki **TURLAR /
+LAPS** dugmesi listeyi acar: en iyi tur mor, sektorler kendi renkleriyle.
+Ayni ekranda **CSV PAYLAS** ile dosyayi disari cikarabilir, QR'i okutarak
+turlari <https://f1dash-app.vercel.app> adresinde acabilirsin. Site tamamen
+statiktir: veriler QR bagindaki adres parcasinda tasinir ya da CSV dosyasi
+tarayiciya birakilir, hicbir yere yuklenmez.
 
 ## Sirada
 

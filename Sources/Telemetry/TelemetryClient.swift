@@ -12,6 +12,8 @@ final class TelemetryClient: ObservableObject {
     @Published private(set) var dash = DashboardModel()
     @Published private(set) var status: ConnectionStatus = .idle
     @Published private(set) var localIP: String = "-"
+    /// Ag degisince IP degistiyse dolar: oyundaki adresin guncellenmesi gerekir.
+    @Published private(set) var previousIP: String?
     @Published private(set) var packetsPerSecond: Int = 0
 
     enum ConnectionStatus: Equatable {
@@ -28,6 +30,8 @@ final class TelemetryClient: ObservableObject {
     private var lastPacketDate: Date?
     private var deltaSample: (value: Int, date: Date)?
     private var timing = LapTiming()
+    private let pathMonitor = NWPathMonitor()
+    private var monitoring = false
     private var packetCounter = 0
     private var tickTimer: Timer?
 
@@ -70,6 +74,7 @@ final class TelemetryClient: ObservableObject {
             self.listener = listener
             self.localIP = Self.currentWiFiAddress() ?? "-"
             startTicker()
+            startPathMonitor()
         } catch {
             status = .failed(error.localizedDescription)
         }
@@ -84,6 +89,32 @@ final class TelemetryClient: ObservableObject {
         listener = nil
         status = .idle
     }
+
+    /// Wi-Fi degisiminde dinleyici yeniden kurulur; IP degistiyse uyari verilir.
+    private func startPathMonitor() {
+        guard !monitoring else { return }
+        monitoring = true
+        pathMonitor.pathUpdateHandler = { [weak self] _ in
+            Task { @MainActor in self?.handlePathChange() }
+        }
+        pathMonitor.start(queue: .global(qos: .utility))
+    }
+
+    private func handlePathChange() {
+        let address = Self.currentWiFiAddress() ?? "-"
+        if localIP != "-" && localIP != address { previousIP = localIP }
+        localIP = address
+
+        // Adres degistiyse eski sokete paket gelmez; dinleyiciyi yeniden kur.
+        guard listener != nil else { return }
+        connections.forEach { $0.cancel() }
+        connections.removeAll()
+        listener?.cancel()
+        listener = nil
+        start()
+    }
+
+    func acknowledgeAddressChange() { previousIP = nil }
 
     nonisolated private func receive(on connection: NWConnection) {
         connection.receiveMessage { [weak self] data, _, _, error in

@@ -7,6 +7,7 @@ struct RootDashboardView: View {
     @AppStorage("udpPort") private var udpPort: Int = 20777
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @State private var showsSetup = false
+    @State private var showsLaps = false
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
@@ -53,8 +54,17 @@ struct RootDashboardView: View {
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dash.sectorFlash)
             .overlay {
-                if client.status != .receiving && !showsSetup {
+                if client.status != .receiving && !showsSetup && !showsLaps {
                     waitingOverlay(unit: unit)
+                }
+            }
+            .overlay {
+                if showsLaps {
+                    LapsView(laps: dash.completedLaps,
+                             bestSectorMS: dash.bestSectorMS,
+                             strings: strings,
+                             unit: unit) { showsLaps = false }
+                    .transition(.opacity)
                 }
             }
             .overlay {
@@ -143,6 +153,18 @@ struct RootDashboardView: View {
             }
 
             Button {
+                withAnimation(.easeOut(duration: 0.2)) { showsLaps = true }
+            } label: {
+                Text(strings.lapsButton)
+                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, unit * 0.3)
+                    .padding(.vertical, unit * 0.14)
+                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+
+            Button {
                 languageID = language.next.rawValue
                 revealPicker()
             } label: {
@@ -186,7 +208,8 @@ struct RootDashboardView: View {
                     strings: strings,
                     localIP: client.localIP,
                     port: client.port.rawValue,
-                    unit: unit) {
+                    unit: unit,
+                    previousIP: client.previousIP) {
             withAnimation(.easeOut(duration: 0.2)) { showsSetup = true }
         }
     }
