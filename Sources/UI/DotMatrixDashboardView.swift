@@ -266,6 +266,14 @@ struct DotMatrixDashboardView: View {
         }
     }
 
+    /// En iyi tura gore: onundeysen yesil, gerideysen kirmizi.
+    private var bestDeltaColor: Color {
+        guard let delta = dash.deltaToBestMS else { return .white.opacity(0.75) }
+        if delta < -20 { return green }
+        if delta > 20 { return Color(red: 1.0, green: 0.28, blue: 0.24) }
+        return .white.opacity(0.85)
+    }
+
     /// Yaklasiyorsak yesil, uzaklasiyorsak kirmizi, sabitse notr.
     private var deltaColor: Color {
         switch dash.deltaTrend {
@@ -283,7 +291,11 @@ struct DotMatrixDashboardView: View {
                 Text(verbatim: dash.currentLapTimeText)
                     .font(.system(size: unit * 0.72, weight: .black, design: .monospaced))
                     .foregroundStyle(dash.currentLapInvalid ? Color(red: 1, green: 0.4, blue: 0.4) : .white)
-                if dash.deltaToCarInFrontMS > 0 {
+                if dash.deltaToBestMS != nil {
+                    Text(verbatim: dash.deltaToBestText)
+                        .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
+                        .foregroundStyle(bestDeltaColor)
+                } else if dash.deltaToCarInFrontMS > 0 {
                     Text(verbatim: dash.deltaToFrontText)
                         .font(.system(size: unit * 0.44, weight: .black, design: .monospaced))
                         .foregroundStyle(deltaColor)
@@ -295,10 +307,13 @@ struct DotMatrixDashboardView: View {
                     RoundedRectangle(cornerRadius: unit * 0.1, style: .continuous)
                         .stroke(panelStroke, lineWidth: 1.5)
                 )
+            SectorStrip(dash: dash, unit: unit)
+                .frame(width: unit * 3.6)
+
             Text(verbatim: "\(dash.speedKPH) KM/H")
                 .font(.system(size: unit * 0.62, weight: .black, design: .monospaced))
                 .foregroundStyle(.white)
-                .frame(width: unit * 4)
+                .frame(width: unit * 3.4)
                 .padding(.vertical, unit * 0.08)
                 .overlay(
                     RoundedRectangle(cornerRadius: unit * 0.1, style: .continuous)

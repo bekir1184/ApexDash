@@ -27,6 +27,7 @@ final class TelemetryClient: ObservableObject {
     private var connections: [NWConnection] = []
     private var lastPacketDate: Date?
     private var deltaSample: (value: Int, date: Date)?
+    private var timing = LapTiming()
     private var packetCounter = 0
     private var tickTimer: Timer?
 
@@ -113,6 +114,8 @@ final class TelemetryClient: ObservableObject {
             guard let l = LapData(data: data, carIndex: idx) else { return }
             dash.apply(l)
             updateDeltaTrend(l.deltaToCarInFrontMS)
+            timing.ingest(l)
+            dash.applyTiming(timing)
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
@@ -145,6 +148,8 @@ final class TelemetryClient: ObservableObject {
                 guard let self else { return }
                 self.packetsPerSecond = self.packetCounter
                 self.packetCounter = 0
+                self.timing.clearFlashIfStale(after: 4)
+                self.dash.applyTiming(self.timing)
                 if let last = self.lastPacketDate, Date().timeIntervalSince(last) > 2, self.status == .receiving {
                     self.status = .listening
                     self.dash = DashboardModel()

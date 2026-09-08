@@ -44,6 +44,14 @@ struct RootDashboardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .overlay(alignment: .top) {
+                if let flash = dash.sectorFlash, client.status == .receiving {
+                    SectorFlashView(flash: flash, unit: unit)
+                        .padding(.top, unit * 1.2)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dash.sectorFlash)
             .overlay {
                 if client.status != .receiving && !showsSetup {
                     waitingOverlay(unit: unit)

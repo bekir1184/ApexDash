@@ -75,6 +75,9 @@ struct RealisticDashboardView: View {
             mainRow
             Rectangle().fill(rule).frame(height: 1)
             bottomRow
+            SectorStrip(dash: dash, unit: unit, compact: true)
+                .padding(.horizontal, unit * 0.12)
+                .padding(.bottom, unit * 0.06)
             ersBar
         }
         .background(RealisticPalette.ground(limiter: limiter))
@@ -157,7 +160,8 @@ struct RealisticDashboardView: View {
 
     private var topRow: some View {
         HStack(spacing: 0) {
-            Text(verbatim: dash.deltaToCarInFrontMS > 0 ? dash.deltaToFrontText : "+0.00")
+            Text(verbatim: dash.deltaToBestMS != nil ? dash.deltaToBestText
+                                                     : (dash.deltaToCarInFrontMS > 0 ? dash.deltaToFrontText : "+0.000"))
                 .foregroundStyle(limiter ? ink : deltaTint)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(status)
@@ -180,6 +184,11 @@ struct RealisticDashboardView: View {
     }
 
     private var deltaTint: Color {
+        if let delta = dash.deltaToBestMS {
+            if delta < -20 { return Color(red: 0.45, green: 0.92, blue: 0.4) }
+            if delta > 20 { return alert }
+            return ink
+        }
         switch dash.deltaTrend {
         case ..<0: return Color(red: 0.45, green: 0.92, blue: 0.4)
         case 1...: return alert

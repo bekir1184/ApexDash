@@ -50,19 +50,20 @@ def rev_bits(percent):
     return sum(1 << i for i in range(lit))
 
 
-def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340):
+def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
+                   s1_ms=0, s2_ms=0, distance=0.0, sector=0, last_lap_ms=0):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
             payload += struct.pack(
                 LAPDATA_FMT,
-                92_431, lap_time_ms,       # lastLapTime, currentLapTime
-                31_205, 0,                 # sektor 1
-                29_880, 0,                 # sektor 2
+                last_lap_ms, lap_time_ms,  # lastLapTime, currentLapTime
+                s1_ms % 60_000, s1_ms // 60_000,   # sektor 1
+                s2_ms % 60_000, s2_ms // 60_000,   # sektor 2
                 delta_ms, 0,               # onundeki araca fark
                 1_250, 0,                  # lidere fark
-                1500.0, 12000.0, 0.0,      # lapDistance, totalDistance, safetyCarDelta
-                4, lap_num, 0, 0, 1, 0,    # position, lap, pitStatus, pitStops, sector, invalid
+                distance, 12000.0, 0.0,    # lapDistance, totalDistance, safetyCarDelta
+                4, lap_num, 0, 0, sector, 0,   # position, lap, pitStatus, pitStops, sector, invalid
                 0, 0, 0, 0, 0,             # penalties, warnings, corner cuts, pens
                 5, 4, 2,                   # gridPosition, driverStatus, resultStatus
                 0, 0, 0, 0,                # pitLaneTimerActive, pitLaneTime, pitStopTimer
@@ -154,9 +155,25 @@ def main():
             (target, port),
         )
         if frame % 3 == 0:
-            lap_time = int((t % 92) * 1000)
+            # 45 saniyelik tur; her turun temposu biraz farkli olsun ki
+            # en iyi tura gore delta anlamli ciksin.
+            lap_length = 45.0
+            track_metres = 5000.0
+            lap_index = int(t / lap_length)
+            pace = 1 + 0.03 * math.sin(lap_index * 1.7)
+            in_lap = t % lap_length
+            lap_time = int(in_lap * 1000 * pace)
+            distance = in_lap / lap_length * track_metres
+            sector = 0 if distance < track_metres / 3 else (1 if distance < 2 * track_metres / 3 else 2)
+            s1 = int(lap_length / 3 * 1000 * pace) if sector >= 1 else 0
+            s2 = int(lap_length / 3 * 1000 * pace) if sector >= 2 else 0
+            last_lap = int(lap_length * 1000 * (1 + 0.03 * math.sin((lap_index - 1) * 1.7))) if lap_index else 0
             delta_ms = int(1200 + 900 * math.sin(t * 0.35))
-            sock.sendto(lapdata_packet(frame, lap_time, 26, delta_ms), (target, port))
+            sock.sendto(
+                lapdata_packet(frame, lap_time, 20 + lap_index, delta_ms,
+                               s1, s2, distance, sector, last_lap),
+                (target, port),
+            )
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
             # her 15 saniyede 5 saniyeligine pit limiter
             limiter = 1 if (t % 15) < 5 else 0

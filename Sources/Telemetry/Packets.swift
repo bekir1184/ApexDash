@@ -212,6 +212,11 @@ struct LapData {
 
     var lastLapTimeMS: Int = 0
     var currentLapTimeMS: Int = 0
+    /// Tamamlanan sektor sureleri (ms). Sektor gecilmeden 0 gelir.
+    var sector1MS: Int = 0
+    var sector2MS: Int = 0
+    /// Turun basindan bu yana kat edilen mesafe (m); cizgiyi gecmeden negatif.
+    var lapDistance: Float = 0
     var deltaToCarInFrontMS: Int = 0
     var deltaToCarInFrontMinutes: Int = 0
     var carPosition: Int = 0
@@ -225,12 +230,16 @@ struct LapData {
         guard let lastLap = r.uint32(),
               let currentLap = r.uint32()
         else { return nil }
-        r.skip(6)                                  // sektor 1 ve 2 sureleri
-        guard let frontMS = r.uint16(),
+        guard let s1MS = r.uint16(),
+              let s1Minutes = r.uint8(),
+              let s2MS = r.uint16(),
+              let s2Minutes = r.uint8(),
+              let frontMS = r.uint16(),
               let frontMinutes = r.uint8()
         else { return nil }
         r.skip(3)                                  // deltaToRaceLeader
-        r.skip(12)                                 // lapDistance, totalDistance, safetyCarDelta
+        guard let distance = r.float() else { return nil }
+        r.skip(8)                                  // totalDistance, safetyCarDelta
         guard let position = r.uint8(),
               let lapNum = r.uint8(),
               r.uint8() != nil,                    // pitStatus
@@ -241,6 +250,9 @@ struct LapData {
 
         self.lastLapTimeMS = Int(lastLap)
         self.currentLapTimeMS = Int(currentLap)
+        self.sector1MS = Int(s1Minutes) * 60_000 + Int(s1MS)
+        self.sector2MS = Int(s2Minutes) * 60_000 + Int(s2MS)
+        self.lapDistance = distance
         self.deltaToCarInFrontMS = Int(frontMS)
         self.deltaToCarInFrontMinutes = Int(frontMinutes)
         self.carPosition = Int(position)

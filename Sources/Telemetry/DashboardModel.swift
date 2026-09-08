@@ -45,6 +45,17 @@ struct DashboardModel {
     var carPosition: Int = 0
     var currentLapInvalid: Bool = false
 
+    // Tur zamanlamasi (LapTiming)
+    var sector1MS: Int = 0
+    var sector2MS: Int = 0
+    var bestLapMS: Int = 0
+    var bestSectorMS: [Int] = [0, 0, 0]
+    /// En iyi tura gore fark (ms); referans tur olusana kadar nil.
+    var deltaToBestMS: Int?
+    var lastLap: CompletedLap?
+    var sectorFlash: SectorFlash?
+    var completedLaps: [CompletedLap] = []
+
     var gearLabel: String {
         switch gear {
         case -1: return "R"
@@ -110,12 +121,36 @@ struct DashboardModel {
         }
     }
 
+    /// "-0.284" biciminde, isaretli delta.
+    var deltaToBestText: String {
+        guard let delta = deltaToBestMS else { return "--.---" }
+        return String(format: "%+.3f", Double(delta) / 1000)
+    }
+
+    var bestLapText: String { Self.lapTimeText(bestLapMS) }
+
+    /// Sektor suresi "31.205" biciminde; dakikayi asarsa tam bicim.
+    static func sectorText(_ milliseconds: Int) -> String {
+        guard milliseconds > 0 else { return "--.---" }
+        if milliseconds >= 60_000 { return lapTimeText(milliseconds) }
+        return String(format: "%.3f", Double(milliseconds) / 1000)
+    }
+
     static func lapTimeText(_ milliseconds: Int) -> String {
         guard milliseconds > 0 else { return "--:--.---" }
         let minutes = milliseconds / 60_000
         let seconds = (milliseconds % 60_000) / 1000
         let millis = milliseconds % 1000
         return String(format: "%d:%02d.%03d", minutes, seconds, millis)
+    }
+
+    mutating func applyTiming(_ timing: LapTiming) {
+        bestLapMS = timing.bestLapMS
+        bestSectorMS = timing.bestSectorMS
+        deltaToBestMS = timing.deltaToBestMS
+        lastLap = timing.lastLap
+        sectorFlash = timing.sectorFlash
+        completedLaps = timing.laps
     }
 
     mutating func apply(_ l: LapData) {
@@ -125,6 +160,8 @@ struct DashboardModel {
         currentLapNum = l.currentLapNum
         carPosition = l.carPosition
         currentLapInvalid = l.currentLapInvalid
+        sector1MS = l.sector1MS
+        sector2MS = l.sector2MS
     }
 
     mutating func apply(_ s: CarStatus) {
