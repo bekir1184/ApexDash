@@ -148,13 +148,14 @@ struct BroadcastHUD {
         drawBattery(in: &ctx)
     }
 
-    /// Bu turda kalan harcama payi: tur basinda dolu, harcandikca azalir.
-    /// Limit gelmemisse depodaki enerji orani kullanilir.
+    /// Bu turda harcanan enerji, pil kapasitesine (4 MJ) gore: tur basinda
+    /// dolu, Overtake acikken pil ile ayni hizda azalir. Tur limitine gore
+    /// olcek (5-9 MJ) kisa hamlelerde gozle gorulmeyecek kadar az oynuyordu.
     private var deployLevel: Double {
-        dash.ersHarvestLimitPerLap > 0 ? 1 - dash.deployedFraction : dash.ersFraction
+        1 - min(max(Double(dash.ersDeployedThisLap) / 4_000_000, 0), 1)
     }
 
-    private var deployActive: Bool { dash.ersTrend < 0 }
+    private var deployActive: Bool { dash.ersTrend < 0 || dash.overtakeActive }
 
     private func litCount(_ fraction: Double) -> Int {
         Int((min(max(fraction, 0), 1) * 10).rounded())

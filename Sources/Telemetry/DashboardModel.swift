@@ -136,10 +136,11 @@ struct DashboardModel {
         min(max(Double(ersStoreEnergy) / 4_000_000, 0), 1)
     }
 
-    /// Bu turda toplanan enerjinin tur limitine orani.
+    /// Bu turda toplanan enerjinin tur limitine orani; limit gelmemisse
+    /// pil kapasitesine gore.
     var harvestFraction: Double {
-        guard ersHarvestLimitPerLap > 0 else { return 0 }
-        return min(max(Double(ersHarvestedThisLap / ersHarvestLimitPerLap), 0), 1)
+        let limit = ersHarvestLimitPerLap > 0 ? ersHarvestLimitPerLap : 4_000_000
+        return min(max(Double(ersHarvestedThisLap / limit), 0), 1)
     }
 
     /// Bu turda harcanan enerjinin tur limitine orani.
