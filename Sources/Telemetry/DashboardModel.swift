@@ -2,6 +2,15 @@ import Foundation
 
 /// Ekranin cizdigi tek dogruluk kaynagi. Farkli paketlerden gelen alanlar
 /// burada birlestirilir.
+/// Onundeki ya da arkandaki arac.
+struct Rival: Equatable {
+    let position: Int
+    let name: String
+    let red: Double
+    let green: Double
+    let blue: Double
+}
+
 struct DashboardModel {
     // CarTelemetry (paket 6)
     var speedKPH: Int = 0
@@ -55,6 +64,10 @@ struct DashboardModel {
     var lastLap: CompletedLap?
     var sectorFlash: SectorFlash?
     var completedLaps: [CompletedLap] = []
+
+    /// Yayin temasindaki isim plakalari icin.
+    var driverAhead: Rival?
+    var driverBehind: Rival?
 
     var gearLabel: String {
         switch gear {

@@ -21,6 +21,11 @@ RATE_HZ = 60
 HEADER_FMT = "<HBBBBBQfIIBB"          # 29 byte
 TELEMETRY_FMT = "<HfffBbHBBH4H4B4BB4f4B"   # 59 byte
 TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte
+PARTICIPANT_FMT = "<BHHHBBB32sBBHBB12B"   # 60 byte
+NAMES = ["Bekir Ersever", "Lewis Hamilton", "George Russell", "Max Verstappen",
+         "Charles Leclerc", "Lando Norris"]
+# oyuncu 4. sirada; onunde 3, arkasinda 5 var
+POSITIONS = [4, 3, 5, 1, 2, 6]
 LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte
 STATUS_FMT = "<BBBBBfffHHBBHBBBbfffBffffB"  # 59 byte
 
@@ -50,6 +55,19 @@ def rev_bits(percent):
     return sum(1 << i for i in range(lit))
 
 
+def participants_packet(frame):
+    payload = struct.pack("<B", CARS)
+    for car in range(CARS):
+        name = (NAMES[car] if car < len(NAMES) else f"Driver {car}").encode()[:31]
+        colours = [0, 210, 190] + [0] * 9 if car == PLAYER else [220, 40, 40] + [0] * 9
+        payload += struct.pack(
+            PARTICIPANT_FMT,
+            0, car, 0, 1, 1 if car == PLAYER else 0, car + 1, 76,
+            name, 1, 1, 0, 4, 1, *colours,
+        )
+    return header(4, frame) + payload
+
+
 def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
                    s1_ms=0, s2_ms=0, distance=0.0, sector=0, last_lap_ms=0):
     payload = b""
@@ -63,14 +81,17 @@ def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
                 delta_ms, 0,               # onundeki araca fark
                 1_250, 0,                  # lidere fark
                 distance, 12000.0, 0.0,    # lapDistance, totalDistance, safetyCarDelta
-                4, lap_num, 0, 0, sector, 0,   # position, lap, pitStatus, pitStops, sector, invalid
+                POSITIONS[PLAYER], lap_num, 0, 0, sector, 0,  # position, lap, pit, stops, sector, invalid
                 0, 0, 0, 0, 0,             # penalties, warnings, corner cuts, pens
                 5, 4, 2,                   # gridPosition, driverStatus, resultStatus
                 0, 0, 0, 0,                # pitLaneTimerActive, pitLaneTime, pitStopTimer
                 312.5, 12,                 # speedTrap, speedTrapLap
             )
         else:
-            payload += bytes(57)
+            position = POSITIONS[car] if car < len(POSITIONS) else car + 1
+            other = bytearray(57)
+            other[32] = position          # carPosition
+            payload += bytes(other)
     payload += struct.pack("<BB", 255, 255)
     return header(2, frame) + payload
 
@@ -154,6 +175,8 @@ def main():
             telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp),
             (target, port),
         )
+        if frame % 120 == 0:
+            sock.sendto(participants_packet(frame), (target, port))
         if frame % 3 == 0:
             # 45 saniyelik tur; her turun temposu biraz farkli olsun ki
             # en iyi tura gore delta anlamli ciksin.

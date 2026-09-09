@@ -30,6 +30,7 @@ final class TelemetryClient: ObservableObject {
     private var lastPacketDate: Date?
     private var deltaSample: (value: Int, date: Date)?
     private var timing = LapTiming()
+    private var participants: [Participant] = []
     private let pathMonitor = NWPathMonitor()
     private var monitoring = false
     private var packetCounter = 0
@@ -147,9 +148,13 @@ final class TelemetryClient: ObservableObject {
             updateDeltaTrend(l.deltaToCarInFrontMS)
             timing.ingest(l)
             dash.applyTiming(timing)
+            updateRivals(positions: LapData.positions(in: data), playerPosition: l.carPosition)
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
+        case .participants:
+            let list = ParticipantsPacket.parse(data)
+            if !list.isEmpty { participants = list }
         default:
             break
         }
@@ -170,6 +175,24 @@ final class TelemetryClient: ObservableObject {
         let change = current - sample.value
         dash.deltaTrend = abs(change) < 50 ? 0 : (change < 0 ? -1 : 1)
         deltaSample = (current, Date())
+    }
+
+    /// Pozisyon siralamasindan onundeki ve arkandaki araci bulur.
+    private func updateRivals(positions: [Int], playerPosition: Int) {
+        guard playerPosition > 0, !participants.isEmpty else { return }
+        dash.driverAhead = rival(at: playerPosition - 1, positions: positions)
+        dash.driverBehind = rival(at: playerPosition + 1, positions: positions)
+    }
+
+    private func rival(at position: Int, positions: [Int]) -> Rival? {
+        guard position > 0, let index = positions.firstIndex(of: position),
+              participants.indices.contains(index)
+        else { return nil }
+        let participant = participants[index]
+        guard !participant.name.isEmpty else { return nil }
+        let colour = participant.teamColour ?? (0.35, 0.78, 0.95)
+        return Rival(position: position, name: participant.surname,
+                     red: colour.red, green: colour.green, blue: colour.blue)
     }
 
     private func startTicker() {

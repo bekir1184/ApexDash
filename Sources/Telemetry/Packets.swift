@@ -261,3 +261,64 @@ struct LapData {
         self.currentLapInvalid = invalid == 1
     }
 }
+
+/// Packet ID 4 - ParticipantData (arac basina 60 byte, paket 1470 byte).
+/// Bes saniyede bir gelir; isimler ve takim renkleri buradan.
+struct Participant {
+    static let stride = 60
+
+    var name: String = ""
+    var raceNumber: Int = 0
+    var teamColour: (red: Double, green: Double, blue: Double)?
+
+    /// Soyadi: yayin grafiklerindeki gibi tek kelime gosterilir.
+    var surname: String {
+        name.split(separator: " ").last.map(String.init)?.uppercased() ?? name.uppercased()
+    }
+}
+
+enum ParticipantsPacket {
+    static func parse(_ data: Data) -> [Participant] {
+        var reader = ByteReader(data, offset: PacketHeader.size)
+        guard reader.uint8() != nil else { return [] }      // m_numActiveCars
+
+        var result: [Participant] = []
+        for index in 0..<24 {
+            var r = ByteReader(data, offset: PacketHeader.size + 1 + index * Participant.stride)
+            guard r.remaining >= Participant.stride else { break }
+            r.skip(8)                                        // ai, driverId, networkId, teamId, myTeam
+            guard let raceNumber = r.uint8() else { break }
+            r.skip(1)                                        // nationality
+
+            var bytes: [UInt8] = []
+            for _ in 0..<32 {
+                guard let byte = r.uint8() else { break }
+                if byte != 0 { bytes.append(byte) }
+            }
+            r.skip(5)                                        // telemetry, names, techLevel, platform
+            guard let colourCount = r.uint8() else { break }
+
+            var colour: (Double, Double, Double)?
+            if colourCount > 0, let red = r.uint8(), let green = r.uint8(), let blue = r.uint8() {
+                colour = (Double(red) / 255, Double(green) / 255, Double(blue) / 255)
+            }
+
+            var participant = Participant()
+            participant.name = String(decoding: bytes, as: UTF8.self)
+            participant.raceNumber = Int(raceNumber)
+            participant.teamColour = colour
+            result.append(participant)
+        }
+        return result
+    }
+}
+
+extension LapData {
+    /// Butun araclarin yaris pozisyonu; onundeki ve arkandakini bulmak icin.
+    static func positions(in data: Data) -> [Int] {
+        (0..<24).map { index in
+            var r = ByteReader(data, offset: PacketHeader.size + index * LapData.stride + 32)
+            return Int(r.uint8() ?? 0)
+        }
+    }
+}

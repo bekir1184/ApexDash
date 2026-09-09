@@ -112,7 +112,7 @@ struct RootDashboardView: View {
         .ignoresSafeArea(edges: .vertical)
         // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
         .overlay {
-            if theme != .realistic {
+            if theme != .realistic && theme != .broadcast {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
