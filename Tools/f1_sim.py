@@ -55,6 +55,12 @@ def rev_bits(percent):
     return sum(1 << i for i in range(lit))
 
 
+def event_packet(frame, code, payload=b""):
+    body = code.encode() + payload
+    body += bytes(45 - 29 - len(body))
+    return header(3, frame) + body
+
+
 def participants_packet(frame):
     payload = struct.pack("<B", CARS)
     for car in range(CARS):
@@ -176,6 +182,14 @@ def main():
             telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp),
             (target, port),
         )
+        # ilk 8 saniye: bes isik yanar, sonra soner
+        if t < 6:
+            lights = min(5, int(t / 1.0))
+            if lights > 0 and frame % 6 == 0:
+                sock.sendto(event_packet(frame, "STLG", struct.pack("<B", lights)), (target, port))
+        elif 6 <= t < 6.2 and frame % 6 == 0:
+            sock.sendto(event_packet(frame, "LGOT"), (target, port))
+
         if frame % 120 == 0:
             sock.sendto(participants_packet(frame), (target, port))
         if frame % 3 == 0:

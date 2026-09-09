@@ -13,6 +13,7 @@ Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunuc
 - 2026 kurallari: **OVERTAKE** (manual override) ve **AERO X/Z** (aktif aero) — DRS yok
 - En iyi tura gore canli delta ve renk kodlu sektor sureleri
 - Wi-Fi degisince otomatik yeniden baglanma; IP degistiyse bekleme ekraninda uyari
+- Yaris basi: oyunun gonderdigi start isiklari (Event `STLG`/`LGOT`) ekranda yanar
 - FIA bayraklari (`m_vehicleFiaFlags`) ve gecersiz tur uyarisi
 - Pit limiter uyarisi
 - Ekran uyku kilidi kapali, sadece yatay
@@ -29,7 +30,7 @@ her iki dilde de ayni kalir).
 | `MODERN` | Bosch DDU tarzi, yuksek kontrastli temiz duzen |
 | `DOT MATRIX` | **Varsayilan.** Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir. Ustte iki gosterge: sari **BATTERY** (arka plani sarj oraninda dolar, depo dolunca yanip soner) ve mor **STRAIGHT MODE** (aktif aero hazir olup gecilmediyse yanip soner, gecilince tam yanar). Nokta dokusu ekranin tamamini kaplar |
 | `REALISTIC` | Gercek F1 direksiyon ekraninin (Bosch / McLaren Applied tipi) taklidi: koyu zemin, ustte delta / durum / tur suresi, solda hiz, ortada dev vites ve altinda batarya, sagda yakit, altta lastik ve fren sicakliklari, en altta batarya seridi. Ekran, LED seridini tasiyan bir govde cercevesinin icinde oturur; iki yanindaki dikey kumeler FIA bayraklarini gosterir (sari ve mavi yanip soner, tur sayilmiyorsa yesil yanip soner). **Pit limiter devredeyken LCD sariya doner**, gercek araclardaki gibi |
-| `YAYIN` | Yayin grafiklerindeki mavi HUD: ortada kalkan bicimli hiz gostergesi (km/h ve mph), BOOST ile overtake pili ve batarya cubugu, dort esit segment sutunu (BRAKE, RECHARGE, DEPLOY, THROTTLE), solda onundeki ve arkandaki sofurun takim renginde egik plakalari, sagda aktif aero, vites siralamasi ve devir cetveli |
+| `YAYIN` | Yayin grafiklerindeki mavi HUD: ortada yuvarlak hiz gostergesi (km/h ve mph), BOOST ile overtake pili ve altinda batarya, daireyi saracak sekilde egilmis dort segment sutunu (BRAKE, RECHARGE, DEPLOY, THROTTLE), solda onundeki ve arkandaki sofurun mavi egik plakalari, sagda aktif aero, vites siralamasi ve tek renk devir cetveli |
 | `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
 
 ## Kurulum ekrani

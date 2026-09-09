@@ -333,3 +333,28 @@ extension LapData {
         }
     }
 }
+
+/// Packet ID 3 - Event. Dort harflik kod ve ardindan olaya ozel alanlar.
+enum GameEvent {
+    case startLights(count: Int)
+    case lightsOut
+    case other(String)
+
+    init?(data: Data) {
+        var r = ByteReader(data, offset: PacketHeader.size)
+        var code = ""
+        for _ in 0..<4 {
+            guard let byte = r.uint8() else { return nil }
+            code.append(Character(UnicodeScalar(byte)))
+        }
+        switch code {
+        case "STLG":
+            guard let lights = r.uint8() else { return nil }
+            self = .startLights(count: Int(lights))
+        case "LGOT":
+            self = .lightsOut
+        default:
+            self = .other(code)
+        }
+    }
+}

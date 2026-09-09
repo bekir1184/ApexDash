@@ -152,6 +152,17 @@ final class TelemetryClient: ObservableObject {
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
+        case .event:
+            switch GameEvent(data: data) {
+            case .startLights(let count):
+                dash.startLights = count
+                dash.lightsOutDate = nil
+            case .lightsOut:
+                dash.startLights = 0
+                dash.lightsOutDate = Date()
+            default:
+                break
+            }
         case .participants:
             let list = ParticipantsPacket.parse(data)
             if !list.isEmpty { participants = list }
@@ -202,6 +213,9 @@ final class TelemetryClient: ObservableObject {
                 guard let self else { return }
                 self.packetsPerSecond = self.packetCounter
                 self.packetCounter = 0
+                if let date = self.dash.lightsOutDate, Date().timeIntervalSince(date) > 3 {
+                    self.dash.lightsOutDate = nil
+                }
                 self.timing.clearFlashIfStale(after: 4)
                 self.dash.applyTiming(self.timing)
                 if let last = self.lastPacketDate, Date().timeIntervalSince(last) > 2, self.status == .receiving {

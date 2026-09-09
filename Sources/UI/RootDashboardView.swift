@@ -47,10 +47,29 @@ struct RootDashboardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .overlay {
+                // Yaris basi: oyun isik sayisini gonderdikce yanar, sonunce
+                // kisa sure yesil bir "GO" gorunur.
+                if dash.startLights > 0 {
+                    StartLightsView(litColumns: dash.startLights, unit: unit)
+                        .padding(unit * 0.4)
+                        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                } else if dash.lightsOutDate != nil {
+                    Text(verbatim: "GO")
+                        .font(.system(size: unit * 2.4, weight: .black, design: .rounded))
+                        .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
+                        .padding(unit * 0.5)
+                        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .animation(.easeOut(duration: 0.15), value: dash.startLights)
+            .animation(.easeOut(duration: 0.15), value: dash.lightsOutDate)
             .overlay(alignment: .top) {
                 if let flash = dash.sectorFlash, client.status == .receiving {
                     SectorFlashView(flash: flash, unit: unit)
-                        .padding(.top, unit * 1.2)
+                        .padding(.top, unit * 0.12)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
             }

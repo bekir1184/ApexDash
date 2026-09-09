@@ -73,11 +73,11 @@ struct SectorFlashView: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .tracking(3)
             Text(verbatim: DashboardModel.sectorText(flash.timeMS))
-                .font(.system(size: unit * 1.1, weight: .black, design: .monospaced))
+                .font(.system(size: unit * 0.8, weight: .black, design: .monospaced))
                 .foregroundStyle(flash.colour.tint)
         }
-        .padding(.horizontal, unit * 0.6)
-        .padding(.vertical, unit * 0.25)
+        .padding(.horizontal, unit * 0.45)
+        .padding(.vertical, unit * 0.14)
         .background(
             RoundedRectangle(cornerRadius: unit * 0.18, style: .continuous)
                 .fill(.black.opacity(0.88))

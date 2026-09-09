@@ -68,6 +68,10 @@ struct DashboardModel {
     var sectorFlash: SectorFlash?
     var completedLaps: [CompletedLap] = []
 
+    /// Yaris basi: yanan isik sayisi (0-5) ve isiklarin sonme ani.
+    var startLights: Int = 0
+    var lightsOutDate: Date?
+
     /// Yayin temasindaki isim plakalari icin.
     var driverAhead: Rival?
     var driverBehind: Rival?
