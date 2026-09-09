@@ -14,6 +14,8 @@ struct HomeView: View {
     let onLanguage: () -> Void
     let onOpenSetup: () -> Void
     let languageLabel: String
+    /// Asagi cekme sirasinda gizlenen kart: pano oraya inerken bos kalir.
+    var hiddenTheme: DashTheme? = nil
 
     @State private var drag: CGFloat = 0
     @State private var showsConnection = false
@@ -182,6 +184,15 @@ struct HomeView: View {
                 .stroke(Color.white.opacity(theme == selectedTheme ? 0.35 : 0.12), lineWidth: 1.5)
         )
         .shadow(color: .black.opacity(0.6), radius: unit * 0.5, y: unit * 0.2)
+        .opacity(theme == hiddenTheme ? 0 : 1)
+        .background {
+            // Secili kartin ekrandaki yeri: kok gorunum panoyu buraya indirir.
+            if theme == selectedTheme {
+                GeometryReader { g in
+                    Color.clear.preference(key: CardFrameKey.self, value: g.frame(in: .global))
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -225,6 +236,15 @@ struct HomeView: View {
                 .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Karuseldeki secili kartin global cercevesi.
+struct CardFrameKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != .zero { value = next }
     }
 }
 

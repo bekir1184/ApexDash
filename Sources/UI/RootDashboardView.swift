@@ -15,6 +15,8 @@ struct RootDashboardView: View {
     @State private var slide: CGFloat = 1
     /// Asagi cekme: pano parmakla birlikte kucularek iner, esik asilinca menuye biner.
     @State private var pull: CGFloat = 0
+    @State private var landing = false
+    @State private var cardFrame: CGRect = .zero
     @AppStorage("webSession") private var sessionID: String = ""
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
@@ -35,21 +37,26 @@ struct RootDashboardView: View {
             // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
             ZStack(alignment: .bottom) {
-                if showsHome {
+                if showsHome || pull > 0 {
                     HomeView(client: client, strings: strings, unit: unit,
                              selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
                              onSelect: { withAnimation(.easeInOut(duration: 0.25)) { showsHome = false } },
                              onLaps: { withAnimation(.easeOut(duration: 0.2)) { showsLaps = true } },
                              onLanguage: { languageID = language.next.rawValue },
                              onOpenSetup: { withAnimation(.easeOut(duration: 0.2)) { showsSetup = true } },
-                             languageLabel: language.label)
-                        .transition(.opacity)
-                        .zIndex(1)
-                } else {
-                themeBackground(unit: unit)
-                    .ignoresSafeArea()
+                             languageLabel: language.label,
+                             hiddenTheme: showsHome ? nil : theme)
+                        .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
+                        .transition(.identity)
+                }
+                if !showsHome {
+                if pull == 0 {
+                    themeBackground(unit: unit)
+                        .ignoresSafeArea()
+                }
 
                 ZStack {
+                    themeBackground(unit: unit)
                     DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding(.vertical, unit * 0.16)
@@ -65,17 +72,19 @@ struct RootDashboardView: View {
                             removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
-                .scaleEffect(pullScale(geo))
-                .offset(y: pull * 0.35)
                 // Yalnizca asagi cekilirken kirp; normalde panolar guvenli
                 // alanin disina (kenarlara, Dynamic Island bandina) tasabilir.
                 .mask {
                     if pull > 0 {
-                        RoundedRectangle(cornerRadius: unit * 0.35, style: .continuous)
+                        RoundedRectangle(cornerRadius: unit * 0.35 / pullTransform(geo).scale, style: .continuous)
                     } else {
                         Color.black.padding(-geo.size.width)
                     }
                 }
+                .scaleEffect(pullTransform(geo).scale)
+                .offset(pullTransform(geo).offset)
+                .zIndex(2)
+                .transition(.identity)
 
                 if showsThemePicker {
                     VStack(spacing: unit * 0.15) {
@@ -182,20 +191,27 @@ struct RootDashboardView: View {
             .gesture(
                 DragGesture(minimumDistance: 20)
                     .onChanged { value in
-                        guard !showsHome else { return }
+                        guard !showsHome, !landing else { return }
                         let t = value.translation
                         // Dikey cekme parmakla ayni hizda; yatay hareket baskinsa cekme yok.
                         if abs(t.height) > abs(t.width) || pull > 0 { pull = max(0, t.height) }
                     }
                     .onEnded { value in
-                        guard !showsHome else { return }
+                        guard !showsHome, !landing else { return }
                         let t = value.translation
                         if pull > 0 {
-                            if pull > geo.size.height * 0.28 || value.predictedEndTranslation.height > geo.size.height * 0.6 {
-                                // Esik asildi: kucultulmus pano karuseldeki yerine oturur.
+                            if pull > geo.size.height * 0.25 || value.predictedEndTranslation.height > geo.size.height * 0.6 {
+                                // Esik asildi: pano karuseldeki kartina iner, sonra menu devralir.
                                 showsConnection = false
-                                withAnimation(.easeInOut(duration: 0.3)) { showsHome = true; showsThemePicker = false }
-                                pull = 0
+                                showsThemePicker = false
+                                landing = true
+                                withAnimation(.easeInOut(duration: 0.28)) { pull = Self.pullSpan(geo) }
+                                Task { @MainActor in
+                                    try? await Task.sleep(nanoseconds: 300_000_000)
+                                    showsHome = true
+                                    pull = 0
+                                    landing = false
+                                }
                             } else {
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { pull = 0 }
                             }
@@ -222,9 +238,22 @@ struct RootDashboardView: View {
         .statusBarHidden()
     }
 
-    /// Asagi cekildikce pano karuseldeki kart boyutuna (%50) dogru kuculur.
-    private func pullScale(_ geo: GeometryProxy) -> CGFloat {
-        max(0.5, 1 - pull / (geo.size.height * 0.6))
+    /// Bu kadar cekilince pano tam olarak kartin yerine oturur.
+    private static func pullSpan(_ geo: GeometryProxy) -> CGFloat { geo.size.height * 0.35 }
+
+    /// Asagi cekildikce pano, karuseldeki secili kartin cercevesine dogru
+    /// kuculup kayar: parmakla ayni hizda, esikte tam yerinde.
+    private func pullTransform(_ geo: GeometryProxy) -> (scale: CGFloat, offset: CGSize) {
+        let p = min(max(pull / Self.pullSpan(geo), 0), 1)
+        let origin = geo.frame(in: .global).origin
+        let target: CGRect = cardFrame == .zero
+            ? CGRect(x: geo.size.width * 0.25, y: geo.size.height * 0.2, width: geo.size.width * 0.5, height: geo.size.width * 0.5 / 2.16)
+            : cardFrame.offsetBy(dx: -origin.x, dy: -origin.y)
+        let endScale = target.width / geo.size.width
+        let scale = 1 - p * (1 - endScale)
+        let dx = (target.midX - geo.size.width / 2) * p
+        let dy = (target.midY - geo.size.height / 2) * p
+        return (scale, CGSize(width: dx, height: dy))
     }
 
     /// Tema zemini ekranin tamamini kaplar; nokta dokusu Dynamic Island'in
