@@ -148,10 +148,10 @@ struct BroadcastHUD {
         drawBattery(in: &ctx)
     }
 
-    /// Tur icinde harcanan enerjinin limite orani; limit gelmemisse deploy modu.
+    /// Bu turda kalan harcama payi: tur basinda dolu, harcandikca azalir.
+    /// Limit gelmemisse depodaki enerji orani kullanilir.
     private var deployLevel: Double {
-        dash.ersHarvestLimitPerLap > 0 ? dash.deployedFraction
-                                       : min(Double(dash.ersDeployMode) / 3, 1)
+        dash.ersHarvestLimitPerLap > 0 ? 1 - dash.deployedFraction : dash.ersFraction
     }
 
     private var deployActive: Bool { dash.ersTrend < 0 }
@@ -267,13 +267,20 @@ struct BroadcastHUD {
         let seg = roundedSegment(side, rIn: rIn, rOut: rOut, aTop: aTop, aBottom: aBottom, c: corner)
 
         let top = point(side, rMid, aTop).y, bottom = point(side, rMid, aBottom).y
-        // Sonuk taban; ustune alttan yukari seviye kadar parlak dolgu.
+        // Sonuk taban; ustune alttan yukari seviye kadar dolgu. Aktifken
+        // panel parlak maviye doner, disina isik sizar ve harfler beyazlasir.
+        if active {
+            var glow = ctx
+            glow.addFilter(.blur(radius: R * 0.05))
+            strokeRounded(&glow, seg, Color(hex: 0x6fd6ff).opacity(0.9), extra: R * 0.06)
+        }
         strokeRounded(&ctx, seg, active ? .white : panelEdge, extra: 3)
-        fillRounded(&ctx, seg, .color(Color(hex: 0x123153)), widthDelta: -2.5)
+        fillRounded(&ctx, seg, .color(active ? Color(hex: 0x1d4f86) : Color(hex: 0x123153)), widthDelta: -2.5)
         let clamped = CGFloat(min(max(level, 0), 1))
         if clamped > 0 {
+            let colours = active ? [Color(hex: 0x7fe0ff), Color(hex: 0x2f96e6)] : [panelTop, panelBottom]
             let gradient = GraphicsContext.Shading.linearGradient(
-                Gradient(colors: [active ? Color(hex: 0x3f82c4) : panelTop, panelBottom]),
+                Gradient(colors: colours),
                 startPoint: CGPoint(x: CX, y: top), endPoint: CGPoint(x: CX, y: bottom))
             var filled = ctx
             let outerTop = point(side, rOut, aTop).y - corner
