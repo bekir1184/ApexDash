@@ -25,6 +25,9 @@ struct RootDashboardView: View {
     @State private var pulling = false
     @State private var settling = false
     @State private var cardFrame: CGRect = .zero
+    /// Gecis boyunca panoya verilen sabit veri: 60 Hz telemetri yeniden
+    /// cizimi animasyon karelerini bolmesin.
+    @State private var frozenDash: DashboardModel?
     /// Tam ekran sayfalayicinin konumu; tema secimiyle esittir.
     @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .dotMatrix
 
@@ -56,7 +59,8 @@ struct RootDashboardView: View {
                              onLanguage: { languageID = language.next.rawValue },
                              onOpenSetup: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true } },
                              languageLabel: language.label,
-                             hidesCentreCard: stageMounted)
+                             hidesCentreCard: stageMounted,
+                             frozenDash: frozenDash)
                         .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
                         .opacity(min(1, stage * 2))
                 }
@@ -141,50 +145,53 @@ struct RootDashboardView: View {
         // icinde guvenli alana cekilir. Boylece sayfalama ekran kenariyla hizali.
         let lead = geo.safeAreaInsets.leading, trail = geo.safeAreaInsets.trailing
         let fullW = geo.size.width + lead + trail
+        let live = frozenDash ?? dash
         return ZStack {
-            DashboardBackground(theme: theme, unit: unit)
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 0) {
-                    ForEach(DashTheme.allCases) { item in
-                        ZStack {
-                            DashboardBackground(theme: item, unit: unit)
-                            DashboardContent(theme: item, dash: dash, unit: unit, strings: strings)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding(.vertical, unit * 0.16)
-                                // Gercekci temada govde cercevesi Dynamic Island
-                                // bandinin uzerine tasar; digerleri guvenli alanda kalir.
-                                .padding(.leading, item == .realistic ? min(lead, unit * 0.34) : lead)
-                                .padding(.trailing, item == .realistic ? min(trail, unit * 0.34) : trail)
+            if fullscreen && !settling {
+                // Tam ekranda temalar arasinda sistemin sayfalayicisiyla gecilir.
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(DashTheme.allCases) { item in
+                            ZStack {
+                                DashboardBackground(theme: item, unit: unit)
+                                DashboardContent(theme: item, dash: live, unit: unit, strings: strings)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .padding(.vertical, unit * 0.16)
+                                    // Gercekci temada govde cercevesi Dynamic Island
+                                    // bandinin uzerine tasar; digerleri guvenli alanda kalir.
+                                    .padding(.leading, item == .realistic ? min(lead, unit * 0.34) : lead)
+                                    .padding(.trailing, item == .realistic ? min(trail, unit * 0.34) : trail)
+                            }
+                            .frame(width: fullW, height: geo.size.height)
+                            .id(item)
                         }
-                        .frame(width: fullW, height: geo.size.height)
-                        .id(item)
                     }
+                    .scrollTargetLayout()
                 }
-                .scrollTargetLayout()
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: $page)
+                .frame(width: fullW, height: geo.size.height)
+                .ignoresSafeArea(.container, edges: .horizontal)
+            } else {
+                // Gecis halinde tek sayfa: karuseldeki kartla birebir ayni cizim.
+                ZStack {
+                    DashboardBackground(theme: theme, unit: unit)
+                    DashboardContent(theme: theme, dash: live, unit: unit, strings: strings)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, unit * 0.16)
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous)
+                        .stroke(Color.white.opacity(0.35), lineWidth: 1.5 / t.scale)
+                        .opacity(stage)
+                }
             }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $page)
-            .scrollDisabled(stage > 0)
-            .frame(width: fullW, height: geo.size.height)
-            .ignoresSafeArea(.container, edges: .horizontal)
         }
         .frame(width: geo.size.width, height: geo.size.height)
-        .compositingGroup()
-        .mask {
-            if stage > 0 {
-                RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous)
-            } else {
-                Color.black.padding(-geo.size.width)
-            }
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous)
-                .stroke(Color.white.opacity(0.35), lineWidth: 1.5 / t.scale)
-                .opacity(stage)
-        }
         .scaleEffect(t.scale)
         .offset(t.offset)
-        .shadow(color: .black.opacity(0.6 * stage), radius: corner * 1.4, y: corner * 0.6)
         .simultaneousGesture(pullGesture(geo))
     }
 
@@ -216,6 +223,7 @@ struct RootDashboardView: View {
                     guard abs(t.height) > abs(t.width) * 1.2, t.height > 0 else { return }
                     pulling = true
                     showsConnection = false
+                    frozenDash = dash
                 }
                 stage = min(max(t.height / pullSpan(geo), 0), 1)
             }
@@ -231,12 +239,13 @@ struct RootDashboardView: View {
     private func present(_ geo: GeometryProxy) {
         guard !stageMounted else { return }
         var still = Transaction(); still.disablesAnimations = true
-        withTransaction(still) { stage = 1; stageMounted = true; page = theme }
+        withTransaction(still) { stage = 1; stageMounted = true; page = theme; frozenDash = dash }
         settling = true
         withAnimation(.spring(duration: 0.55, bounce: 0.12), completionCriteria: .logicallyComplete) {
             stage = 0
         } completion: {
             settling = false
+            frozenDash = nil
         }
     }
 
@@ -247,7 +256,7 @@ struct RootDashboardView: View {
             stage = 1
         } completion: {
             var still = Transaction(); still.disablesAnimations = true
-            withTransaction(still) { stageMounted = false; stage = 1 }
+            withTransaction(still) { stageMounted = false; stage = 1; frozenDash = nil }
             settling = false
         }
     }
@@ -258,6 +267,7 @@ struct RootDashboardView: View {
             stage = 0
         } completion: {
             settling = false
+            frozenDash = nil
         }
     }
 

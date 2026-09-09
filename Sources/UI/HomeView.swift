@@ -19,6 +19,8 @@ struct HomeView: View {
     let languageLabel: String
     /// Ortadaki kart gizli tutulur: tam ekran panonun sahnesi oraya oturur.
     var hidesCentreCard = false
+    /// Gecis sirasinda onizlemeler bu sabit veriyle cizilir.
+    var frozenDash: DashboardModel? = nil
 
     @State private var position: Int?
     @State private var showsConnection = false
@@ -42,7 +44,7 @@ struct HomeView: View {
                     Spacer(minLength: 0)
                     TimelineView(.periodic(from: .now, by: 0.1)) { _ in
                         let live = client.status == .receiving
-                        let dash = live ? client.dash : DashboardModel.demo
+                        let dash = frozenDash ?? (live ? client.dash : DashboardModel.demo)
                         carousel(size: size, cardW: cardW, cardH: cardH, dash: dash)
                     }
                     .frame(height: cardH * 1.12)
