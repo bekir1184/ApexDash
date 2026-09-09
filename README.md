@@ -78,7 +78,8 @@ python3 Tools/f1_sim.py 192.168.1.42   # gercek iPhone
 
 ## Paket duzeni
 
-Spesifikasyon: EA Forums "F1 25: 2026 Season Pack UDP Specification".
+Spesifikasyon: EA Forums "F1 25: 2026 Season Pack UDP Specification"
+(resmi "2026 Season Pack Telemetry Output Structures" dosyasiyla dogrulandi).
 Header 29 byte, little-endian, packed. Kullanilan paketler:
 
 | ID | Paket | Boyut | Arac basina |

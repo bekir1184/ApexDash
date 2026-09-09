@@ -131,7 +131,8 @@ def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
     return header(16, frame) + payload
 
 
-def status_packet(frame, ers=4_000_000.0, limiter=0, flag=1):
+def status_packet(frame, ers=4_000_000.0, limiter=0, flag=1,
+                  harvest=0.0, deployed=0.0):
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
@@ -144,7 +145,7 @@ def status_packet(frame, ers=4_000_000.0, limiter=0, flag=1):
                 18, 18, 4, flag,           # actual/visual compound, tyre age, fia flag
                 0.0, 0.0, ers,             # ICE, MGUK, ers store
                 2,                         # ers deploy mode
-                0.0, 0.0, 0.0, 0.0,        # harvest/deploy
+                harvest * 0.6, harvest * 0.4, 4_000_000.0, deployed,  # harvestMGUK/H, limit, deployed
                 0,                         # networkPaused
             )
         else:
@@ -203,7 +204,9 @@ def main():
             # bayraklar: 10 sn yesil, 5 sn sari, 5 sn mavi
             cycle = t % 20
             flag = 3 if cycle < 5 else (2 if cycle < 10 else 1)
-            sock.sendto(status_packet(frame, ers, limiter, flag), (target, port))
+            harvest = 4_000_000.0 * (0.2 + 0.6 * abs(math.sin(t * 0.15)))
+            deployed = 4_000_000.0 * (0.1 + 0.5 * abs(math.cos(t * 0.2)))
+            sock.sendto(status_packet(frame, ers, limiter, flag, harvest, deployed), (target, port))
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,
                                   overtake_active=0.45 < phase < 0.6,

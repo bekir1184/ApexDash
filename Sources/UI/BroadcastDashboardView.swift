@@ -34,13 +34,15 @@ struct BroadcastDashboardView: View {
         .padding(.vertical, unit * 0.2)
     }
 
-    /// Deploy modu yukseldikce dolan sutun; sarj ise bunun tersi.
+    /// Sutunlar gercek ERS verisinden gelir: tur icinde toplanan ve harcanan
+    /// enerjinin tur limitine orani. Limit gelmemisse deploy moduna dusulur.
     private var deployFraction: Double {
-        dash.ersDeployMode == 0 ? 0 : min(Double(dash.ersDeployMode) / 3, 1)
+        dash.ersHarvestLimitPerLap > 0 ? dash.deployedFraction
+                                       : min(Double(dash.ersDeployMode) / 3, 1)
     }
 
     private var rechargeFraction: Double {
-        dash.throttle < 0.1 ? 1 : max(0, 1 - Double(dash.throttle))
+        dash.harvestFraction
     }
 
     // MARK: - Ortadaki kalkan

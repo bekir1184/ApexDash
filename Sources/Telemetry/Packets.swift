@@ -176,6 +176,10 @@ struct CarStatus {
     var ersDeployMode: Int = 0
     /// -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
     var fiaFlag: Int = -1
+    /// Bu turda toplanan ve harcanan ERS enerjisi (Joule) ile tur basina limit.
+    var ersHarvestedThisLap: Float = 0
+    var ersHarvestLimitPerLap: Float = 0
+    var ersDeployedThisLap: Float = 0
 
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
@@ -192,7 +196,11 @@ struct CarStatus {
         guard let flag = r.int8() else { return nil }
         r.skip(8)                            // enginePowerICE, enginePowerMGUK
         guard let ersStore = r.float(),
-              let deployMode = r.uint8()
+              let deployMode = r.uint8(),
+              let harvestMGUK = r.float(),
+              let harvestMGUH = r.float(),
+              let harvestLimit = r.float(),
+              let deployed = r.float()
         else { return nil }
 
         self.pitLimiterOn = limiter == 1
@@ -203,6 +211,9 @@ struct CarStatus {
         self.ersStoreEnergy = ersStore
         self.ersDeployMode = Int(deployMode)
         self.fiaFlag = Int(flag)
+        self.ersHarvestedThisLap = harvestMGUK + harvestMGUH
+        self.ersHarvestLimitPerLap = harvestLimit
+        self.ersDeployedThisLap = deployed
     }
 }
 

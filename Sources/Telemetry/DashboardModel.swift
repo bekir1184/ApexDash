@@ -36,6 +36,9 @@ struct DashboardModel {
     var fuelRemainingLaps: Float = 0
     /// FIA bayragi: -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
     var fiaFlag: Int = -1
+    var ersHarvestedThisLap: Float = 0
+    var ersHarvestLimitPerLap: Float = 0
+    var ersDeployedThisLap: Float = 0
 
     // CarTelemetry2 (paket 16) - 2026 kurallari
     var aeroStraightMode: Bool = false
@@ -125,6 +128,18 @@ struct DashboardModel {
         min(max(Double(ersStoreEnergy) / 4_000_000, 0), 1)
     }
 
+    /// Bu turda toplanan enerjinin tur limitine orani.
+    var harvestFraction: Double {
+        guard ersHarvestLimitPerLap > 0 else { return 0 }
+        return min(max(Double(ersHarvestedThisLap / ersHarvestLimitPerLap), 0), 1)
+    }
+
+    /// Bu turda harcanan enerjinin tur limitine orani.
+    var deployedFraction: Double {
+        guard ersHarvestLimitPerLap > 0 else { return 0 }
+        return min(max(Double(ersDeployedThisLap / ersHarvestLimitPerLap), 0), 1)
+    }
+
     var ersModeText: String {
         switch ersDeployMode {
         case 1: return "MEDIUM"
@@ -186,6 +201,9 @@ struct DashboardModel {
         ersDeployMode = s.ersDeployMode
         fuelRemainingLaps = s.fuelRemainingLaps
         fiaFlag = s.fiaFlag
+        ersHarvestedThisLap = s.ersHarvestedThisLap
+        ersHarvestLimitPerLap = s.ersHarvestLimitPerLap
+        ersDeployedThisLap = s.ersDeployedThisLap
     }
 
     mutating func apply(_ t: CarTelemetry2) {
