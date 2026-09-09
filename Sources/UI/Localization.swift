@@ -92,6 +92,7 @@ struct Strings {
         case .modern: return "MODERN"
         case .dotMatrix: return "DOT MATRIX"
         case .realistic: return "REALISTIC"
+        case .broadcast: return pick("YAYIN", "BROADCAST")
         case .game: return pick("OYUN", "GAME")
         }
     }

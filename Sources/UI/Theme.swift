@@ -5,6 +5,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     case modern
     case dotMatrix
     case realistic
+    case broadcast
     case game
 
     var id: String { rawValue }
@@ -14,6 +15,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     var background: Color {
         switch self {
         case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
+        case .broadcast: return Color(red: 0.02, green: 0.05, blue: 0.09)
         case .modern, .dotMatrix, .realistic: return .black
         }
     }
