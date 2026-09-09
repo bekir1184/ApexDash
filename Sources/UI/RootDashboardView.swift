@@ -13,6 +13,8 @@ struct RootDashboardView: View {
     @State private var showsConnection = false
     /// Yatay kaydirmada panonun kaydigi yon: +1 sola (sonraki), -1 saga (onceki).
     @State private var slide: CGFloat = 1
+    /// Asagi cekme: pano parmakla birlikte kucularek iner, esik asilinca menuye biner.
+    @State private var pull: CGFloat = 0
     @AppStorage("webSession") private var sessionID: String = ""
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
@@ -42,25 +44,31 @@ struct RootDashboardView: View {
                              onOpenSetup: { withAnimation(.easeOut(duration: 0.2)) { showsSetup = true } },
                              languageLabel: language.label)
                         .transition(.opacity)
+                        .zIndex(1)
                 } else {
                 themeBackground(unit: unit)
                     .ignoresSafeArea()
 
-                DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, unit * 0.16)
-                    .id(theme)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: slide > 0 ? .trailing : .leading).combined(with: .opacity),
-                        removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
-                    // Gercekci temada govde cercevesi yatay guvenli alanin
-                    // disina, Dynamic Island bandinin uzerine tasar; orada
-                    // sadece isiklar var, yazi yok.
-                    // Govde guvenli alanin disina tasar ama cihaz kenarina
-                    // dayanmaz: dis pah her yandan gorunsun diye biraz icerde kalir.
-                    .padding(.horizontal, theme == .realistic
-                             ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
-                             : 0)
+                ZStack {
+                    DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, unit * 0.16)
+                        // Gercekci temada govde cercevesi yatay guvenli alanin
+                        // disina, Dynamic Island bandinin uzerine tasar; orada
+                        // sadece isiklar var, yazi yok.
+                        .padding(.horizontal, theme == .realistic
+                                 ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
+                                 : 0)
+                        .id(theme)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: slide > 0 ? .trailing : .leading).combined(with: .opacity),
+                            removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+                .scaleEffect(pullScale(geo))
+                .offset(y: pull * 0.35)
+                .clipShape(RoundedRectangle(cornerRadius: pull > 0 ? unit * 0.35 : 0, style: .continuous))
 
                 if showsThemePicker {
                     VStack(spacing: unit * 0.15) {
@@ -165,20 +173,31 @@ struct RootDashboardView: View {
             .contentShape(Rectangle())
             .onTapGesture { if !showsHome { revealPicker() } }
             .gesture(
-                DragGesture(minimumDistance: 40)
+                DragGesture(minimumDistance: 20)
+                    .onChanged { value in
+                        guard !showsHome else { return }
+                        let t = value.translation
+                        // Dikey cekme parmakla ayni hizda; yatay hareket baskinsa cekme yok.
+                        if abs(t.height) > abs(t.width) || pull > 0 { pull = max(0, t.height) }
+                    }
                     .onEnded { value in
                         guard !showsHome else { return }
                         let t = value.translation
-                        if abs(t.width) > abs(t.height) {
+                        if pull > 0 {
+                            if pull > geo.size.height * 0.28 || value.predictedEndTranslation.height > geo.size.height * 0.6 {
+                                // Esik asildi: kucultulmus pano karuseldeki yerine oturur.
+                                showsConnection = false
+                                withAnimation(.easeInOut(duration: 0.3)) { showsHome = true; showsThemePicker = false }
+                                pull = 0
+                            } else {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { pull = 0 }
+                            }
+                        } else if abs(t.width) > 40 {
                             slide = t.width < 0 ? 1 : -1
                             withAnimation(.easeInOut(duration: 0.32)) {
                                 themeID = (t.width < 0 ? theme.next : theme.previous).rawValue
                             }
                             revealPicker()
-                        } else if t.height > 60 {
-                            // Asagi kaydirma: menuye don
-                            showsConnection = false
-                            withAnimation(.easeInOut(duration: 0.25)) { showsHome = true; showsThemePicker = false }
                         }
                     }
             )
@@ -194,6 +213,11 @@ struct RootDashboardView: View {
         
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
+    }
+
+    /// Asagi cekildikce pano karuseldeki kart boyutuna (%50) dogru kuculur.
+    private func pullScale(_ geo: GeometryProxy) -> CGFloat {
+        max(0.5, 1 - pull / (geo.size.height * 0.6))
     }
 
     /// Tema zemini ekranin tamamini kaplar; nokta dokusu Dynamic Island'in
