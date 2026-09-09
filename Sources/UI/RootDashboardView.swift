@@ -11,8 +11,8 @@ struct RootDashboardView: View {
     /// Acilista karusel; SEC ile tam ekran panoya gecilir.
     @State private var showsHome = !UserDefaults.standard.bool(forKey: "skipHome")   // test icin baslatma argumani
     @State private var showsConnection = false
-    /// Yatay kaydirmada panonun kaydigi yon: +1 sola (sonraki), -1 saga (onceki).
-    @State private var slide: CGFloat = 1
+    /// Yatay kaydirma: pano parmakla birlikte kayar, komsu tema kenardan gelir.
+    @State private var hdrag: CGFloat = 0
     /// Asagi cekme: pano parmakla birlikte kucularek iner, esik asilinca menuye biner.
     @State private var pull: CGFloat = 0
     @State private var landing = false
@@ -56,20 +56,18 @@ struct RootDashboardView: View {
                 }
 
                 ZStack {
-                    themeBackground(unit: unit)
-                    DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(.vertical, unit * 0.16)
-                        // Gercekci temada govde cercevesi yatay guvenli alanin
-                        // disina, Dynamic Island bandinin uzerine tasar; orada
-                        // sadece isiklar var, yazi yok.
-                        .padding(.horizontal, theme == .realistic
-                                 ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
-                                 : 0)
-                        .id(theme)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: slide > 0 ? .trailing : .leading).combined(with: .opacity),
-                            removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
+                    if pull > 0 { themeBackground(unit: unit) }
+                    // Mevcut pano parmakla kayar; komsu tema kaydirma yonunden gelir.
+                    dashboardPage(theme, geo: geo, unit: unit)
+                        .offset(x: hdrag)
+                    if hdrag != 0 {
+                        let neighbour = hdrag < 0 ? theme.next : theme.previous
+                        ZStack {
+                            themeBackground(for: neighbour, unit: unit)
+                            dashboardPage(neighbour, geo: geo, unit: unit)
+                        }
+                        .offset(x: hdrag + (hdrag < 0 ? geo.size.width : -geo.size.width))
+                    }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
                 // Yalnizca asagi cekilirken kirp; normalde panolar guvenli
@@ -193,8 +191,9 @@ struct RootDashboardView: View {
                     .onChanged { value in
                         guard !showsHome, !landing else { return }
                         let t = value.translation
-                        // Dikey cekme parmakla ayni hizda; yatay hareket baskinsa cekme yok.
-                        if abs(t.height) > abs(t.width) || pull > 0 { pull = max(0, t.height) }
+                        // Ilk yon karar verir: dikeyse cekme, yataysa tema kaydirma.
+                        if hdrag == 0 && (abs(t.height) > abs(t.width) || pull > 0) { pull = max(0, t.height) }
+                        else if pull == 0 { hdrag = t.width }
                     }
                     .onEnded { value in
                         guard !showsHome, !landing else { return }
@@ -217,12 +216,22 @@ struct RootDashboardView: View {
                             } else {
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { pull = 0 }
                             }
-                        } else if abs(t.width) > 40 {
-                            slide = t.width < 0 ? 1 : -1
-                            withAnimation(.easeInOut(duration: 0.32)) {
-                                themeID = (t.width < 0 ? theme.next : theme.previous).rawValue
+                        } else if hdrag != 0 {
+                            let w = geo.size.width
+                            let projected = value.predictedEndTranslation.width
+                            let commit = abs(projected) > w * 0.3 && (projected < 0) == (hdrag < 0)
+                            if commit {
+                                let target = hdrag < 0 ? theme.next : theme.previous
+                                withAnimation(.easeOut(duration: 0.25)) { hdrag = hdrag < 0 ? -w : w }
+                                Task { @MainActor in
+                                    try? await Task.sleep(nanoseconds: 260_000_000)
+                                    var still = Transaction(); still.disablesAnimations = true
+                                    withTransaction(still) { themeID = target.rawValue; hdrag = 0 }
+                                    revealPicker()
+                                }
+                            } else {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { hdrag = 0 }
                             }
-                            revealPicker()
                         }
                     }
             )
@@ -238,6 +247,18 @@ struct RootDashboardView: View {
         
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
+    }
+
+    /// Tek bir temanin tam ekran panosu.
+    private func dashboardPage(_ page: DashTheme, geo: GeometryProxy, unit: CGFloat) -> some View {
+        DashboardContent(theme: page, dash: dash, unit: unit, strings: strings)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, unit * 0.16)
+            // Gercekci temada govde cercevesi yatay guvenli alanin disina,
+            // Dynamic Island bandinin uzerine tasar; orada sadece isiklar var.
+            .padding(.horizontal, page == .realistic
+                     ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
+                     : 0)
     }
 
     /// Bu kadar cekilince pano tam olarak kartin yerine oturur.
@@ -260,8 +281,12 @@ struct RootDashboardView: View {
 
     /// Tema zemini ekranin tamamini kaplar; nokta dokusu Dynamic Island'in
     /// altinda da devam ettigi icin panel her yerde ayni gorunur.
-    @ViewBuilder
     private func themeBackground(unit: CGFloat) -> some View {
+        themeBackground(for: theme, unit: unit)
+    }
+
+    @ViewBuilder
+    private func themeBackground(for theme: DashTheme, unit: CGFloat) -> some View {
         switch theme {
         case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
         // Ekranin disinda kalan yer direksiyon govdesi; sarı uyari sadece
