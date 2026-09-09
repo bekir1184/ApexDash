@@ -91,10 +91,11 @@ Header 29 byte, little-endian, packed. Kullanilan paketler:
 
 Tamamlanan turlar sektor sureleriyle saklanir. Tema cubugundaki **TURLAR /
 LAPS** dugmesi listeyi acar: en iyi tur mor, sektorler kendi renkleriyle.
-Ayni ekranda **CSV PAYLAS** ile dosyayi disari cikarabilir, QR'i okutarak
-turlari <https://f1dash-app.vercel.app> adresinde acabilirsin. Site tamamen
-statiktir: veriler QR bagindaki adres parcasinda tasinir ya da CSV dosyasi
-tarayiciya birakilir, hicbir yere yuklenmez.
+**Laptopta izlemek icin:** <https://f1dash-app.vercel.app> adresini ac; sayfa
+bir oturum kodu ve QR gosterir. Telefondaki TURLAR ekraninda **QR OKUT**'a
+basip o QR'i okut; bundan sonra her tur bitisinde turlar sayfaya kendiliginden
+duser (sayfa uc saniyede bir yoklar). Baglanmadan da **CSV PAYLAS** ile dosyayi
+disari cikarip sayfaya birakabilirsin.
 
 ## Sirada
 

@@ -39,6 +39,12 @@
   .purple { color: var(--purple); } .green { color: var(--green); }
   .yellow { color: var(--yellow); } .red { color: var(--red); }
   .chart { margin-top: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .pair { margin: 20px 0; display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+          background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .pair img { width: 168px; height: 168px; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 8px; }
+  .pair .code { font-size: 30px; letter-spacing: 6px; }
+  .pair .hint { color: var(--dim); font-size: 13px; max-width: 380px; }
+  .pair .live { color: var(--green); font-size: 13px; }
   .drop { margin-top: 22px; border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--dim); }
   .drop input { display: none; }
   .drop label { color: var(--ink); text-decoration: underline; cursor: pointer; }
@@ -53,6 +59,7 @@
     <span id="subtitle">TUR ANALİZİ</span>
   </header>
 
+  <div id="pair" class="pair"></div>
   <div id="content"></div>
 
   <div class="drop" id="drop">
@@ -64,6 +71,7 @@
   <footer>Veri telefonundan geliyor; hiçbir yere yüklenmiyor, tarayıcıda işleniyor.</footer>
 </div>
 
+<script src="/qrcode.js"></script>
 <script>
 const fmtLap = ms => {
   if (!ms) return "--";
@@ -150,7 +158,7 @@ function chart(laps, best) {
   const span = Math.max(max - min, 1);
   const x = i => pad + (laps.length === 1 ? 0 : i * (width - pad * 2) / (laps.length - 1));
   // Y ekseni sure: hizli turlar asagida, yavaslayinca cizgi yukari cikar.
-  const y = t => height - pad - (max - t) / span * (height - pad * 2);
+  const y = t => pad + (max - t) / span * (height - pad * 2);
   const points = laps.map((lap, i) => `${x(i)},${y(lap.time)}`).join(" ");
   const dots = laps.map((lap, i) =>
     `<circle cx="${x(i)}" cy="${y(lap.time)}" r="3.5" fill="${lap.time === best ? "#b45cff" : "#3ce85a"}"/>`
@@ -159,6 +167,51 @@ function chart(laps, best) {
       <polyline points="${points}" fill="none" stroke="#3ce85a" stroke-width="2" opacity=".7"/>
       ${dots}
     </svg></div>`;
+}
+
+/** Oturum kimligi: URL'de yoksa uretilir ve adrese yazilir. */
+function sessionId() {
+  const params = new URLSearchParams(location.search);
+  let id = (params.get("s") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (id.length < 4) {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    id = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+    params.set("s", id);
+    history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
+  }
+  return id;
+}
+
+const session = sessionId();
+const pairURL = `${location.origin}/?s=${session}`;
+let lastUpdate = null;
+
+function renderPair(connected) {
+  const qr = qrcode(0, "M");
+  qr.addData(pairURL);
+  qr.make();
+  document.getElementById("pair").innerHTML = `
+    ${connected ? "" : qr.createImgTag(5, 8)}
+    <div>
+      <div class="code">${session}</div>
+      <div class="${connected ? "live" : "hint"}">
+        ${connected
+          ? `Telefon bagli · son guncelleme ${new Date(lastUpdate).toLocaleTimeString("tr-TR")}`
+          : "Telefondaki F1Dash uygulamasinda TURLAR ekranini ac, QR OKUT'a bas ve bu kodu okut. Turlar buraya kendiliginden dusecek."}
+      </div>
+    </div>`;
+}
+
+async function poll() {
+  try {
+    const response = await fetch(`/api/session?id=${session}`, { cache: "no-store" });
+    const data = await response.json();
+    if (data.updatedAt && data.updatedAt !== lastUpdate) {
+      lastUpdate = data.updatedAt;
+      render(data.laps);
+      renderPair(true);
+    }
+  } catch (_) { /* aga takilirsa bir sonraki yoklamada dener */ }
 }
 
 const drop = document.getElementById("drop");
@@ -171,8 +224,11 @@ drop.addEventListener("drop", e => {
   if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
 });
 
+renderPair(false);
 render(parseHash(location.hash));
 window.addEventListener("hashchange", () => render(parseHash(location.hash)));
+poll();
+setInterval(poll, 3000);
 </script>
 </body>
 </html>

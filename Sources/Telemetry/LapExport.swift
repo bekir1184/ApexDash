@@ -1,7 +1,4 @@
 import Foundation
-import CoreImage
-import CoreImage.CIFilterBuiltins
-import UIKit
 
 /// Tur kayitlarini disari cikarma: CSV dosyasi ve siteye gotururen QR.
 enum LapExport {
@@ -33,25 +30,4 @@ enum LapExport {
         }
     }
 
-    /// Sitenin okudugu kompakt bicim: tur:sure:s1:s2:s3, virgulle ayrilir.
-    /// QR'a sigmasi icin son turlarla sinirlanir.
-    static func webURL(_ laps: [CompletedLap], limit: Int = 30) -> URL? {
-        let recent = laps.suffix(limit)
-        guard !recent.isEmpty else { return URL(string: siteURL) }
-        let payload = recent.map {
-            "\($0.number):\($0.timeMS):\($0.sector1MS):\($0.sector2MS):\($0.sector3MS)"
-        }.joined(separator: ",")
-        return URL(string: "\(siteURL)/#l=\(payload)")
-    }
-
-    static func qrImage(for url: URL) -> UIImage? {
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(url.absoluteString.utf8)
-        filter.correctionLevel = "L"
-        guard let output = filter.outputImage else { return nil }
-        let scaled = output.transformed(by: CGAffineTransform(scaleX: 8, y: 8))
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
-        return UIImage(cgImage: cgImage)
-    }
 }

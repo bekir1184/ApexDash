@@ -7,7 +7,11 @@ struct LapsView: View {
     let bestSectorMS: [Int]
     let strings: Strings
     let unit: CGFloat
+    @Binding var sessionID: String
+    @ObservedObject var uploader: SessionUploader
     let onClose: () -> Void
+
+    @State private var showsScanner = false
 
     private var bestLapMS: Int { laps.map(\.timeMS).min() ?? 0 }
 
@@ -102,31 +106,95 @@ struct LapsView: View {
     }
 
     private var sidebar: some View {
-        VStack(spacing: unit * 0.2) {
-            if let url = LapExport.webURL(laps), let qr = LapExport.qrImage(for: url) {
-                Image(uiImage: qr)
-                    .interpolation(.none)
-                    .resizable()
-                    .frame(width: unit * 3.4, height: unit * 3.4)
-                    .padding(unit * 0.14)
-                    .background(RoundedRectangle(cornerRadius: unit * 0.1).fill(.white))
-                Text(verbatim: strings.scanForWeb)
+        VStack(spacing: unit * 0.24) {
+            if sessionID.isEmpty {
+                Button { showsScanner = true } label: {
+                    Text(strings.scanQR)
+                        .font(.system(size: unit * 0.3, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+                        .frame(width: unit * 3.6)
+                        .padding(.vertical, unit * 0.16)
+                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                }
+                .buttonStyle(.plain)
+
+                Text(verbatim: strings.scanHint)
                     .font(.system(size: unit * 0.2, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.45))
                     .multilineTextAlignment(.center)
-                    .frame(width: unit * 3.6)
+                    .frame(width: unit * 3.8)
+            } else {
+                VStack(spacing: unit * 0.06) {
+                    Text(verbatim: strings.connectedTo(sessionID))
+                        .font(.system(size: unit * 0.24, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
+                    if let date = uploader.lastUploadDate {
+                        Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
+                            .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    if let error = uploader.lastError {
+                        Text(verbatim: error)
+                            .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Color(red: 1, green: 0.4, blue: 0.35))
+                            .lineLimit(2)
+                    }
+                }
+                .frame(width: unit * 3.8)
+
+                Button {
+                    uploader.send(laps: laps, sessionID: sessionID)
+                } label: {
+                    Text(strings.sendNow)
+                        .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+                        .frame(width: unit * 3.6)
+                        .padding(.vertical, unit * 0.14)
+                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                }
+                .buttonStyle(.plain)
+
+                Button { sessionID = "" } label: {
+                    Text(strings.disconnect)
+                        .font(.system(size: unit * 0.22, weight: .heavy, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .buttonStyle(.plain)
             }
 
             if let file = LapExport.csvFile(laps) {
                 ShareLink(item: file) {
                     Text(strings.shareCSV)
-                        .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
-                        .foregroundStyle(.black)
-                        .frame(width: unit * 3.4)
-                        .padding(.vertical, unit * 0.14)
-                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                        .font(.system(size: unit * 0.24, weight: .black, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .frame(width: unit * 3.6)
+                        .padding(.vertical, unit * 0.12)
+                        .background(Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1.5))
                 }
                 .buttonStyle(.plain)
+            }
+        }
+        .fullScreenCover(isPresented: $showsScanner) {
+            ZStack(alignment: .topTrailing) {
+                QRScannerView { scanned in
+                    if let id = SessionUploader.sessionID(from: scanned) {
+                        sessionID = id
+                        uploader.send(laps: laps, sessionID: id)
+                    }
+                    showsScanner = false
+                }
+                .ignoresSafeArea()
+
+                Button { showsScanner = false } label: {
+                    Text(strings.close)
+                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(.white))
+                }
+                .buttonStyle(.plain)
+                .padding(24)
             }
         }
     }

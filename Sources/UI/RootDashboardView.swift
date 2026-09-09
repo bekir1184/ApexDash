@@ -8,6 +8,8 @@ struct RootDashboardView: View {
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @State private var showsSetup = false
     @State private var showsLaps = false
+    @AppStorage("webSession") private var sessionID: String = ""
+    @StateObject private var uploader = SessionUploader()
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
 
@@ -63,7 +65,9 @@ struct RootDashboardView: View {
                     LapsView(laps: dash.completedLaps,
                              bestSectorMS: dash.bestSectorMS,
                              strings: strings,
-                             unit: unit) { showsLaps = false }
+                             unit: unit,
+                             sessionID: $sessionID,
+                             uploader: uploader) { showsLaps = false }
                     .transition(.opacity)
                 }
             }
@@ -85,6 +89,11 @@ struct RootDashboardView: View {
             }
             .onChange(of: udpPort) { _, new in
                 client.update(port: UInt16(new))
+            }
+            // Yeni tur tamamlandiginda site kendiliginden guncellenir.
+            .onChange(of: dash.completedLaps.count) { _, _ in
+                guard !sessionID.isEmpty else { return }
+                uploader.send(laps: dash.completedLaps, sessionID: sessionID)
             }
             .contentShape(Rectangle())
             .onTapGesture { revealPicker() }
