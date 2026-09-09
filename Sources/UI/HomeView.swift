@@ -87,7 +87,7 @@ struct HomeView: View {
             TimelineView(.periodic(from: .now, by: 0.5)) { _ in
                 ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
                                 strings: strings, unit: unit) {
-                    showsConnection.toggle()
+                    if client.status != .receiving { showsConnection.toggle() }
                 }
             }
         }
@@ -114,7 +114,10 @@ struct HomeView: View {
                     .opacity(max(0.2, 1 - abs(rel) * 0.45))
                     .offset(x: rel * step)
                     .zIndex(Double(10 - abs(rel)))
-                    .allowsHitTesting(false)
+                    .onTapGesture {
+                        if dist == 0 { onSelect() }
+                        else { withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { selectedTheme = theme } }
+                    }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -193,9 +196,12 @@ struct HomeView: View {
     // MARK: Alt cubuk
 
     private var footer: some View {
-        HStack {
-            pill(strings.lapsButton, filled: false, action: onLaps)
-            Spacer()
+        ZStack {
+            HStack {
+                pill(strings.lapsButton, filled: false, action: onLaps)
+                Spacer()
+                pill(languageLabel, filled: false, action: onLanguage)
+            }
             Button(action: onSelect) {
                 Text(strings.selectButton)
                     .font(.system(size: unit * 0.32, weight: .black, design: .rounded))
@@ -206,8 +212,6 @@ struct HomeView: View {
                     .background(Capsule().fill(Color.white))
             }
             .buttonStyle(.plain)
-            Spacer()
-            pill(languageLabel, filled: false, action: onLanguage)
         }
     }
 
@@ -273,6 +277,7 @@ struct ConnectionBadge: View {
             .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .allowsHitTesting(status != .receiving)
     }
 }
 

@@ -195,6 +195,7 @@ struct RootDashboardView: View {
     }
 
     private func themePicker(unit: CGFloat) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: unit * 0.2) {
             ForEach(DashTheme.allCases) { option in
                 Button {
@@ -238,20 +239,10 @@ struct RootDashboardView: View {
             }
             .buttonStyle(.plain)
 
-            Button {
-                languageID = language.next.rawValue
-                revealPicker()
-            } label: {
-                Text(verbatim: language.label)
-                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, unit * 0.3)
-                    .padding(.vertical, unit * 0.14)
-                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
-            }
-            .buttonStyle(.plain)
         }
         .padding(unit * 0.14)
+        .fixedSize()
+        }
         .background(Capsule().fill(.black.opacity(0.85)))
         .padding(.bottom, unit * 0.25)
     }
