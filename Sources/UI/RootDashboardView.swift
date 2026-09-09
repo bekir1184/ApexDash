@@ -42,6 +42,9 @@ struct RootDashboardView: View {
     private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .systemDefault }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
+    /// Ekranda gosterilen veri: baglanti yokken menu onizlemeleriyle ayni
+    /// ornek degerler, boylece buyutup geri donunce goruntu degismez.
+    private var shownDash: DashboardModel { client.status == .receiving ? client.dash : .demo }
     private var inMenu: Bool { !stageMounted }
     private var fullscreen: Bool { stageMounted && stage == 0 }
 
@@ -145,7 +148,7 @@ struct RootDashboardView: View {
         // icinde guvenli alana cekilir. Boylece sayfalama ekran kenariyla hizali.
         let lead = geo.safeAreaInsets.leading, trail = geo.safeAreaInsets.trailing
         let fullW = geo.size.width + lead + trail
-        let live = frozenDash ?? dash
+        let live = frozenDash ?? shownDash
         return ZStack {
             if fullscreen && !settling {
                 // Tam ekranda temalar arasinda sistemin sayfalayicisiyla gecilir.
@@ -223,7 +226,7 @@ struct RootDashboardView: View {
                     guard abs(t.height) > abs(t.width) * 1.2, t.height > 0 else { return }
                     pulling = true
                     showsConnection = false
-                    frozenDash = dash
+                    frozenDash = shownDash
                 }
                 stage = min(max(t.height / pullSpan(geo), 0), 1)
             }
@@ -239,7 +242,7 @@ struct RootDashboardView: View {
     private func present(_ geo: GeometryProxy) {
         guard !stageMounted else { return }
         var still = Transaction(); still.disablesAnimations = true
-        withTransaction(still) { stage = 1; stageMounted = true; page = theme; frozenDash = dash }
+        withTransaction(still) { stage = 1; stageMounted = true; page = theme; frozenDash = shownDash }
         settling = true
         withAnimation(.spring(duration: 0.55, bounce: 0.12), completionCriteria: .logicallyComplete) {
             stage = 0
