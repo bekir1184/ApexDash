@@ -34,9 +34,8 @@ struct BroadcastDashboardView: View {
 struct BroadcastLayout {
     let size: CGSize
     let centreScale: CGFloat
-    let bandScale: CGFloat
-    let bandWidth: CGFloat
-    let bandHeight: CGFloat
+    /// Ekranin altini kaplayan satir: aktif aero, vites cetveli, devir.
+    let strip: CGRect
 
     /// Orta grubun tasarim alanindaki dusey araligi: esnetilmis bezel ustu
     /// ile BRAKE / THROTTLE yazisinin alti.
@@ -47,24 +46,18 @@ struct BroadcastLayout {
     init(size: CGSize) {
         self.size = size
         let R: CGFloat = 340
-        bandWidth = R * 1.09
-        bandHeight = R * 1.0
-        let margin = size.width * 0.012
-        // Orta grup yuksekligi doldurur; ama yan bantlara ekran genisliginin
-        // en az %17'si kalacak sekilde sinirlanir.
-        let minBand = size.width * 0.17
-        let byHeight = size.height / (Self.designBottom - Self.designTop)
-        let byWidth = (size.width / 2 - 2 * margin - minBand) / (R * 2.06)
-        centreScale = min(byHeight, byWidth)
-        let free = size.width / 2 - R * 2.06 * centreScale - 2 * margin
-        bandScale = max(min(centreScale, free / bandWidth), 0.01)
+        let stripH = size.height * 0.16, gap = size.height * 0.02, margin = size.width * 0.012
+        strip = CGRect(x: margin, y: size.height - stripH, width: size.width - 2 * margin, height: stripH)
+        let areaH = size.height - stripH - gap
+        centreScale = min(areaH / (Self.designBottom - Self.designTop), size.width / (R * 4.1))
     }
 
     /// Tasarim koordinatindaki orta grup dikdortgenini ekrana tasir.
     func centre(_ rect: CGRect) -> CGRect {
         let x = size.width / 2 + (rect.minX - Self.designCentreX) * centreScale
         let span = (Self.designBottom - Self.designTop) * centreScale
-        let y = (size.height - span) / 2 + (rect.minY - Self.designTop) * centreScale
+        let areaH = strip.minY - size.height * 0.02
+        let y = (areaH - span) / 2 + (rect.minY - Self.designTop) * centreScale
         return CGRect(x: x, y: y, width: rect.width * centreScale, height: rect.height * centreScale)
     }
 
@@ -72,15 +65,6 @@ struct BroadcastLayout {
         let origin = centre(CGRect(x: 0, y: 0, width: 0, height: 0)).origin
         ctx.translateBy(x: origin.x, y: origin.y)
         ctx.scaleBy(x: centreScale, y: centreScale)
-    }
-
-    /// Bant icin yerel (0,0 kokenli) tasarim koordinatlarini ekrana tasir.
-    func applyBand(to ctx: inout GraphicsContext, side: BroadcastHUD.Side, bottomDesignY: CGFloat) {
-        let margin = size.width * 0.012
-        let bottom = centre(CGRect(x: 0, y: bottomDesignY, width: 0, height: 0)).minY
-        let x = side == .left ? margin : size.width - margin - bandWidth * bandScale
-        ctx.translateBy(x: x, y: bottom - bandHeight * bandScale)
-        ctx.scaleBy(x: bandScale, y: bandScale)
     }
 }
 
@@ -122,12 +106,7 @@ struct BroadcastHUD {
     }
 
     func draw(in ctx: inout GraphicsContext, layout: BroadcastLayout) {
-        var left = ctx
-        layout.applyBand(to: &left, side: .left, bottomDesignY: CY + R * 1.22)
-        drawDriverPlates(in: &left, size: CGSize(width: layout.bandWidth, height: layout.bandHeight))
-        var right = ctx
-        layout.applyBand(to: &right, side: .right, bottomDesignY: CY + R * 1.22)
-        drawRightBand(in: &right, size: CGSize(width: layout.bandWidth, height: layout.bandHeight))
+        drawBottomStrip(in: &ctx, rect: layout.strip)
 
         layout.applyCentre(to: &ctx)
         var stretched = ctx
@@ -418,87 +397,61 @@ struct BroadcastHUD {
         ctx.fill(bolt, with: .color(blue ? Color(hex: 0xb5e9fa) : Color(hex: 0x2a2205)))
     }
 
-    // MARK: Yan bantlar
+    // MARK: Alt serit
 
-    private struct Band {
-        let rect: CGRect
-        var x0: CGFloat { rect.minX }
-        var w: CGFloat { rect.width }
-        var h: CGFloat { rect.height }
-    }
-
-    private func drawSideBand(in ctx: inout GraphicsContext, size: CGSize) -> Band {
-        let inset: CGFloat = 2
-        let rect = CGRect(x: inset, y: inset, width: size.width - 2 * inset, height: size.height - 2 * inset)
-        let path = Path(roundedRect: rect, cornerRadius: corner)
+    /// Ekranin altini kaplayan satir: solda ACTIVE AERO, ortada vites cetveli,
+    /// sagda devir cubugu. Ekran koordinatinda cizilir; olcu serit yuksekligi.
+    private func drawBottomStrip(in ctx: inout GraphicsContext, rect: CGRect) {
+        let h = rect.height, k = h / 100          // 100 birim = serit yuksekligi
+        let path = Path(roundedRect: rect, cornerRadius: h * 0.22)
         ctx.fill(path, with: .color(blockFill))
-        ctx.stroke(path, with: .color(blockEdge), lineWidth: 3)
-        return Band(rect: rect)
-    }
+        ctx.stroke(path, with: .color(blockEdge), lineWidth: max(1.5, k * 2))
 
-    private func drawDriverPlates(in ctx: inout GraphicsContext, size: CGSize) {
-        let band = drawSideBand(in: &ctx, size: size)
-        let pad = R * 0.08
-        let rows: [Rival?] = [dash.driverAhead, dash.player, dash.driverBehind]
-        for (i, rival) in rows.enumerated() {
-            let y = band.rect.minY + band.h * (0.26 + 0.30 * CGFloat(i))
-            var line = Path()
-            line.move(to: CGPoint(x: band.rect.minX + pad, y: y + R * 0.05))
-            line.addLine(to: CGPoint(x: band.rect.maxX - pad, y: y + R * 0.05))
-            ctx.stroke(line, with: .color(teal.opacity(rival == nil ? 0.35 : 1)), lineWidth: 3)
-            guard let rival else { continue }
-            let isPlayer = i == 1
-            drawText(&ctx, "\(rival.position)", size: 34, weight: .heavy, italic: true, colour: cyanInk,
-                     anchor: .leading, at: CGPoint(x: band.rect.minX + pad, y: y))
-            drawText(&ctx, rival.name.uppercased(), size: 40, weight: .heavy, italic: true,
-                     colour: isPlayer ? cyanInk : .white, anchor: .leading,
-                     at: CGPoint(x: band.rect.minX + pad + R * 0.22, y: y))
-        }
-    }
+        let pad = h * 0.35, x0 = rect.minX + pad, x1 = rect.maxX - pad
+        let midY = rect.midY
 
-    private func drawRightBand(in ctx: inout GraphicsContext, size: CGSize) {
-        let band = drawSideBand(in: &ctx, size: size)
-        let pad = R * 0.08, x0 = band.rect.minX + pad, x1 = band.rect.maxX - pad
-
-        // Satir 1: ACTIVE AERO + cift cizgi
-        let y1 = band.rect.minY + band.h * 0.22
+        // Sol: ACTIVE AERO + cift cizgi
         let aero = dash.aeroStraightMode
-        drawText(&ctx, "ACTIVE AERO", size: 30, weight: .heavy, italic: true,
+        drawText(&ctx, "ACTIVE AERO", size: k * 24, weight: .heavy, italic: true,
                  colour: aero ? .white : Color(hex: 0x6f8797), anchor: .leading,
-                 at: CGPoint(x: x0, y: y1))
+                 at: CGPoint(x: x0, y: midY + k * 8))
+        let sx = x0 + k * 170
         var slashes = Path()
-        slashes.move(to: CGPoint(x: x1 - 46, y: y1 + 2)); slashes.addLine(to: CGPoint(x: x1 - 30, y: y1 - 20))
-        slashes.move(to: CGPoint(x: x1 - 22, y: y1 + 2)); slashes.addLine(to: CGPoint(x: x1 - 6, y: y1 - 20))
+        slashes.move(to: CGPoint(x: sx, y: midY + k * 14)); slashes.addLine(to: CGPoint(x: sx + k * 14, y: midY - k * 14))
+        slashes.move(to: CGPoint(x: sx + k * 22, y: midY + k * 14)); slashes.addLine(to: CGPoint(x: sx + k * 36, y: midY - k * 14))
         ctx.stroke(slashes, with: .color(aero ? Color(hex: 0x3fe0f0) : Color(hex: 0x3d5566)),
-                   style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                   style: StrokeStyle(lineWidth: k * 5, lineCap: .round))
 
-        // Satir 2: vites cetveli
+        // Orta: vites cetveli
         let gears = ["N"] + (1...max(dash.maxGears, 8)).map(String.init)
-        let y2 = band.rect.minY + band.h * 0.55
+        let gx0 = rect.minX + rect.width * 0.33, gx1 = rect.minX + rect.width * 0.62
         for (i, label) in gears.enumerated() {
-            let x = x0 + 18 + (x1 - x0 - 36) * CGFloat(i) / CGFloat(gears.count - 1)
+            let x = gx0 + (gx1 - gx0) * CGFloat(i) / CGFloat(gears.count - 1)
             let on = label == dash.gearLabel
-            drawText(&ctx, label, size: 40, weight: .heavy, italic: true,
-                     colour: on ? .white : Color(hex: 0x4d6a7c), at: CGPoint(x: x, y: y2))
+            drawText(&ctx, label, size: on ? k * 46 : k * 30, weight: .heavy, italic: true,
+                     colour: on ? .white : Color(hex: 0x4d6a7c), at: CGPoint(x: x, y: midY + k * 12))
         }
+        drawText(&ctx, "GEARS", size: k * 18, weight: .heavy, italic: true, colour: Color(hex: 0x9fb6c4),
+                 anchor: .leading, at: CGPoint(x: gx1 + k * 30, y: midY + k * 8))
 
-        // Satir 3: RPM cubugu
-        let by = band.rect.minY + band.h * 0.70
-        let track = Path(roundedRect: CGRect(x: x0, y: by, width: x1 - x0, height: 8), cornerRadius: 4)
+        // Sag: RPM cubugu
+        let bx0 = rect.minX + rect.width * 0.72, bx1 = x1
+        let by = midY - k * 4
+        let track = Path(roundedRect: CGRect(x: bx0, y: by, width: bx1 - bx0, height: k * 10), cornerRadius: k * 5)
         ctx.fill(track, with: .color(slatOff))
         let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
         if fraction > 0 {
-            ctx.fill(Path(roundedRect: CGRect(x: x0, y: by, width: (x1 - x0) * fraction, height: 8),
-                          cornerRadius: 4),
+            ctx.fill(Path(roundedRect: CGRect(x: bx0, y: by, width: (bx1 - bx0) * fraction, height: k * 10),
+                          cornerRadius: k * 5),
                      with: .color(dash.shiftFlash ? .white : teal))
         }
         let tick = Color(hex: 0x9fb6c4)
-        drawText(&ctx, "0", size: 22, weight: .bold, italic: false, colour: tick,
-                 at: CGPoint(x: x0 + 6, y: by + 32))
-        drawText(&ctx, "\(Int((Double(dash.maxRPM) / 1000).rounded()))", size: 22, weight: .bold,
-                 italic: false, colour: tick, at: CGPoint(x: x1 - 8, y: by + 32))
-        drawText(&ctx, "RPM x1000", size: 30, weight: .heavy, italic: true,
-                 colour: Color(hex: 0xdfe9f0), at: CGPoint(x: (x0 + x1) / 2, y: by + 34))
+        drawText(&ctx, "0", size: k * 16, weight: .bold, italic: false, colour: tick,
+                 at: CGPoint(x: bx0 + k * 4, y: by + k * 30))
+        drawText(&ctx, "\(Int((Double(dash.maxRPM) / 1000).rounded()))", size: k * 16, weight: .bold,
+                 italic: false, colour: tick, at: CGPoint(x: bx1 - k * 6, y: by + k * 30))
+        drawText(&ctx, "RPM x1000", size: k * 18, weight: .heavy, italic: true,
+                 colour: Color(hex: 0xdfe9f0), at: CGPoint(x: (bx0 + bx1) / 2, y: by + k * 32))
     }
 
     // MARK: Metin

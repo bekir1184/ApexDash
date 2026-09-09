@@ -9,7 +9,7 @@ struct RootDashboardView: View {
     @State private var showsSetup = false
     @State private var showsLaps = false
     /// Acilista karusel; SEC ile tam ekran panoya gecilir.
-    @State private var showsHome = true
+    @State private var showsHome = !UserDefaults.standard.bool(forKey: "skipHome")   // test icin baslatma argumani
     @State private var showsConnection = false
     @AppStorage("webSession") private var sessionID: String = ""
 
