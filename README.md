@@ -91,6 +91,10 @@ Header 29 byte, little-endian, packed. Kullanilan paketler:
 
 Tamamlanan turlar sektor sureleriyle saklanir. Tema cubugundaki **TURLAR /
 LAPS** dugmesi listeyi acar: en iyi tur mor, sektorler kendi renkleriyle.
+Gonderim otomatiktir: eslestikten sonra her tur bitisinde turlarin tamami
+gonderilir, ayrica yirmi saniyede bir tekrar denenir; panonun alt satirinda
+`WEB <kod>` yaziyorsa baglanti ayakta demektir.
+
 **Laptopta izlemek icin:** <https://f1dash-app.vercel.app> adresini ac; sayfa
 bir oturum kodu ve QR gosterir. Telefondaki TURLAR ekraninda **QR OKUT**'a
 basip o QR'i okut; bundan sonra her tur bitisinde turlar sayfaya kendiliginden

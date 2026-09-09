@@ -45,6 +45,8 @@
   .pair .code { font-size: 30px; letter-spacing: 6px; }
   .pair .hint { color: var(--dim); font-size: 13px; max-width: 380px; }
   .pair .live { color: var(--green); font-size: 13px; }
+  .pair .reset { margin-top: 10px; background: none; border: 1px solid var(--line); color: var(--dim);
+                 border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 12px; cursor: pointer; }
   .drop { margin-top: 22px; border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--dim); }
   .drop input { display: none; }
   .drop label { color: var(--ink); text-decoration: underline; cursor: pointer; }
@@ -170,15 +172,21 @@ function chart(laps, best) {
 }
 
 /** Oturum kimligi: URL'de yoksa uretilir ve adrese yazilir. */
+function newCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+}
+
+/** Kod once adreste, sonra tarayici hafizasinda aranir; boylece sayfayi
+ *  yeniden acinca telefonun bildigi kod degismez. */
 function sessionId() {
   const params = new URLSearchParams(location.search);
   let id = (params.get("s") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (id.length < 4) {
-    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    id = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
-    params.set("s", id);
-    history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
-  }
+  if (id.length < 4) id = (localStorage.getItem("f1dash-session") || "").toUpperCase();
+  if (id.length < 4) id = newCode();
+  localStorage.setItem("f1dash-session", id);
+  params.set("s", id);
+  history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
   return id;
 }
 
@@ -199,6 +207,7 @@ function renderPair(connected) {
           ? `Telefon bagli · son guncelleme ${new Date(lastUpdate).toLocaleTimeString("tr-TR")}`
           : "Telefondaki F1Dash uygulamasinda TURLAR ekranini ac, QR OKUT'a bas ve bu kodu okut. Turlar buraya kendiliginden dusecek."}
       </div>
+      <button class="reset" onclick="resetSession()">YENİ KOD</button>
     </div>`;
 }
 
@@ -212,6 +221,11 @@ async function poll() {
       renderPair(true);
     }
   } catch (_) { /* aga takilirsa bir sonraki yoklamada dener */ }
+}
+
+function resetSession() {
+  localStorage.removeItem("f1dash-session");
+  location.href = location.pathname;
 }
 
 const drop = document.getElementById("drop");

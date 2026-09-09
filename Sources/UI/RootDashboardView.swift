@@ -84,6 +84,8 @@ struct RootDashboardView: View {
                 }
             }
             .onAppear {
+                uploader.startHeartbeat(laps: { dash.completedLaps },
+                                        sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
                 if !didCompleteSetup { showsSetup = true }
             }
@@ -205,6 +207,12 @@ struct RootDashboardView: View {
         HStack {
             Text(verbatim: "F1 26 · UDP \(client.port.rawValue)")
             Spacer()
+            if !sessionID.isEmpty {
+                Text(verbatim: uploader.lastError == nil ? "WEB \(sessionID)" : "WEB ?")
+                    .foregroundStyle(uploader.lastError == nil
+                                     ? Color(red: 0.24, green: 0.92, blue: 0.35).opacity(0.7)
+                                     : Color(red: 1, green: 0.4, blue: 0.35).opacity(0.8))
+            }
             Text(verbatim: "\(client.packetsPerSecond) Hz")
             Text(verbatim: client.localIP)
         }

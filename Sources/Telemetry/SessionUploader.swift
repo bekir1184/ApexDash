@@ -9,6 +9,7 @@ final class SessionUploader: ObservableObject {
     @Published private(set) var isSending = false
 
     private var inFlight: Task<Void, Never>?
+    private var heartbeat: Task<Void, Never>?
 
     /// QR'daki adresten oturum kimligini cikarir.
     static func sessionID(from scanned: String) -> String? {
@@ -24,6 +25,27 @@ final class SessionUploader: ObservableObject {
         return (4...12).contains(clean.count) ? String(clean) : nil
     }
 
+    /// Tur bitisleri arasinda da duzenli gonderim: sayfa "bagli" gorunur ve
+    /// basarisiz bir gonderim kendiliginden telafi edilir.
+    func startHeartbeat(interval: TimeInterval = 20, laps: @escaping () -> [CompletedLap],
+                        sessionID: @escaping () -> String) {
+        heartbeat?.cancel()
+        heartbeat = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                guard let self else { return }
+                let id = sessionID()
+                guard !id.isEmpty else { continue }
+                await self.upload(laps: laps(), sessionID: id)
+            }
+        }
+    }
+
+    func stopHeartbeat() {
+        heartbeat?.cancel()
+        heartbeat = nil
+    }
+
     func send(laps: [CompletedLap], sessionID: String) {
         guard !sessionID.isEmpty, !laps.isEmpty else { return }
         inFlight?.cancel()
@@ -33,7 +55,7 @@ final class SessionUploader: ObservableObject {
     }
 
     private func upload(laps: [CompletedLap], sessionID: String) async {
-        guard let url = URL(string: "\(LapExport.siteURL)/api/session") else { return }
+        guard !laps.isEmpty, let url = URL(string: "\(LapExport.siteURL)/api/session") else { return }
         let payload: [String: Any] = [
             "id": sessionID,
             "best": laps.map(\.timeMS).min() ?? 0,
