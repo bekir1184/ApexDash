@@ -1,300 +1,446 @@
 import SwiftUI
 
-/// Yayin grafiklerindeki mavi HUD: ortada yuvarlak hiz gostergesi, iki yanda
-/// onu saracak sekilde egilmis segment sutunlari, solda rakip plakalari,
-/// sagda aktif aero, vites siralamasi ve devir cetveli.
+/// Yayin grafiklerindeki mavi HUD. Geometri, onaylanan SVG prototipinden
+/// (2170 x 1000 tasarim alani, R = 340) birebir tasinmistir: ortada nokta
+/// dokulu hiz gostergesi, iki yanda cemberle ayni merkezli halka dilimleri
+/// (RECHARGE / DEPLOY paneli ve BRAKE / THROTTLE bloklari), altta pil,
+/// koselerde surucu plakalari ve vites / devir / aktif aero paneli.
 struct BroadcastDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
 
-    private let panel = Color(red: 0.05, green: 0.12, blue: 0.19)
-    private let edge = Color(red: 0.35, green: 0.78, blue: 0.95)
-    private let ink = Color(red: 0.93, green: 0.97, blue: 1.0)
-    private let green = Color(red: 0.22, green: 0.92, blue: 0.42)
-
-    private var mph: Int { Int(Double(dash.speedKPH) * 0.621371) }
+    private static let design = CGSize(width: 2170, height: 1000)
 
     var body: some View {
-        HStack(spacing: unit * 0.18) {
-            namePlates
-
-            // Yanlar daireyi saracak sekilde disa dogru egilir ve alcalir.
-            column(label: "BRAKE", fraction: Double(dash.brake),
-                   tint: Color(red: 1.0, green: 0.35, blue: 0.32), segments: 8)
-                .rotationEffect(.degrees(-11))
-                .offset(y: unit * 0.62)
-            column(label: "RECHARGE", fraction: rechargeFraction, tint: edge, segments: 10)
-                .rotationEffect(.degrees(-5))
-                .offset(y: unit * 0.2)
-
-            speedDial
-
-            column(label: "DEPLOY", fraction: deployFraction, tint: green, segments: 10)
-                .rotationEffect(.degrees(5))
-                .offset(y: unit * 0.2)
-            column(label: "THROTTLE", fraction: Double(dash.throttle), tint: green, segments: 8)
-                .rotationEffect(.degrees(11))
-                .offset(y: unit * 0.62)
-
-            rightPanel
-        }
-        .padding(.horizontal, unit * 0.25)
-    }
-
-    /// Sutunlar gercek ERS verisinden gelir: tur icinde toplanan ve harcanan
-    /// enerjinin tur limitine orani. Limit gelmemisse deploy moduna dusulur.
-    private var deployFraction: Double {
-        dash.ersHarvestLimitPerLap > 0 ? dash.deployedFraction
-                                       : min(Double(dash.ersDeployMode) / 3, 1)
-    }
-
-    private var rechargeFraction: Double { dash.harvestFraction }
-
-    // MARK: - Ortadaki yuvarlak gosterge
-
-    private var speedDial: some View {
-        ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                caption("KM/H")
-                Text(verbatim: "\(dash.speedKPH)")
-                    .font(.system(size: unit * 1.05, weight: .bold, design: .rounded))
-                    .foregroundStyle(ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-
-                caption("BOOST")
-                overtakePill
-                    .padding(.horizontal, unit * 0.25)
-
-                Text(verbatim: "\(mph)")
-                    .font(.system(size: unit * 1.05, weight: .bold, design: .rounded))
-                    .foregroundStyle(ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                caption("MPH")
+        GeometryReader { geo in
+            let scale = min(geo.size.width / Self.design.width,
+                            geo.size.height / Self.design.height)
+            let origin = CGPoint(x: (geo.size.width - Self.design.width * scale) / 2,
+                                 y: (geo.size.height - Self.design.height * scale) / 2)
+            Canvas(rendersAsynchronously: false) { context, _ in
+                var ctx = context
+                ctx.translateBy(x: origin.x, y: origin.y)
+                ctx.scaleBy(x: scale, y: scale)
+                BroadcastHUD(dash: dash).draw(in: &ctx)
             }
-            .padding(unit * 0.3)
-            .frame(width: unit * 4.1, height: unit * 4.1)
-            .background(
-                Circle().fill(
-                    RadialGradient(colors: [panel.opacity(0.98), panel.opacity(0.72)],
-                                   center: .center, startRadius: 0, endRadius: unit * 2.1)
-                )
-            )
             .overlay {
-                ShiftFlashOverlay(active: dash.shiftFlash, color: edge).clipShape(Circle())
-            }
-            .overlay(Circle().stroke(edge.opacity(0.8), lineWidth: unit * 0.05))
-            .shadow(color: edge.opacity(0.3), radius: unit * 0.45)
-
-            batteryPill
-                .offset(y: unit * 0.34)
-        }
-    }
-
-    private var overtakePill: some View {
-        Text(dash.overtakeActive ? "OVERTAKE" : (dash.overtakeAvailable ? "OVERTAKE" : "OVERTAKE"))
-            .font(.system(size: unit * 0.28, weight: .heavy, design: .rounded))
-            .foregroundStyle(dash.overtakeActive ? .black : ink.opacity(dash.overtakeAvailable ? 0.9 : 0.3))
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, unit * 0.05)
-            .background(
-                RoundedRectangle(cornerRadius: unit * 0.08, style: .continuous)
-                    .fill(dash.overtakeActive ? green : Color.white.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: unit * 0.08, style: .continuous)
-                    .stroke(green.opacity(dash.overtakeAvailable || dash.overtakeActive ? 0.9 : 0.25),
-                            lineWidth: 1.5)
-            )
-    }
-
-    private var batteryPill: some View {
-        HStack(spacing: unit * 0.1) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: unit * 0.22, weight: .black))
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.black.opacity(0.4))
-                    Capsule().fill(edge).frame(width: geo.size.width * dash.ersFraction)
-                }
-            }
-            .frame(height: unit * 0.16)
-        }
-        .foregroundStyle(ink)
-        .frame(width: unit * 1.8)
-        .padding(.horizontal, unit * 0.12)
-        .padding(.vertical, unit * 0.07)
-        .background(Capsule().fill(panel))
-        .overlay(Capsule().stroke(edge.opacity(0.8), lineWidth: 1.2))
-    }
-
-    // MARK: - Yan sutunlar
-
-    private func column(label: String, fraction: Double, tint: Color, segments: Int) -> some View {
-        HStack(spacing: unit * 0.07) {
-            Text(label)
-                .font(.system(size: unit * 0.19, weight: .heavy, design: .rounded))
-                .foregroundStyle(ink.opacity(0.75))
-                .fixedSize()
-                .rotationEffect(.degrees(-90))
-                .frame(width: unit * 0.26)
-
-            VStack(spacing: unit * 0.045) {
-                let lit = Int((min(max(fraction, 0), 1) * Double(segments)).rounded())
-                ForEach(0..<segments, id: \.self) { index in
-                    RoundedRectangle(cornerRadius: unit * 0.03, style: .continuous)
-                        .fill(segments - index <= lit ? tint : Color.white.opacity(0.07))
-                        .frame(height: unit * 0.17)
-                }
-            }
-            .frame(width: unit * 0.36)
-        }
-        .padding(unit * 0.11)
-        .background(
-            RoundedRectangle(cornerRadius: unit * 0.5, style: .continuous)
-                .fill(panel.opacity(0.85))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: unit * 0.5, style: .continuous)
-                .stroke(edge.opacity(0.55), lineWidth: 1.5)
-        )
-    }
-
-    // MARK: - Rakip plakalari
-
-    /// Yayindaki gibi mavi, egik plakalar: ustte onundeki, altta arkandaki.
-    private var namePlates: some View {
-        VStack(alignment: .leading, spacing: unit * 0.14) {
-            plate(for: dash.driverAhead)
-            plate(for: dash.driverBehind)
-        }
-        .frame(width: unit * 3.0, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private func plate(for rival: Rival?) -> some View {
-        if let rival {
-            HStack(spacing: unit * 0.14) {
-                Text(verbatim: "\(rival.position)")
-                    .font(.system(size: unit * 0.32, weight: .black, design: .rounded))
-                    .foregroundStyle(ink.opacity(0.7))
-                Text(verbatim: rival.name)
-                    .font(.system(size: unit * 0.32, weight: .black, design: .rounded))
-                    .foregroundStyle(edge)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-            }
-            .padding(.horizontal, unit * 0.22)
-            .padding(.vertical, unit * 0.1)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                Parallelogram(slant: unit * 0.24)
-                    .fill(LinearGradient(colors: [panel.opacity(0.95), panel.opacity(0.4)],
-                                         startPoint: .leading, endPoint: .trailing))
-            )
-            .overlay(Parallelogram(slant: unit * 0.24).stroke(edge.opacity(0.8), lineWidth: 1.5))
-        } else {
-            Color.clear.frame(height: unit * 0.6)
-        }
-    }
-
-    // MARK: - Sag panel
-
-    private var rightPanel: some View {
-        VStack(alignment: .leading, spacing: unit * 0.2) {
-            HStack(spacing: unit * 0.16) {
-                Text("ACTIVE\nAERO")
-                    .font(.system(size: unit * 0.23, weight: .heavy, design: .rounded))
-                    .foregroundStyle(ink.opacity(0.75))
-                Text(verbatim: "//")
-                    .font(.system(size: unit * 0.48, weight: .black, design: .rounded))
-                    .foregroundStyle(dash.aeroStraightMode ? green : ink.opacity(0.22))
-            }
-
-            gears
-            rpmScale
-        }
-        .padding(unit * 0.24)
-        .frame(width: unit * 4.3)
-        .background(
-            RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous)
-                .fill(panel.opacity(0.85))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous)
-                .stroke(edge.opacity(0.6), lineWidth: 1.5)
-        )
-    }
-
-    private var gears: some View {
-        HStack(alignment: .firstTextBaseline, spacing: unit * 0.1) {
-            ForEach(gearLabels, id: \.self) { label in
-                let selected = label == dash.gearLabel
-                Text(verbatim: label)
-                    .font(.system(size: selected ? unit * 0.6 : unit * 0.32,
-                                  weight: selected ? .black : .semibold, design: .rounded))
-                    .foregroundStyle(selected ? ink : ink.opacity(0.28))
-            }
-            Text("GEARS")
-                .font(.system(size: unit * 0.19, weight: .heavy, design: .rounded))
-                .foregroundStyle(ink.opacity(0.55))
-        }
-    }
-
-    private var gearLabels: [String] {
-        ["N"] + (1...max(dash.maxGears, 8)).map(String.init)
-    }
-
-    /// Devir cetveli: tek renk mavi cizgi, ustunde dolan parlak bant.
-    private var rpmScale: some View {
-        VStack(alignment: .leading, spacing: unit * 0.06) {
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(edge.opacity(0.18))
-                    Capsule()
-                        .fill(dash.shiftFlash ? ink : edge)
-                        .frame(width: geo.size.width * dash.rpmFraction)
-                }
-            }
-            .frame(height: unit * 0.16)
-
-            HStack(spacing: 0) {
-                ForEach(Array(stride(from: 0, through: 15, by: 3)), id: \.self) { value in
-                    Text(verbatim: "\(value)")
-                        .font(.system(size: unit * 0.17, weight: .heavy, design: .rounded))
-                        .foregroundStyle(ink.opacity(0.4))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                Text(verbatim: "RPM x1000")
-                    .font(.system(size: unit * 0.17, weight: .heavy, design: .rounded))
-                    .foregroundStyle(edge.opacity(0.8))
-                    .fixedSize()
+                // Vites uyarisi gostergenin (esnetilmis) elipsi icinde yanip soner.
+                let hud = BroadcastHUD(dash: dash)
+                ShiftFlashOverlay(active: dash.shiftFlash,
+                                  color: Color(hex: 0x63d6dd))
+                    .clipShape(Ellipse())
+                    .frame(width: hud.dialFrame.width * scale, height: hud.dialFrame.height * scale)
+                    .position(x: origin.x + hud.dialFrame.midX * scale,
+                              y: origin.y + hud.dialFrame.midY * scale)
             }
         }
-    }
-
-    private func caption(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: unit * 0.22, weight: .heavy, design: .rounded))
-            .foregroundStyle(ink.opacity(0.6))
-            .tracking(2)
     }
 }
 
-/// Yayin grafiklerindeki egik plaka bicimi.
-struct Parallelogram: Shape {
-    var slant: CGFloat
+// MARK: - Cizim
 
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX + slant, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX - slant, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
+/// Tasarim alanindaki tum cizim; GraphicsContext uzerine tek gecişte cizer.
+struct BroadcastHUD {
+    let dash: DashboardModel
+
+    // Prototipteki sabitler
+    let R: CGFloat = 340
+    let CX: CGFloat = 1085
+    let CY: CGFloat = 480
+    var corner: CGFloat { R * 0.13 }
+    /// Cember, paneller ve bloklar tabandan yukari dogru bu oranda esnetilir.
+    let stretch: CGFloat = 1.12
+    var stretchBase: CGFloat { CY + R * 1.09 }
+
+    // Renkler (referanstan olculen)
+    let blockFill = Color(hex: 0x0a1a27)
+    let blockEdge = Color(hex: 0x3b83a8)
+    let slatOff = Color(hex: 0x1a3a4e)
+    let panelTop = Color(hex: 0x27578c)
+    let panelBottom = Color(hex: 0x1e4a7c)
+    let panelEdge = Color(hex: 0x6db8e6)
+    let panelInk = Color(hex: 0x8fc6ea)
+    let ring = Color(hex: 0x63d6dd)
+    let ringInner = Color(hex: 0x2e7f96)
+    let green = Color(hex: 0x4dff7a)
+    let teal = Color(hex: 0x3fd9c9)
+    let cyanInk = Color(hex: 0x8fe4f0)
+
+    /// Esnetilmis gostergenin cerceve dikdortgeni (tasarim koordinatlari).
+    var dialFrame: CGRect {
+        let r = R * 1.03
+        let top = stretchBase - (stretchBase - (CY - r)) * stretch
+        let bottom = stretchBase - (stretchBase - (CY + r)) * stretch
+        return CGRect(x: CX - r, y: top, width: 2 * r, height: bottom - top)
     }
+
+    func draw(in ctx: inout GraphicsContext) {
+        drawDriverPlates(in: &ctx)
+        drawRightBand(in: &ctx)
+
+        var stretched = ctx
+        stretched.translateBy(x: 0, y: stretchBase)
+        stretched.scaleBy(x: 1, y: stretch)
+        stretched.translateBy(x: 0, y: -stretchBase)
+
+        drawSlatBlock(in: &stretched, side: .left, lit: litCount(Double(dash.brake)),
+                      colour: Color(hex: 0x3fb0f0), label: "BRAKE")
+        drawSlatBlock(in: &stretched, side: .right, lit: litCount(Double(dash.throttle)),
+                      colour: Color(hex: 0x3ff06a), label: "THROTTLE")
+        drawLabelPanel(in: &stretched, side: .left, text: "RECHARGE")
+        drawLabelPanel(in: &stretched, side: .right, text: "DEPLOY")
+        drawDial(in: &stretched)
+
+        drawBattery(in: &ctx)
+    }
+
+    private func litCount(_ fraction: Double) -> Int {
+        Int((min(max(fraction, 0), 1) * 10).rounded())
+    }
+
+    // MARK: Halka dilimi geometrisi
+
+    enum Side { case left, right }
+
+    /// Prototipteki P(r, a): sol tarafta x ekseni aynalanir.
+    private func point(_ side: Side, _ r: CGFloat, _ a: CGFloat) -> CGPoint {
+        CGPoint(x: CX + (side == .left ? -1 : 1) * r * cos(a), y: CY + r * sin(a))
+    }
+
+    private func angle(_ side: Side, _ a: CGFloat) -> Angle {
+        .radians(side == .left ? Double(.pi - a) : Double(a))
+    }
+
+    /// Ic yay a0 -> a1, dis yay a1 -> a0 olan halka dilimi.
+    private func ringSlice(_ side: Side, rIn: CGFloat, rOut: CGFloat,
+                           a0: CGFloat, a1: CGFloat) -> Path {
+        var p = Path()
+        let c = CGPoint(x: CX, y: CY)
+        let s0 = angle(side, a0), s1 = angle(side, a1)
+        p.move(to: point(side, rIn, a0))
+        p.addArc(center: c, radius: rIn, startAngle: s0, endAngle: s1,
+                 clockwise: s1.radians < s0.radians)
+        p.addLine(to: point(side, rOut, a1))
+        p.addArc(center: c, radius: rOut, startAngle: s1, endAngle: s0,
+                 clockwise: s0.radians < s1.radians)
+        p.closeSubpath()
+        return p
+    }
+
+    /// Koseleri yuvarlatilmis dilim: sekil `c` kadar icten cizilir ve ayni
+    /// renkte 2c kalinliginda yuvarlak birlesimli konturla boyutuna doner.
+    private struct RoundedSegment {
+        let path: Path
+        let strokeWidth: CGFloat
+    }
+
+    private func roundedSegment(_ side: Side, rIn: CGFloat, rOut: CGFloat,
+                                aTop: CGFloat, aBottom: CGFloat, c: CGFloat) -> RoundedSegment {
+        let rMid = (rIn + rOut) / 2, da = c / rMid
+        return RoundedSegment(path: ringSlice(side, rIn: rIn + c, rOut: rOut - c,
+                                              a0: aTop + da, a1: aBottom - da),
+                              strokeWidth: 2 * c)
+    }
+
+    private func fillRounded(_ ctx: inout GraphicsContext, _ seg: RoundedSegment,
+                             _ shading: GraphicsContext.Shading, widthDelta: CGFloat = 0) {
+        ctx.fill(seg.path, with: shading)
+        ctx.stroke(seg.path, with: shading,
+                   style: StrokeStyle(lineWidth: seg.strokeWidth + widthDelta, lineJoin: .round))
+    }
+
+    private func strokeRounded(_ ctx: inout GraphicsContext, _ seg: RoundedSegment,
+                               _ colour: Color, extra: CGFloat) {
+        ctx.stroke(seg.path, with: .color(colour),
+                   style: StrokeStyle(lineWidth: seg.strokeWidth + extra, lineJoin: .round))
+    }
+
+    // MARK: BRAKE / THROTTLE bloklari
+
+    private func drawSlatBlock(in ctx: inout GraphicsContext, side: Side, lit: Int,
+                               colour: Color, label: String) {
+        let rIn = R * 1.58, rOut = R * 1.96, rMid = (rIn + rOut) / 2
+        let aTop = -asin(0.40 * R / rMid), aBottom = asin(0.91 * R / rMid)
+        let seg = roundedSegment(side, rIn: rIn, rOut: rOut, aTop: aTop, aBottom: aBottom, c: corner)
+
+        fillRounded(&ctx, seg, .color(blockFill))
+        strokeRounded(&ctx, seg, blockEdge.opacity(0.8), extra: 2.5)
+        fillRounded(&ctx, seg, .color(blockFill), widthDelta: -2.5)
+
+        // Dilimler, blogun padR kadar icten yuvarlatilmis kopyasiyla maskelenir.
+        let padR = R * 0.05, padA = padR / rMid
+        let inner = roundedSegment(side, rIn: rIn + padR, rOut: rOut - padR,
+                                   aTop: aTop + padA, aBottom: aBottom - padA, c: corner - padR)
+        var masked = ctx
+        masked.clipToLayer { layer in
+            layer.fill(inner.path, with: .color(.white))
+            layer.stroke(inner.path, with: .color(.white),
+                         style: StrokeStyle(lineWidth: inner.strokeWidth, lineJoin: .round))
+        }
+        let n = 10, gap = (aBottom - aTop) * 0.028
+        let r0 = rIn + padR * 0.4, r1 = rOut - padR * 0.4
+        let step = (aBottom - aTop) / CGFloat(n)
+        for i in 0..<n {
+            let a0 = aTop + CGFloat(i) * step + gap / 2
+            let a1 = aTop + CGFloat(i + 1) * step - gap / 2
+            let slice = ringSlice(side, rIn: r0, rOut: r1, a0: a0, a1: a1)
+            let on = i >= n - lit
+            let c: Color = on ? colour : slatOff
+            masked.fill(slice, with: .color(c))
+            masked.stroke(slice, with: .color(c),
+                          style: StrokeStyle(lineWidth: R * 0.012, lineJoin: .round))
+        }
+
+        let bottom = point(side, rOut, aBottom).y
+        drawText(&ctx, label, size: 47, weight: .heavy, italic: true, colour: .white,
+                 at: CGPoint(x: point(side, rMid, aBottom).x, y: bottom + R * 0.20))
+    }
+
+    // MARK: RECHARGE / DEPLOY panelleri
+
+    private func drawLabelPanel(in ctx: inout GraphicsContext, side: Side, text: String) {
+        let rIn = R * 1.125, rOut = R * 1.52, rMid = (rIn + rOut) / 2
+        let aTop = -asin(0.56 * R / rMid), aBottom = asin(0.88 * R / rMid)
+        let seg = roundedSegment(side, rIn: rIn, rOut: rOut, aTop: aTop, aBottom: aBottom, c: corner)
+
+        let top = point(side, rMid, aTop).y, bottom = point(side, rMid, aBottom).y
+        let gradient = GraphicsContext.Shading.linearGradient(
+            Gradient(colors: [panelTop, panelBottom]),
+            startPoint: CGPoint(x: CX, y: top), endPoint: CGPoint(x: CX, y: bottom))
+        strokeRounded(&ctx, seg, panelEdge, extra: 3)
+        fillRounded(&ctx, seg, gradient, widthDelta: -2.5)
+
+        // Harfler orta yaricap boyunca, dik, esit acisal aralikla
+        let letters = Array(text)
+        let pad: CGFloat = 0.09
+        for (i, ch) in letters.enumerated() {
+            let a = aTop + pad + (aBottom - aTop - 2 * pad) * CGFloat(i) / CGFloat(letters.count - 1)
+            let p = point(side, rMid, a)
+            drawText(&ctx, String(ch), size: 47, weight: .heavy, italic: true, colour: panelInk,
+                     at: CGPoint(x: p.x, y: p.y + R * 0.055))
+        }
+    }
+
+    // MARK: Cember
+
+    private static var dotPattern: Path = {
+        var p = Path()
+        let step: CGFloat = 9
+        var y: CGFloat = -350
+        while y < 350 {
+            var x: CGFloat = -350
+            while x < 350 {
+                p.addEllipse(in: CGRect(x: x + 2.5 - 1.8, y: y + 2.5 - 1.8, width: 3.6, height: 3.6))
+                x += step
+            }
+            y += step
+        }
+        return p
+    }()
+
+    private static var hatchPattern: Path = {
+        var p = Path()
+        var x: CGFloat = 0
+        while x < 560 {
+            p.addRect(CGRect(x: x, y: 0, width: 5, height: 40))
+            x += 14
+        }
+        return p
+    }()
+
+    private func drawDial(in ctx: inout GraphicsContext) {
+        let centre = CGPoint(x: CX, y: CY)
+        func circle(_ r: CGFloat) -> Path {
+            Path(ellipseIn: CGRect(x: CX - r, y: CY - r, width: 2 * r, height: 2 * r))
+        }
+
+        ctx.fill(circle(R * 1.09), with: .color(Color(hex: 0x07131d)))
+        ctx.fill(circle(R), with: .color(Color(hex: 0x0d1c2b)))
+        var dots = ctx
+        dots.clip(to: circle(R))
+        dots.translateBy(x: CX, y: CY)
+        dots.fill(Self.dotPattern, with: .color(Color(hex: 0x16405c)))
+
+        // Halka konturlari pile yaklastikca solar.
+        var rings = ctx
+        rings.clipToLayer { layer in
+            let fade = Gradient(stops: [
+                .init(color: .white.opacity(0), location: 0),
+                .init(color: .white.opacity(0), location: 0.55),
+                .init(color: .white, location: 1)
+            ])
+            layer.fill(Path(CGRect(x: 0, y: 0, width: 2170, height: 1000)),
+                       with: .radialGradient(fade, center: CGPoint(x: CX, y: CY + R * 0.98),
+                                             startRadius: 0, endRadius: R * 0.75))
+        }
+        rings.stroke(circle(R * 1.03), with: .color(ring), lineWidth: R * 0.02)
+        rings.stroke(circle(R * 0.96), with: .color(ringInner), lineWidth: 2)
+
+        // Cember ici
+        drawText(&ctx, dash.speedUnitLabel, size: 59, weight: .bold, italic: false, colour: .white,
+                 at: CGPoint(x: CX, y: CY - R * 0.66))
+        drawText(&ctx, "\(dash.speedKPH)", size: 197, weight: .heavy, italic: false, colour: .white,
+                 at: CGPoint(x: CX, y: CY - R * 0.11))
+
+        var hatch = ctx
+        hatch.translateBy(x: CX - R * 0.81, y: CY + R * 0.04)
+        hatch.clip(to: Path(CGRect(x: 0, y: 0, width: R * 1.62, height: R * 0.18)))
+        hatch.fill(Self.hatchPattern, with: .color(Color(hex: 0x2a4258).opacity(0.85)))
+        drawText(&ctx, "BOOST", size: 52, weight: .bold, italic: false,
+                 colour: Color(hex: 0x9fb6c4), tracking: 3,
+                 at: CGPoint(x: CX, y: CY + R * 0.18))
+
+        let box = Path(roundedRect: CGRect(x: CX - R * 0.72, y: CY + R * 0.28,
+                                           width: R * 1.44, height: R * 0.22), cornerRadius: 5)
+        let available = dash.overtakeAvailable || dash.overtakeActive
+        ctx.fill(box, with: .color(dash.overtakeActive ? green : Color(hex: 0x0b2a16)))
+        ctx.stroke(box, with: .color(green.opacity(available ? 1 : 0.3)), lineWidth: 5)
+        drawText(&ctx, "OVERTAKE", size: 52, weight: .bold, italic: false,
+                 colour: dash.overtakeActive ? .black : green.opacity(available ? 1 : 0.35), tracking: 2,
+                 at: CGPoint(x: CX, y: CY + R * 0.43))
+        _ = centre
+    }
+
+    // MARK: Pil
+
+    private func drawBattery(in ctx: inout GraphicsContext) {
+        let bw = R * 0.80, bh = R * 0.24, by = CY + R * 0.86
+        let rect = CGRect(x: CX - bw / 2, y: by, width: bw, height: bh)
+        let body = Path(roundedRect: rect, cornerRadius: bh * 0.30)
+        ctx.fill(body, with: .color(Color(hex: 0x21497f)))
+        var level = ctx
+        level.clip(to: body)
+        level.fill(Path(CGRect(x: rect.minX, y: rect.minY, width: bw * dash.ersFraction, height: bh)),
+                   with: .color(Color(hex: 0x3980d0)))
+        ctx.stroke(body, with: .color(Color(hex: 0x7bbfe4)), lineWidth: 5)
+        ctx.fill(Path(roundedRect: CGRect(x: rect.maxX + 1, y: by + bh * 0.28,
+                                          width: bh * 0.18, height: bh * 0.44), cornerRadius: 3),
+                 with: .color(Color(hex: 0x7ee0f0)))
+
+        // Simsek
+        let s = bh * 0.9, x = CX, y = by + bh * 0.5 - s / 2
+        var bolt = Path()
+        bolt.move(to: CGPoint(x: x + s * 0.18, y: y))
+        bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45, y: y + s * 0.55))
+        bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3, y: y + s * 0.55))
+        bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3 - s * 0.18, y: y + s * 0.55 + s * 0.45))
+        bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3 - s * 0.18 + s * 0.5, y: y + s * 0.55 + s * 0.45 - s * 0.6))
+        bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3 - s * 0.18 + s * 0.5 - s * 0.3, y: y + s * 0.55 + s * 0.45 - s * 0.6))
+        bolt.closeSubpath()
+        ctx.fill(bolt, with: .color(Color(hex: 0xb5e9fa)))
+    }
+
+    // MARK: Yan bantlar
+
+    private struct Band {
+        let rect: CGRect
+        var x0: CGFloat { rect.minX }
+        var w: CGFloat { rect.width }
+        var h: CGFloat { rect.height }
+    }
+
+    private func drawSideBand(in ctx: inout GraphicsContext, side: Side) -> Band {
+        let dir: CGFloat = side == .left ? -1 : 1
+        let xIn = R * 2.06, xOut = R * 3.15, w = xOut - xIn, h = R * 1.0
+        let cx = CX + dir * (xIn + w / 2), cy = CY + R * 1.22 - h / 2
+        let rect = CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h)
+        let path = Path(roundedRect: rect, cornerRadius: corner)
+        ctx.fill(path, with: .color(blockFill))
+        ctx.stroke(path, with: .color(blockEdge), lineWidth: 3)
+        return Band(rect: rect)
+    }
+
+    private func drawDriverPlates(in ctx: inout GraphicsContext) {
+        let band = drawSideBand(in: &ctx, side: .left)
+        let pad = R * 0.08
+        let rows: [Rival?] = [dash.driverAhead, dash.player, dash.driverBehind]
+        for (i, rival) in rows.enumerated() {
+            let y = band.rect.minY + band.h * (0.26 + 0.30 * CGFloat(i))
+            var line = Path()
+            line.move(to: CGPoint(x: band.rect.minX + pad, y: y + R * 0.05))
+            line.addLine(to: CGPoint(x: band.rect.maxX - pad, y: y + R * 0.05))
+            ctx.stroke(line, with: .color(teal.opacity(rival == nil ? 0.35 : 1)), lineWidth: 3)
+            guard let rival else { continue }
+            let isPlayer = i == 1
+            drawText(&ctx, "\(rival.position)", size: 34, weight: .heavy, italic: true, colour: cyanInk,
+                     anchor: .leading, at: CGPoint(x: band.rect.minX + pad, y: y))
+            drawText(&ctx, rival.name.uppercased(), size: 40, weight: .heavy, italic: true,
+                     colour: isPlayer ? cyanInk : .white, anchor: .leading,
+                     at: CGPoint(x: band.rect.minX + pad + R * 0.22, y: y))
+        }
+    }
+
+    private func drawRightBand(in ctx: inout GraphicsContext) {
+        let band = drawSideBand(in: &ctx, side: .right)
+        let pad = R * 0.08, x0 = band.rect.minX + pad, x1 = band.rect.maxX - pad
+
+        // Satir 1: ACTIVE AERO + cift cizgi
+        let y1 = band.rect.minY + band.h * 0.22
+        let aero = dash.aeroStraightMode
+        drawText(&ctx, "ACTIVE AERO", size: 30, weight: .heavy, italic: true,
+                 colour: aero ? .white : Color(hex: 0x6f8797), anchor: .leading,
+                 at: CGPoint(x: x0, y: y1))
+        var slashes = Path()
+        slashes.move(to: CGPoint(x: x1 - 46, y: y1 + 2)); slashes.addLine(to: CGPoint(x: x1 - 30, y: y1 - 20))
+        slashes.move(to: CGPoint(x: x1 - 22, y: y1 + 2)); slashes.addLine(to: CGPoint(x: x1 - 6, y: y1 - 20))
+        ctx.stroke(slashes, with: .color(aero ? Color(hex: 0x3fe0f0) : Color(hex: 0x3d5566)),
+                   style: StrokeStyle(lineWidth: 5, lineCap: .round))
+
+        // Satir 2: vites cetveli
+        let gears = ["N"] + (1...max(dash.maxGears, 8)).map(String.init)
+        let y2 = band.rect.minY + band.h * 0.55
+        for (i, label) in gears.enumerated() {
+            let x = x0 + 18 + (x1 - x0 - 36) * CGFloat(i) / CGFloat(gears.count - 1)
+            let on = label == dash.gearLabel
+            drawText(&ctx, label, size: 40, weight: .heavy, italic: true,
+                     colour: on ? .white : Color(hex: 0x4d6a7c), at: CGPoint(x: x, y: y2))
+        }
+
+        // Satir 3: RPM cubugu
+        let by = band.rect.minY + band.h * 0.70
+        let track = Path(roundedRect: CGRect(x: x0, y: by, width: x1 - x0, height: 8), cornerRadius: 4)
+        ctx.fill(track, with: .color(slatOff))
+        let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
+        if fraction > 0 {
+            ctx.fill(Path(roundedRect: CGRect(x: x0, y: by, width: (x1 - x0) * fraction, height: 8),
+                          cornerRadius: 4),
+                     with: .color(dash.shiftFlash ? .white : teal))
+        }
+        let tick = Color(hex: 0x9fb6c4)
+        drawText(&ctx, "0", size: 22, weight: .bold, italic: false, colour: tick,
+                 at: CGPoint(x: x0 + 6, y: by + 32))
+        drawText(&ctx, "\(Int((Double(dash.maxRPM) / 1000).rounded()))", size: 22, weight: .bold,
+                 italic: false, colour: tick, at: CGPoint(x: x1 - 8, y: by + 32))
+        drawText(&ctx, "RPM x1000", size: 30, weight: .heavy, italic: true,
+                 colour: Color(hex: 0xdfe9f0), at: CGPoint(x: (x0 + x1) / 2, y: by + 34))
+    }
+
+    // MARK: Metin
+
+    /// SVG'deki gibi `at` metnin taban cizgisi; x hizasi `anchor` ile secilir.
+    private func drawText(_ ctx: inout GraphicsContext, _ string: String, size: CGFloat,
+                          weight: Font.Weight, italic: Bool, colour: Color, tracking: CGFloat = 0,
+                          anchor: HorizontalAlignment = .center, at point: CGPoint) {
+        var text = Text(verbatim: string)
+            .font(.system(size: size, weight: weight))
+            .foregroundColor(colour)
+            .tracking(tracking)
+        if italic { text = text.italic() }
+        let resolved = ctx.resolve(text)
+        let unit: UnitPoint = anchor == .leading ? .bottomLeading : .bottom
+        // Taban cizgisi: alt kenar ile arasinda yaklasik 0.22 em inis payi var.
+        ctx.draw(resolved, at: CGPoint(x: point.x, y: point.y + size * 0.22), anchor: unit)
+    }
+}
+
+extension Color {
+    init(hex: UInt32) {
+        self.init(red: Double((hex >> 16) & 0xff) / 255,
+                  green: Double((hex >> 8) & 0xff) / 255,
+                  blue: Double(hex & 0xff) / 255)
+    }
+}
+
+private extension DashboardModel {
+    var speedUnitLabel: String { "KM/H" }
 }

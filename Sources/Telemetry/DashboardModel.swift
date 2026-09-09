@@ -74,6 +74,7 @@ struct DashboardModel {
 
     /// Yayin temasindaki isim plakalari icin.
     var driverAhead: Rival?
+    var player: Rival?
     var driverBehind: Rival?
 
     var gearLabel: String {

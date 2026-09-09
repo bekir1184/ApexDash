@@ -192,6 +192,7 @@ final class TelemetryClient: ObservableObject {
     private func updateRivals(positions: [Int], playerPosition: Int) {
         guard playerPosition > 0, !participants.isEmpty else { return }
         dash.driverAhead = rival(at: playerPosition - 1, positions: positions)
+        dash.player = rival(at: playerPosition, positions: positions)
         dash.driverBehind = rival(at: playerPosition + 1, positions: positions)
     }
 
