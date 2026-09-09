@@ -47,10 +47,15 @@ struct BroadcastLayout {
     init(size: CGSize) {
         self.size = size
         let R: CGFloat = 340
-        centreScale = min(size.height / (Self.designBottom - Self.designTop), size.width / (R * 4.3))
         bandWidth = R * 1.09
         bandHeight = R * 1.0
         let margin = size.width * 0.012
+        // Orta grup yuksekligi doldurur; ama yan bantlara ekran genisliginin
+        // en az %17'si kalacak sekilde sinirlanir.
+        let minBand = size.width * 0.17
+        let byHeight = size.height / (Self.designBottom - Self.designTop)
+        let byWidth = (size.width / 2 - 2 * margin - minBand) / (R * 2.06)
+        centreScale = min(byHeight, byWidth)
         let free = size.width / 2 - R * 2.06 * centreScale - 2 * margin
         bandScale = max(min(centreScale, free / bandWidth), 0.01)
     }
@@ -135,7 +140,7 @@ struct BroadcastHUD {
         drawSlatBlock(in: &stretched, side: .right, lit: litCount(Double(dash.throttle)),
                       colour: Color(hex: 0x3ff06a), label: "THROTTLE")
         drawLabelPanel(in: &stretched, side: .left, text: "RECHARGE",
-                       level: dash.harvestFraction, active: dash.brake > 0.08)
+                       level: dash.harvestFraction, active: dash.ersTrend > 0)
         drawLabelPanel(in: &stretched, side: .right, text: "DEPLOY",
                        level: deployLevel, active: deployActive)
         drawDial(in: &stretched)
@@ -149,9 +154,7 @@ struct BroadcastHUD {
                                        : min(Double(dash.ersDeployMode) / 3, 1)
     }
 
-    private var deployActive: Bool {
-        dash.ersDeployMode > 0 && dash.throttle > 0.3 && dash.ersStoreEnergy > 0
-    }
+    private var deployActive: Bool { dash.ersTrend < 0 }
 
     private func litCount(_ fraction: Double) -> Int {
         Int((min(max(fraction, 0), 1) * 10).rounded())
@@ -378,15 +381,21 @@ struct BroadcastHUD {
         let bw = R * 0.80, bh = R * 0.24, by = CY + R * 0.86
         let rect = CGRect(x: CX - bw / 2, y: by, width: bw, height: bh)
         let body = Path(roundedRect: rect, cornerRadius: bh * 0.30)
-        ctx.fill(body, with: .color(Color(hex: 0x21497f)))
+        // Oyundaki gibi: normalde sari, Overtake devredeyken maviye doner.
+        let blue = dash.overtakeActive
+        let empty = blue ? Color(hex: 0x21497f) : Color(hex: 0x5a4a12)
+        let full = blue ? Color(hex: 0x3980d0) : Color(hex: 0xf0c330)
+        let edge = blue ? Color(hex: 0x7bbfe4) : Color(hex: 0xffe27a)
+        let nub = blue ? Color(hex: 0x7ee0f0) : Color(hex: 0xffe27a)
+        ctx.fill(body, with: .color(empty))
         var level = ctx
         level.clip(to: body)
         level.fill(Path(CGRect(x: rect.minX, y: rect.minY, width: bw * dash.ersFraction, height: bh)),
-                   with: .color(Color(hex: 0x3980d0)))
-        ctx.stroke(body, with: .color(Color(hex: 0x7bbfe4)), lineWidth: 5)
+                   with: .color(full))
+        ctx.stroke(body, with: .color(edge), lineWidth: 5)
         ctx.fill(Path(roundedRect: CGRect(x: rect.maxX + 1, y: by + bh * 0.28,
                                           width: bh * 0.18, height: bh * 0.44), cornerRadius: 3),
-                 with: .color(Color(hex: 0x7ee0f0)))
+                 with: .color(nub))
 
         // Simsek
         let s = bh * 0.9, x = CX, y = by + bh * 0.5 - s / 2
@@ -398,7 +407,7 @@ struct BroadcastHUD {
         bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3 - s * 0.18 + s * 0.5, y: y + s * 0.55 + s * 0.45 - s * 0.6))
         bolt.addLine(to: CGPoint(x: x + s * 0.18 - s * 0.45 + s * 0.3 - s * 0.18 + s * 0.5 - s * 0.3, y: y + s * 0.55 + s * 0.45 - s * 0.6))
         bolt.closeSubpath()
-        ctx.fill(bolt, with: .color(Color(hex: 0xb5e9fa)))
+        ctx.fill(bolt, with: .color(blue ? Color(hex: 0xb5e9fa) : Color(hex: 0x2a2205)))
     }
 
     // MARK: Yan bantlar

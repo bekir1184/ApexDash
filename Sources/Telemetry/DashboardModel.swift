@@ -36,6 +36,9 @@ struct DashboardModel {
     var fuelRemainingLaps: Float = 0
     /// FIA bayragi: -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
     var fiaFlag: Int = -1
+    /// Depodaki enerjinin yonu: +1 toplaniyor (recharge), -1 harcaniyor
+    /// (deploy), 0 sabit. Ardisik CarStatus paketlerinden turetilir.
+    var ersTrend: Int = 0
     var ersHarvestedThisLap: Float = 0
     var ersHarvestLimitPerLap: Float = 0
     var ersDeployedThisLap: Float = 0
@@ -202,6 +205,12 @@ struct DashboardModel {
         idleRPM = s.idleRPM
         maxGears = s.maxGears
         pitLimiterOn = s.pitLimiterOn
+        // Depo 4 MJ; 0.05 %'lik degisim paket gurultusunu eler.
+        let delta = s.ersStoreEnergy - ersStoreEnergy
+        let threshold: Float = 2_000
+        if delta > threshold { ersTrend = 1 }
+        else if delta < -threshold { ersTrend = -1 }
+        else if abs(delta) <= threshold / 4 { ersTrend = 0 }
         ersStoreEnergy = s.ersStoreEnergy
         ersDeployMode = s.ersDeployMode
         fuelRemainingLaps = s.fuelRemainingLaps
