@@ -34,6 +34,8 @@ struct BroadcastDashboardView: View {
 struct BroadcastLayout {
     let size: CGSize
     let centreScale: CGFloat
+    /// Yatay olcek: orta grup ekranin sagini solunu dolduracak kadar esnetilir.
+    let centreScaleX: CGFloat
     /// Ekranin altini kaplayan satir: aktif aero, vites cetveli, devir.
     let strip: CGRect
 
@@ -50,21 +52,23 @@ struct BroadcastLayout {
         strip = CGRect(x: margin, y: size.height - stripH, width: size.width - 2 * margin, height: stripH)
         let areaH = size.height - stripH - gap
         centreScale = min(areaH / (Self.designBottom - Self.designTop), size.width / (R * 4.1))
+        // Bloklarin dis kenari 1.96R'de; genislik buna gore yayilir, en fazla %45 esner.
+        centreScaleX = min((size.width - 2 * margin) / (R * 4.0), centreScale * 1.45)
     }
 
     /// Tasarim koordinatindaki orta grup dikdortgenini ekrana tasir.
     func centre(_ rect: CGRect) -> CGRect {
-        let x = size.width / 2 + (rect.minX - Self.designCentreX) * centreScale
+        let x = size.width / 2 + (rect.minX - Self.designCentreX) * centreScaleX
         let span = (Self.designBottom - Self.designTop) * centreScale
         let areaH = strip.minY - size.height * 0.02
         let y = (areaH - span) / 2 + (rect.minY - Self.designTop) * centreScale
-        return CGRect(x: x, y: y, width: rect.width * centreScale, height: rect.height * centreScale)
+        return CGRect(x: x, y: y, width: rect.width * centreScaleX, height: rect.height * centreScale)
     }
 
     func applyCentre(to ctx: inout GraphicsContext) {
         let origin = centre(CGRect(x: 0, y: 0, width: 0, height: 0)).origin
         ctx.translateBy(x: origin.x, y: origin.y)
-        ctx.scaleBy(x: centreScale, y: centreScale)
+        ctx.scaleBy(x: centreScaleX, y: centreScale)
     }
 }
 
