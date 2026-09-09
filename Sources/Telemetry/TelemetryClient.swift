@@ -31,6 +31,10 @@ final class TelemetryClient: ObservableObject {
     private var deltaSample: (value: Int, date: Date)?
     private var timing = LapTiming()
     private var participants: [Participant] = []
+    private var recorder = TraceRecorder()
+    /// Tamamlanan turlarin ayrintili izleri (siteye gonderim icin).
+    @Published private(set) var lapTraces: [LapTrace] = []
+    @Published private(set) var sessionInfo = SessionInfo()
     private let pathMonitor = NWPathMonitor()
     private var monitoring = false
     private var packetCounter = 0
@@ -139,12 +143,22 @@ final class TelemetryClient: ObservableObject {
         case .carTelemetry:
             guard let t = CarTelemetry(data: data, carIndex: idx) else { return }
             dash.apply(t)
+            recorder.telemetry = t
         case .carTelemetry2:
             guard let t = CarTelemetry2(data: data, carIndex: idx) else { return }
             dash.apply(t)
+            recorder.telemetry2 = t
+        case .motion:
+            guard let m = CarMotion(data: data, carIndex: idx) else { return }
+            recorder.motion = m
+        case .session:
+            guard let info = SessionInfo(data: data) else { return }
+            if info != sessionInfo { sessionInfo = info }
         case .lapData:
             guard let l = LapData(data: data, carIndex: idx) else { return }
             dash.apply(l)
+            recorder.ingest(l)
+            if recorder.traces.count != lapTraces.count { lapTraces = recorder.traces }
             updateDeltaTrend(l.deltaToCarInFrontMS)
             timing.ingest(l)
             dash.applyTiming(timing)
@@ -152,6 +166,7 @@ final class TelemetryClient: ObservableObject {
         case .carStatus:
             guard let s = CarStatus(data: data, carIndex: idx) else { return }
             dash.apply(s)
+            recorder.status = s
         case .event:
             switch GameEvent(data: data) {
             case .startLights(let count):

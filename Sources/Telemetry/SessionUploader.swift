@@ -10,6 +10,15 @@ final class SessionUploader: ObservableObject {
 
     private var inFlight: Task<Void, Never>?
     private var heartbeat: Task<Void, Never>?
+    /// Bu oturumda basariyla gonderilmis tur izleri (oturum kimligi + tur no).
+    private var sentTraces: Set<String> = []
+
+    /// Bir gonderimde tasinan her sey.
+    struct Payload {
+        var laps: [CompletedLap]
+        var traces: [LapTrace]
+        var session: SessionInfo
+    }
 
     /// QR'daki adresten oturum kimligini cikarir.
     static func sessionID(from scanned: String) -> String? {
@@ -27,7 +36,7 @@ final class SessionUploader: ObservableObject {
 
     /// Tur bitisleri arasinda da duzenli gonderim: sayfa "bagli" gorunur ve
     /// basarisiz bir gonderim kendiliginden telafi edilir.
-    func startHeartbeat(interval: TimeInterval = 20, laps: @escaping () -> [CompletedLap],
+    func startHeartbeat(interval: TimeInterval = 20, payload: @escaping () -> Payload,
                         sessionID: @escaping () -> String) {
         heartbeat?.cancel()
         heartbeat = Task { [weak self] in
@@ -36,7 +45,7 @@ final class SessionUploader: ObservableObject {
                 guard let self else { return }
                 let id = sessionID()
                 guard !id.isEmpty else { continue }
-                await self.upload(laps: laps(), sessionID: id)
+                await self.upload(payload(), sessionID: id)
             }
         }
     }
@@ -46,32 +55,50 @@ final class SessionUploader: ObservableObject {
         heartbeat = nil
     }
 
-    func send(laps: [CompletedLap], sessionID: String) {
-        guard !sessionID.isEmpty, !laps.isEmpty else { return }
+    func send(_ payload: Payload, sessionID: String) {
+        guard !sessionID.isEmpty, !payload.laps.isEmpty else { return }
         inFlight?.cancel()
         inFlight = Task { [weak self] in
-            await self?.upload(laps: laps, sessionID: sessionID)
+            await self?.upload(payload, sessionID: sessionID)
         }
     }
 
-    private func upload(laps: [CompletedLap], sessionID: String) async {
-        guard !laps.isEmpty, let url = URL(string: "\(LapExport.siteURL)/api/session") else { return }
-        let payload: [String: Any] = [
+    /// Once tur listesi (kucuk), sonra henuz gitmemis tur izleri teker teker.
+    private func upload(_ payload: Payload, sessionID: String) async {
+        guard !payload.laps.isEmpty else { return }
+        let laps = payload.laps.suffix(200).map { lap -> [String: Any] in
+            ["lap": lap.number, "time": lap.timeMS,
+             "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS],
+             "trace": payload.traces.contains { $0.number == lap.number }]
+        }
+        let session = payload.session
+        var index: [String: Any] = [
             "id": sessionID,
-            "best": laps.map(\.timeMS).min() ?? 0,
-            "laps": laps.suffix(200).map { lap in
-                ["lap": lap.number,
-                 "time": lap.timeMS,
-                 "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS]]
-            }
+            "best": payload.laps.map(\.timeMS).min() ?? 0,
+            "laps": laps,
+            "track": ["id": session.trackID, "length": session.trackLength,
+                      "weather": session.weather, "trackTemp": session.trackTemperature,
+                      "airTemp": session.airTemperature, "sessionType": session.sessionType]
         ]
-        guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return }
+        guard await post(index, sessionID: sessionID) else { return }
+
+        for trace in payload.traces where !sentTraces.contains("\(sessionID)/\(trace.number)") {
+            index = ["id": sessionID, "trace": trace.payload()]
+            guard await post(index, sessionID: sessionID) else { return }
+            sentTraces.insert("\(sessionID)/\(trace.number)")
+        }
+    }
+
+    private func post(_ payload: [String: Any], sessionID: String) async -> Bool {
+        guard let url = URL(string: "\(LapExport.siteURL)/api/session"),
+              let body = try? JSONSerialization.data(withJSONObject: payload)
+        else { return false }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
-        request.timeoutInterval = 10
+        request.timeoutInterval = 20
 
         isSending = true
         defer { isSending = false }
@@ -79,12 +106,14 @@ final class SessionUploader: ObservableObject {
             let (_, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
                 lastError = "HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)"
-                return
+                return false
             }
             lastUploadDate = Date()
             lastError = nil
+            return true
         } catch {
             if !Task.isCancelled { lastError = error.localizedDescription }
+            return false
         }
     }
 }

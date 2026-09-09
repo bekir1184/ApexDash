@@ -32,6 +32,78 @@ STATUS_FMT = "<BBBBBfffHHBBHBBBbfffBffffB"  # 59 byte
 MAX_RPM = 15000
 IDLE_RPM = 4000
 
+MOTION_FMT = "<ffffffhhhhhhhhhfff"   # 54 byte
+SESSION_HEAD_FMT = "<BbbBHBb"        # weather, trackTemp, airTemp, totalLaps, trackLength, sessionType, trackId
+SESSION_SIZE = 926 - 29
+
+
+class Track:
+    """Kapali bir pist: duz + viraj parcalarindan olusur; mesafe -> konum,
+    egrilik, hedef hiz. Viraja girerken fren, cikarken gaz uretilir."""
+
+    def __init__(self):
+        # (uzunluk m, egrilik yaricapi m veya None=duz, yon +1 sol / -1 sag)
+        self.segments = [
+            (700, None, 0), (90, 60, 1), (220, None, 0), (140, 120, -1), (380, None, 0),
+            (80, 35, 1), (60, 35, 1), (300, None, 0), (200, 200, -1), (520, None, 0),
+            (110, 45, -1), (250, None, 0), (160, 90, 1), (90, 50, 1), (600, None, 0),
+            (140, 70, -1), (180, None, 0), (130, 55, 1), (150, 110, -1), (390, None, 0),
+        ]
+        self.length = sum(seg[0] for seg in self.segments)
+        # Konumlari 1 m adimla onceden hesapla (kapanma hatasini yayarak duzelt)
+        pts, x, z, heading = [], 0.0, 0.0, 0.0
+        curv = []
+        for seg_len, radius, sign in self.segments:
+            for _ in range(int(seg_len)):
+                k = (sign / radius) if radius else 0.0
+                heading += k
+                x += math.cos(heading); z += math.sin(heading)
+                pts.append((x, z)); curv.append(k)
+        n = len(pts)
+        for i, (px, pz) in enumerate(pts):
+            f = i / n
+            pts[i] = (px - x * f, pz - z * f)
+        self.points, self.curv = pts, curv
+        # Hedef hiz: egrilige gore, ileriye dogru fren mesafesi ile yumusatilmis
+        target = [min(330.0, 3.6 * math.sqrt(3.2 * 9.81 / abs(k))) if k else 330.0 for k in curv]
+        for i in range(n - 2, -1, -1):
+            target[i] = min(target[i], target[i + 1] + 0.55)      # frenleme (km/h per m)
+        for i in range(1, n):
+            target[i] = min(target[i], target[i - 1] + 0.22)      # hizlanma
+        self.target = target
+
+    def at(self, distance):
+        i = int(distance) % len(self.points)
+        x, z = self.points[i]
+        nx, nz = self.points[(i + 1) % len(self.points)]
+        yaw = math.atan2(nz - z, nx - x)
+        return x, z, yaw, self.curv[i], self.target[i]
+
+
+TRACK = Track()
+
+
+def motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long):
+    payload = b""
+    for car in range(CARS):
+        if car == PLAYER:
+            payload += struct.pack(
+                MOTION_FMT, x, 0.0, z,
+                v_ms * math.cos(yaw), 0.0, v_ms * math.sin(yaw),
+                int(math.cos(yaw) * 32767), 0, int(math.sin(yaw) * 32767),
+                int(-math.sin(yaw) * 32767), 0, int(math.cos(yaw) * 32767),
+                int(g_lat * 1000), int(g_long * 1000), 1000,
+                yaw, 0.0, 0.0,
+            )
+        else:
+            payload += bytes(54)
+    return header(0, frame) + payload
+
+
+def session_packet(frame):
+    head = struct.pack(SESSION_HEAD_FMT, 1, 41, 27, 20, int(TRACK.length), 10, 7)
+    return header(1, frame) + head + bytes(SESSION_SIZE - len(head))
+
 
 def header(packet_id, frame):
     return struct.pack(
@@ -102,14 +174,14 @@ def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
     return header(2, frame) + payload
 
 
-def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, tyre_temp=98):
+def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, tyre_temp=98, steer=0.0):
     percent = int(max(0, min(100, (rpm - IDLE_RPM) / (MAX_RPM - IDLE_RPM) * 100)))
     payload = b""
     for car in range(CARS):
         if car == PLAYER:
             payload += struct.pack(
                 TELEMETRY_FMT,
-                int(speed), throttle, 0.0, brake, 0, gear, int(rpm), 0,
+                int(speed), throttle, steer, brake, 0, gear, int(rpm), 0,
                 percent, rev_bits(percent),
                 brake_temp + 40, brake_temp, brake_temp - 30, brake_temp - 60,
                 tyre_temp, tyre_temp + 6, tyre_temp - 4, tyre_temp + 12,
@@ -166,23 +238,58 @@ def main():
     print(f"F1 26 sim -> {target}:{port} @ {RATE_HZ} Hz  (Ctrl+C ile durdur)")
 
     frame = 0
+    distance = 0.0
+    speed = 80.0            # km/h
+    lap_index = 0
+    lap_start_t = 0.0
+    last_lap_ms = 0
+    s1_ms = s2_ms = 0
+    prev_speed = speed
     while True:
         t = frame / RATE_HZ
-        # 8 saniyelik bir tur: vitesler yukari, sonra fren
-        phase = (t % 8) / 8
-        gear = min(8, max(1, int(phase * 9)))
-        rpm = IDLE_RPM + (MAX_RPM - IDLE_RPM) * (0.35 + 0.65 * abs(math.sin(t * 2.2)))
-        speed = 60 + 280 * phase
-        throttle = 1.0 if phase < 0.72 else 0.0
-        brake = 0.0 if phase < 0.72 else min(1.0, (phase - 0.72) * 6)
+        dt = 1 / RATE_HZ
+        x, z, yaw, curv, v_target = TRACK.at(distance)
+        # her turun temposu biraz farkli olsun ki karsilastirma anlamli ciksin
+        pace = 1 + 0.03 * math.sin(lap_index * 1.7)
+        v_target = v_target / pace
+        if speed < v_target:
+            throttle, brake = 1.0, 0.0
+            speed = min(v_target, speed + 45 * dt * (1 - speed / 360))
+        else:
+            throttle = 0.0 if v_target < speed - 4 else 0.4
+            brake = min(1.0, 0.5 + (speed - v_target) / 30) if v_target < speed - 2 else 0.0
+            speed = max(v_target, speed - (170 * brake + 12) * dt)
+        v_ms = speed / 3.6
+        distance += v_ms * dt
+        if distance >= TRACK.length:
+            distance -= TRACK.length
+            last_lap_ms = int((t - lap_start_t) * 1000)
+            lap_start_t = t
+            lap_index += 1
+            s1_ms = s2_ms = 0
+        lap_time = int((t - lap_start_t) * 1000)
+        sector = 0 if distance < TRACK.length / 3 else (1 if distance < 2 * TRACK.length / 3 else 2)
+        if sector >= 1 and s1_ms == 0: s1_ms = lap_time
+        if sector >= 2 and s2_ms == 0: s2_ms = lap_time - s1_ms
+
+        gear = max(1, min(8, int(speed / 42) + 1))
+        gear_span = 42
+        rpm = IDLE_RPM + (MAX_RPM - IDLE_RPM) * ((speed - (gear - 1) * gear_span) / gear_span) * 0.9
+        rpm = max(IDLE_RPM, min(MAX_RPM, rpm))
+        g_lat = (v_ms * v_ms * curv) / 9.81
+        steer = max(-1.0, min(1.0, curv * 40))
+        g_long = ((speed - prev_speed) / 3.6 / dt) / 9.81
+        prev_speed = speed
+        phase = distance / TRACK.length
 
         brake_temp = int(260 + 640 * brake + 60 * math.sin(t))
         tyre_temp = int(88 + 26 * phase + 6 * math.sin(t * 0.7))
         sock.sendto(
-            telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp),
+            telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp, steer),
             (target, port),
         )
-        # ilk 8 saniye: bes isik yanar, sonra soner
+        sock.sendto(motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long), (target, port))
+        # ilk 6 saniye: bes isik yanar, sonra soner
         if t < 6:
             lights = min(5, int(t / 1.0))
             if lights > 0 and frame % 6 == 0:
@@ -192,24 +299,12 @@ def main():
 
         if frame % 120 == 0:
             sock.sendto(participants_packet(frame), (target, port))
+            sock.sendto(session_packet(frame), (target, port))
         if frame % 3 == 0:
-            # 45 saniyelik tur; her turun temposu biraz farkli olsun ki
-            # en iyi tura gore delta anlamli ciksin.
-            lap_length = 45.0
-            track_metres = 5000.0
-            lap_index = int(t / lap_length)
-            pace = 1 + 0.03 * math.sin(lap_index * 1.7)
-            in_lap = t % lap_length
-            lap_time = int(in_lap * 1000 * pace)
-            distance = in_lap / lap_length * track_metres
-            sector = 0 if distance < track_metres / 3 else (1 if distance < 2 * track_metres / 3 else 2)
-            s1 = int(lap_length / 3 * 1000 * pace) if sector >= 1 else 0
-            s2 = int(lap_length / 3 * 1000 * pace) if sector >= 2 else 0
-            last_lap = int(lap_length * 1000 * (1 + 0.03 * math.sin((lap_index - 1) * 1.7))) if lap_index else 0
             delta_ms = int(1200 + 900 * math.sin(t * 0.35))
             sock.sendto(
                 lapdata_packet(frame, lap_time, 20 + lap_index, delta_ms,
-                               s1, s2, distance, sector, last_lap),
+                               s1_ms, s2_ms, distance, sector, last_lap_ms),
                 (target, port),
             )
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
@@ -224,7 +319,7 @@ def main():
             sock.sendto(
                 telemetry2_packet(frame, overtake_ready=phase > 0.3,
                                   overtake_active=0.45 < phase < 0.6,
-                                  straight_mode=phase > 0.35),
+                                  straight_mode=curv == 0 and speed > 200),
                 (target, port),
             )
         frame += 1

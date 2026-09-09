@@ -9,6 +9,7 @@ struct LapsView: View {
     let unit: CGFloat
     @Binding var sessionID: String
     @ObservedObject var uploader: SessionUploader
+    let payload: () -> SessionUploader.Payload
     let onClose: () -> Void
 
     @State private var showsScanner = false
@@ -143,7 +144,7 @@ struct LapsView: View {
                 .frame(width: unit * 3.8)
 
                 Button {
-                    uploader.send(laps: laps, sessionID: sessionID)
+                    uploader.send(payload(), sessionID: sessionID)
                 } label: {
                     Text(strings.sendNow)
                         .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
@@ -179,7 +180,7 @@ struct LapsView: View {
                 QRScannerView { scanned in
                     if let id = SessionUploader.sessionID(from: scanned) {
                         sessionID = id
-                        uploader.send(laps: laps, sessionID: id)
+                        uploader.send(payload(), sessionID: id)
                     }
                     showsScanner = false
                 }

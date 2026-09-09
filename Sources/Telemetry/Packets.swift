@@ -79,6 +79,8 @@ struct CarTelemetry {
     var engineTemp: Int = 0
     var tyrePressures: [Float] = [0, 0, 0, 0]
 
+    init() {}
+
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
         guard r.remaining >= Self.stride else { return nil }
@@ -137,6 +139,8 @@ struct CarTelemetry2 {
     var is2026Regulations: Bool = false
     var drivingWrongWay: Bool = false
 
+    init() {}
+
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
         guard r.remaining >= Self.stride else { return nil }
@@ -180,6 +184,8 @@ struct CarStatus {
     var ersHarvestedThisLap: Float = 0
     var ersHarvestLimitPerLap: Float = 0
     var ersDeployedThisLap: Float = 0
+
+    init() {}
 
     init?(data: Data, carIndex: Int) {
         var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
@@ -356,5 +362,67 @@ enum GameEvent {
         default:
             self = .other(code)
         }
+    }
+}
+
+/// Packet ID 0 - Motion (arac basina 54 byte). Pist haritasi ve G kuvveti
+/// icin oyuncunun dunya konumu ve ivmeleri.
+struct CarMotion {
+    static let stride = 54
+
+    var worldX: Float = 0
+    var worldY: Float = 0
+    var worldZ: Float = 0
+    var speedMS: Float = 0
+    var yaw: Float = 0
+    /// G kuvvetleri (g biriminde; paket 1000 ile carpilmis int16 tasir).
+    var gLateral: Float = 0
+    var gLongitudinal: Float = 0
+
+    init() {}
+
+    init?(data: Data, carIndex: Int) {
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
+        guard r.remaining >= Self.stride else { return nil }
+        guard let x = r.float(), let y = r.float(), let z = r.float(),
+              let vx = r.float(), let vy = r.float(), let vz = r.float()
+        else { return nil }
+        r.skip(12)                                  // forward/right yon vektorleri
+        guard let gLat = r.uint16(), let gLong = r.uint16() else { return nil }
+        r.skip(2)                                   // gForceVertical
+        guard let yaw = r.float() else { return nil }
+        worldX = x; worldY = y; worldZ = z
+        speedMS = (vx * vx + vy * vy + vz * vz).squareRoot()
+        self.yaw = yaw
+        gLateral = Float(Int16(bitPattern: gLat)) / 1000
+        gLongitudinal = Float(Int16(bitPattern: gLong)) / 1000
+    }
+}
+
+/// Packet ID 1 - Session. Yalnizca pist ve hava bilgisi okunur.
+struct SessionInfo: Equatable {
+    var weather: Int = 0
+    var trackTemperature: Int = 0
+    var airTemperature: Int = 0
+    var totalLaps: Int = 0
+    var trackLength: Int = 0
+    var sessionType: Int = 0
+    var trackID: Int = -1
+
+    init() {}
+
+    init?(data: Data) {
+        var r = ByteReader(data, offset: PacketHeader.size)
+        guard let weather = r.uint8(), let trackTemp = r.int8(), let airTemp = r.int8(),
+              let totalLaps = r.uint8(), let length = r.uint16(),
+              let type = r.uint8(), let track = r.int8()
+        else { return nil }
+        self.weather = Int(weather)
+        trackTemperature = Int(trackTemp)
+        airTemperature = Int(airTemp)
+        self.totalLaps = Int(totalLaps)
+        trackLength = Int(length)
+        sessionType = Int(type)
+        trackID = Int(track)
     }
 }

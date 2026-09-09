@@ -9,6 +9,11 @@ struct RootDashboardView: View {
     @State private var showsSetup = false
     @State private var showsLaps = false
     @AppStorage("webSession") private var sessionID: String = ""
+
+    /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
+    private var uploadPayload: SessionUploader.Payload {
+        .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
+    }
     @StateObject private var uploader = SessionUploader()
     @State private var showsThemePicker = false
     @State private var hideTask: Task<Void, Never>?
@@ -86,7 +91,8 @@ struct RootDashboardView: View {
                              strings: strings,
                              unit: unit,
                              sessionID: $sessionID,
-                             uploader: uploader) { showsLaps = false }
+                             uploader: uploader,
+                             payload: { uploadPayload }) { showsLaps = false }
                     .transition(.opacity)
                 }
             }
@@ -103,8 +109,7 @@ struct RootDashboardView: View {
                 }
             }
             .onAppear {
-                uploader.startHeartbeat(laps: { dash.completedLaps },
-                                        sessionID: { sessionID })
+                uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
                 if !didCompleteSetup { showsSetup = true }
             }
@@ -112,9 +117,9 @@ struct RootDashboardView: View {
                 client.update(port: UInt16(new))
             }
             // Yeni tur tamamlandiginda site kendiliginden guncellenir.
-            .onChange(of: dash.completedLaps.count) { _, _ in
+            .onChange(of: client.lapTraces.count) { _, _ in
                 guard !sessionID.isEmpty else { return }
-                uploader.send(laps: dash.completedLaps, sessionID: sessionID)
+                uploader.send(uploadPayload, sessionID: sessionID)
             }
             .contentShape(Rectangle())
             .onTapGesture { revealPicker() }
