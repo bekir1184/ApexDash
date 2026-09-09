@@ -423,8 +423,9 @@ struct BroadcastHUD {
                    style: StrokeStyle(lineWidth: k * 5, lineCap: .round))
 
         // Orta: vites cetveli
-        let gears = ["N"] + (1...max(dash.maxGears, 8)).map(String.init)
-        let gx0 = rect.minX + rect.width * 0.33, gx1 = rect.minX + rect.width * 0.62
+        // R, N ve 1...8: oyundaki vites sayisi kadar
+        let gears = ["R", "N"] + (1...max(min(dash.maxGears, 8), 1)).map(String.init)
+        let gx0 = rect.minX + rect.width * 0.31, gx1 = rect.minX + rect.width * 0.62
         for (i, label) in gears.enumerated() {
             let x = gx0 + (gx1 - gx0) * CGFloat(i) / CGFloat(gears.count - 1)
             let on = label == dash.gearLabel
