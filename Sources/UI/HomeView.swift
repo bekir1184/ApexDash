@@ -25,7 +25,7 @@ struct HomeView: View {
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let cardW = size.width * 0.50, cardH = cardW / 2.16
+            let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
             ZStack {
                 background
 
@@ -98,7 +98,7 @@ struct HomeView: View {
     // MARK: Karusel
 
     private func carousel(in size: CGSize, dash: DashboardModel) -> some View {
-        let cardW = size.width * 0.50, cardH = cardW / 2.16
+        let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
         let step = cardW * 0.66                      // kartlar arasi mesafe: yandakiler kenardan gorunur
         let count = themes.count
         let current = themes.firstIndex(of: selectedTheme) ?? 0
@@ -165,7 +165,7 @@ struct HomeView: View {
     /// olceklenir, boylece tam ekrandaki yerlesimin aynisi gorunur.
     private func card(theme: DashTheme, dash: DashboardModel, width: CGFloat, height: CGFloat,
                       size: CGSize) -> some View {
-        let full = CGSize(width: size.width, height: size.width / 2.16)
+        let full = size
         let scale = width / full.width
         let fullUnit = min(full.width / 15.2, full.height / 8.2)
         return ZStack {

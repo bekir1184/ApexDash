@@ -84,7 +84,7 @@ struct RootDashboardView: View {
                 .scaleEffect(pullTransform(geo).scale)
                 .offset(pullTransform(geo).offset)
                 .zIndex(2)
-                .transition(.identity)
+                .transition(.opacity)
 
                 if showsThemePicker {
                     VStack(spacing: unit * 0.15) {
@@ -207,8 +207,10 @@ struct RootDashboardView: View {
                                 landing = true
                                 withAnimation(.easeInOut(duration: 0.28)) { pull = Self.pullSpan(geo) }
                                 Task { @MainActor in
-                                    try? await Task.sleep(nanoseconds: 300_000_000)
-                                    showsHome = true
+                                    // Yerine oturunca pano kartin ustunde kisa bir gecisle solar.
+                                    try? await Task.sleep(nanoseconds: 290_000_000)
+                                    withAnimation(.easeOut(duration: 0.18)) { showsHome = true }
+                                    try? await Task.sleep(nanoseconds: 200_000_000)
                                     pull = 0
                                     landing = false
                                 }
