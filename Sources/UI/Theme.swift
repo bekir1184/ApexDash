@@ -25,6 +25,12 @@ enum DashTheme: String, CaseIterable, Identifiable {
         let index = all.firstIndex(of: self) ?? 0
         return all[(index + 1) % all.count]
     }
+
+    var previous: DashTheme {
+        let all = Self.allCases
+        let index = all.firstIndex(of: self) ?? 0
+        return all[(index + all.count - 1) % all.count]
+    }
 }
 
 /// Sicaklik degerlerini renge cevirir. Esikler F1 oyunlarindaki calisma

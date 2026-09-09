@@ -11,6 +11,8 @@ struct RootDashboardView: View {
     /// Acilista karusel; SEC ile tam ekran panoya gecilir.
     @State private var showsHome = !UserDefaults.standard.bool(forKey: "skipHome")   // test icin baslatma argumani
     @State private var showsConnection = false
+    /// Yatay kaydirmada panonun kaydigi yon: +1 sola (sonraki), -1 saga (onceki).
+    @State private var slide: CGFloat = 1
     @AppStorage("webSession") private var sessionID: String = ""
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
@@ -47,6 +49,10 @@ struct RootDashboardView: View {
                 DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, unit * 0.16)
+                    .id(theme)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: slide > 0 ? .trailing : .leading).combined(with: .opacity),
+                        removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
                     // Gercekci temada govde cercevesi yatay guvenli alanin
                     // disina, Dynamic Island bandinin uzerine tasar; orada
                     // sadece isiklar var, yazi yok.
@@ -161,10 +167,19 @@ struct RootDashboardView: View {
             .gesture(
                 DragGesture(minimumDistance: 40)
                     .onEnded { value in
-                        guard !showsHome,
-                              abs(value.translation.width) > abs(value.translation.height) else { return }
-                        themeID = theme.next.rawValue
-                        revealPicker()
+                        guard !showsHome else { return }
+                        let t = value.translation
+                        if abs(t.width) > abs(t.height) {
+                            slide = t.width < 0 ? 1 : -1
+                            withAnimation(.easeInOut(duration: 0.32)) {
+                                themeID = (t.width < 0 ? theme.next : theme.previous).rawValue
+                            }
+                            revealPicker()
+                        } else if t.height > 60 {
+                            // Asagi kaydirma: menuye don
+                            showsConnection = false
+                            withAnimation(.easeInOut(duration: 0.25)) { showsHome = true; showsThemePicker = false }
+                        }
                     }
             )
         }
@@ -227,17 +242,6 @@ struct RootDashboardView: View {
             }
             .buttonStyle(.plain)
 
-            Button {
-                withAnimation(.easeOut(duration: 0.2)) { showsLaps = true }
-            } label: {
-                Text(strings.lapsButton)
-                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, unit * 0.3)
-                    .padding(.vertical, unit * 0.14)
-                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
-            }
-            .buttonStyle(.plain)
 
         }
         .padding(unit * 0.14)
