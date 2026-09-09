@@ -85,6 +85,10 @@ struct Strings {
     }
     var startButton: String { pick("BASLA", "START") }
     var setupButton: String { pick("KURULUMU AC", "OPEN SETUP") }
+    var selectButton: String { pick("SEÇ", "SELECT") }
+    var menuButton: String { pick("MENÜ", "MENU") }
+    var connected: String { pick("BAĞLI", "CONNECTED") }
+    var notConnected: String { pick("BAĞLANTI YOK", "NOT CONNECTED") }
 
 
     func themeTitle(_ theme: DashTheme) -> String {

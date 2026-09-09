@@ -8,6 +8,9 @@ struct RootDashboardView: View {
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @State private var showsSetup = false
     @State private var showsLaps = false
+    /// Acilista karusel; SEC ile tam ekran panoya gecilir.
+    @State private var showsHome = true
+    @State private var showsConnection = false
     @AppStorage("webSession") private var sessionID: String = ""
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
@@ -28,10 +31,20 @@ struct RootDashboardView: View {
             // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
             ZStack(alignment: .bottom) {
+                if showsHome {
+                    HomeView(client: client, strings: strings, unit: unit,
+                             selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
+                             onSelect: { withAnimation(.easeInOut(duration: 0.25)) { showsHome = false } },
+                             onLaps: { withAnimation(.easeOut(duration: 0.2)) { showsLaps = true } },
+                             onLanguage: { languageID = language.next.rawValue },
+                             onOpenSetup: { withAnimation(.easeOut(duration: 0.2)) { showsSetup = true } },
+                             languageLabel: language.label)
+                        .transition(.opacity)
+                } else {
                 themeBackground(unit: unit)
                     .ignoresSafeArea()
 
-                content(unit: unit)
+                DashboardContent(theme: theme, dash: dash, unit: unit, strings: strings)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, unit * 0.16)
                     // Gercekci temada govde cercevesi yatay guvenli alanin
@@ -50,6 +63,33 @@ struct RootDashboardView: View {
                     }
                     .padding(.horizontal, unit * 0.6)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                }
+            }
+            // Tam ekranda baglanti yoksa sag ustte kucuk uyari; dokununca kart acilir.
+            .overlay(alignment: .topTrailing) {
+                if !showsHome && !showsSetup && !showsLaps {
+                    VStack(alignment: .trailing, spacing: unit * 0.15) {
+                        if client.status != .receiving {
+                            ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
+                                            strings: strings, unit: unit) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                                    showsConnection.toggle()
+                                }
+                            }
+                        }
+                        if showsConnection {
+                            ConnectionCard(client: client, strings: strings, unit: unit * 0.62,
+                                           onOpenSetup: {
+                                               showsConnection = false
+                                               withAnimation(.easeOut(duration: 0.2)) { showsSetup = true }
+                                           },
+                                           onClose: { withAnimation { showsConnection = false } })
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+                    }
+                    .padding(.top, unit * 0.3)
+                    .padding(.trailing, unit * 0.5)
                 }
             }
             .overlay {
@@ -72,18 +112,13 @@ struct RootDashboardView: View {
             .animation(.easeOut(duration: 0.15), value: dash.startLights)
             .animation(.easeOut(duration: 0.15), value: dash.lightsOutDate)
             .overlay(alignment: .top) {
-                if let flash = dash.sectorFlash, client.status == .receiving {
+                if let flash = dash.sectorFlash, client.status == .receiving, !showsHome {
                     SectorFlashView(flash: flash, unit: unit)
                         .padding(.top, unit * 0.12)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dash.sectorFlash)
-            .overlay {
-                if client.status != .receiving && !showsSetup && !showsLaps {
-                    waitingOverlay(unit: unit)
-                }
-            }
             .overlay {
                 if showsLaps {
                     LapsView(laps: dash.completedLaps,
@@ -122,11 +157,12 @@ struct RootDashboardView: View {
                 uploader.send(uploadPayload, sessionID: sessionID)
             }
             .contentShape(Rectangle())
-            .onTapGesture { revealPicker() }
+            .onTapGesture { if !showsHome { revealPicker() } }
             .gesture(
                 DragGesture(minimumDistance: 40)
                     .onEnded { value in
-                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        guard !showsHome,
+                              abs(value.translation.width) > abs(value.translation.height) else { return }
                         themeID = theme.next.rawValue
                         revealPicker()
                     }
@@ -136,7 +172,7 @@ struct RootDashboardView: View {
         .ignoresSafeArea(edges: .vertical)
         // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
         .overlay {
-            if theme != .realistic && theme != .broadcast {
+            if !showsHome && theme != .realistic && theme != .broadcast {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
@@ -158,17 +194,6 @@ struct RootDashboardView: View {
         }
     }
 
-    @ViewBuilder
-    private func content(unit: CGFloat) -> some View {
-        switch theme {
-        case .modern: ModernDashboardView(dash: dash, unit: unit, strings: strings)
-        case .dotMatrix: DotMatrixDashboardView(dash: dash, unit: unit)
-        case .realistic: RealisticDashboardView(dash: dash, unit: unit)
-        case .broadcast: BroadcastDashboardView(dash: dash, unit: unit)
-        case .game: GameDashboardView(dash: dash, unit: unit)
-        }
-    }
-
     private func themePicker(unit: CGFloat) -> some View {
         HStack(spacing: unit * 0.2) {
             ForEach(DashTheme.allCases) { option in
@@ -187,6 +212,19 @@ struct RootDashboardView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            Button {
+                showsConnection = false
+                withAnimation(.easeInOut(duration: 0.25)) { showsHome = true; showsThemePicker = false }
+            } label: {
+                Text(strings.menuButton)
+                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, unit * 0.3)
+                    .padding(.vertical, unit * 0.14)
+                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
 
             Button {
                 withAnimation(.easeOut(duration: 0.2)) { showsLaps = true }
@@ -243,25 +281,5 @@ struct RootDashboardView: View {
         }
         .font(.system(size: unit * 0.22, weight: .semibold, design: .monospaced))
         .foregroundStyle(.white.opacity(0.22))
-    }
-
-    private func waitingOverlay(unit: CGFloat) -> some View {
-        WaitingView(title: statusTitle,
-                    strings: strings,
-                    localIP: client.localIP,
-                    port: client.port.rawValue,
-                    unit: unit,
-                    previousIP: client.previousIP) {
-            withAnimation(.easeOut(duration: 0.2)) { showsSetup = true }
-        }
-    }
-
-    private var statusTitle: String {
-        switch client.status {
-        case .idle: return strings.connectionOff
-        case .listening: return strings.waitingForData
-        case .receiving: return ""
-        case .failed(let message): return strings.failure(message)
-        }
     }
 }
