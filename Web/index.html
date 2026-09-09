@@ -124,6 +124,7 @@
             <button data-m="speed" class="on">Hız</button>
             <button data-m="pedal">Gaz / Fren</button>
             <button data-m="ers">ERS</button>
+            <button data-m="sector">Sektör</button>
           </span>
         </h2>
         <canvas id="map"></canvas>
@@ -206,6 +207,7 @@ const state = {
   traces: new Map(),       // lap -> {d,t,x,z,v,...} sutun dizileri
   loading: new Set(),
   mapMode: "speed",
+  orient: null,
   cursor: null,            // mesafe (m)
   corners: []
 };
@@ -258,7 +260,7 @@ async function ensureTraces() {
     state.loading.add(lap);
     try {
       const r = await fetch(`/api/session?id=${session}&lap=${lap}`, { cache: "no-store" });
-      if (r.ok) state.traces.set(lap, columnise(await r.json()));
+      if (r.ok) state.traces.set(lap, columnise(await r.json(), state.laps.find(l => l.lap === lap)));
       else markMissing(lap);
     } catch (_) { markMissing(lap); }
     finally { state.loading.delete(lap); }
@@ -277,11 +279,63 @@ function markMissing(lap) {
 }
 
 /** Satir dizilerini sutun dizilerine cevirir ve mesafeye gore siralar. */
-function columnise(trace) {
+function columnise(trace, info) {
   const cols = trace.columns, rows = trace.rows.slice().sort((a, b) => a[1] - b[1]);
   const out = { n: rows.length, time: trace.time };
   cols.forEach((c, i) => out[c] = Float64Array.from(rows, r => r[i]));
+  const n = out.n;
+  // Isinlanma / geri sarma: ardisik ornekler arasi 60 m ustu sicrama cizgiyi
+  // koparir; iki tarafi da kopuk tek ornekler (tur oncesi bayat konum) atilir.
+  const jump = new Float64Array(n);
+  for (let i = 1; i < n; i++) jump[i] = Math.hypot(out.x[i] - out.x[i - 1], out.z[i] - out.z[i - 1]);
+  out.brk = new Uint8Array(n); out.ok = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    const before = i === 0 || jump[i] > 60, after = i === n - 1 || jump[i + 1] > 60;
+    out.brk[i] = before ? 1 : 0;
+    out.ok[i] = before && after ? 0 : 1;
+  }
+  // Sektorler: tur bilgisindeki sureler uzerinden
+  const sectors = info?.sectors || [];
+  const s1 = sectors[0] || Infinity, s2 = s1 + (sectors[1] || Infinity);
+  out.sec = Uint8Array.from(out.t, t => t < s1 ? 0 : t < s2 ? 1 : 2);
   return out;
+}
+
+/** Haritayi gercek pist cizimleri gibi yerlestirir: en uzun duz yatay, pist
+ *  govdesi onun ustunde. Yalnizca dondurme yapilir (ayna yok), boylece pistin
+ *  yonu korunur. Referans turdan bir kez hesaplanir, tum turlara uygulanir. */
+function orientation(tr) {
+  const vmax = Math.max(...tr.v);
+  let best = [0, 0];
+  for (let i = 0; i < tr.n;) {
+    if (tr.ok[i] && tr.v[i] >= 0.85 * vmax) {
+      let j = i;
+      while (j < tr.n && tr.ok[j] && !(j > i && tr.brk[j]) && tr.v[j] >= 0.85 * vmax) j++;
+      if (j - i > best[1] - best[0]) best = [i, j];
+      i = j;
+    } else i++;
+  }
+  const [i, j] = best;
+  if (j - i < 5) return { cos: 1, sin: 0 };
+  const heading = Math.atan2(tr.z[j - 1] - tr.z[i], tr.x[j - 1] - tr.x[i]);
+  const candidates = [Math.PI - heading, -heading];   // duz sola ya da saga aksin
+  let cx = 0, cz = 0, k = 0;
+  for (let q = 0; q < tr.n; q++) if (tr.ok[q]) { cx += tr.x[q]; cz += tr.z[q]; k++; }
+  cx /= k; cz /= k;
+  const mx = (tr.x[i] + tr.x[j - 1]) / 2, mz = (tr.z[i] + tr.z[j - 1]) / 2;
+  for (const a of candidates) {
+    const rz = (cx - mx) * Math.sin(a) + (cz - mz) * Math.cos(a);
+    if (rz < 0) return { cos: Math.cos(a), sin: Math.sin(a) };   // govde ustte (ekranda -y)
+  }
+  return { cos: Math.cos(candidates[0]), sin: Math.sin(candidates[0]) };
+}
+function mapXY(tr, i) {
+  const o = state.orient || { cos: 1, sin: 0 };
+  return [tr.x[i] * o.cos - tr.z[i] * o.sin, tr.x[i] * o.sin + tr.z[i] * o.cos];
+}
+function mapPoint(x, z) {
+  const o = state.orient || { cos: 1, sin: 0 };
+  return [x * o.cos - z * o.sin, x * o.sin + z * o.cos];
 }
 
 // ---------------------------------------------------------------- tur listesi
@@ -334,7 +388,7 @@ function detectCorners(tr) {
     let isMin = true;
     for (let k = i - 5; k <= i + 5; k++) if (tr.v[k] < v) { isMin = false; break; }
     const turning = Math.abs(tr.gl[i]) > 0.6 || Math.abs(tr.st[i]) > 0.12;
-    if (isMin && turning && v < 300) {
+    if (isMin && turning && v < 300 && tr.ok[i]) {
       const last = corners[corners.length - 1];
       if (!last || tr.d[i] - last.d > 90) {
         corners.push({ i, d: tr.d[i], x: tr.x[i], z: tr.z[i], v });
@@ -389,6 +443,7 @@ function lapStats(tr) {
 // ---------------------------------------------------------------- cizim
 function renderAll() {
   const ref = state.traces.get(state.selected[0]);
+  state.orient = ref ? orientation(ref) : null;
   state.corners = detectCorners(ref);
   $("refLap").textContent = state.selected[0] ?? "—";
   renderStats();
@@ -431,8 +486,10 @@ const map = { canvas: $("map"), fit: null };
 function fitMap(tr) {
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
   for (let i = 0; i < tr.n; i++) {
-    minX = Math.min(minX, tr.x[i]); maxX = Math.max(maxX, tr.x[i]);
-    minZ = Math.min(minZ, tr.z[i]); maxZ = Math.max(maxZ, tr.z[i]);
+    if (!tr.ok[i]) continue;
+    const [x, z] = mapXY(tr, i);
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
   }
   const w = map.canvas.width, h = map.canvas.height, pad = 40;
   const s = Math.min((w - pad * 2) / Math.max(maxX - minX, 1), (h - pad * 2) / Math.max(maxZ - minZ, 1));
@@ -452,31 +509,41 @@ function drawMap() {
   const { px, pz } = map.fit;
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
-  // Pist govdesi (koyu)
+  const at = i => { const [x, z] = mapXY(tr, i); return [px(x), pz(z)]; };
+  // Pist govdesi (koyu); kopmalarda kalem kaldirilir
   ctx.beginPath();
-  for (let i = 0; i < tr.n; i++) i ? ctx.lineTo(px(tr.x[i]), pz(tr.z[i])) : ctx.moveTo(px(tr.x[i]), pz(tr.z[i]));
-  ctx.closePath();
+  for (let i = 0; i < tr.n; i++) {
+    if (!tr.ok[i]) continue;
+    const [x, y] = at(i);
+    if (tr.brk[i]) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
   ctx.strokeStyle = "#1c2430"; ctx.lineWidth = 16 * dpr; ctx.stroke();
 
   // Veri ile renkli cizgi
+  const SECTOR = ["#ff4438", "#4aa3ff", "#f5d92b"];
   const maxV = Math.max(...tr.v), minV = Math.min(...tr.v);
   for (let i = 1; i < tr.n; i++) {
+    if (!tr.ok[i] || !tr.ok[i - 1] || tr.brk[i]) continue;
     let col;
     if (state.mapMode === "speed") col = speedColour((tr.v[i] - minV) / Math.max(maxV - minV, 1));
     else if (state.mapMode === "pedal") col = tr.br[i] > 0.1 ? "#ff4438" : tr.th[i] > 0.9 ? "#3ce85a" : tr.th[i] > 0.1 ? "#9fd36a" : "#5b6472";
+    else if (state.mapMode === "sector") col = SECTOR[tr.sec[i]];
     else col = tr.ov[i] ? "#4aa3ff" : tr.dep[i] > (tr.dep[i - 1] ?? 0) + 0.5 ? "#f5d92b" : tr.ers[i] > (tr.ers[i - 1] ?? 0) ? "#3fd9c9" : "#5b6472";
-    ctx.beginPath(); ctx.moveTo(px(tr.x[i - 1]), pz(tr.z[i - 1])); ctx.lineTo(px(tr.x[i]), pz(tr.z[i]));
+    const [x0, y0] = at(i - 1), [x1, y1] = at(i);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
     ctx.strokeStyle = col; ctx.lineWidth = 7 * dpr; ctx.stroke();
   }
 
-  // Start cizgisi
-  ctx.beginPath(); ctx.arc(px(tr.x[0]), pz(tr.z[0]), 6 * dpr, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff"; ctx.fill();
+  // Start / finis: turun ilk gecerli noktasi
+  let first = 0; while (first < tr.n - 1 && !tr.ok[first]) first++;
+  { const [x, y] = at(first);
+    ctx.beginPath(); ctx.arc(x, y, 6 * dpr, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); }
 
   // Viraj numaralari
   ctx.font = `${11 * dpr}px ui-monospace, Menlo, monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   state.corners.forEach(k => {
-    const x = px(k.x), z = pz(k.z);
+    const [kx, kz] = mapPoint(k.x, k.z);
+    const x = px(kx), z = pz(kz);
     ctx.beginPath(); ctx.arc(x, z, 10 * dpr, 0, Math.PI * 2);
     ctx.fillStyle = "#0b0f14"; ctx.fill(); ctx.strokeStyle = "#3fd9c9"; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
     ctx.fillStyle = "#e8fbf9"; ctx.fillText(String(k.n), x, z + dpr * 0.5);
@@ -485,7 +552,7 @@ function drawMap() {
   // Imlec noktalari
   if (state.cursor != null) state.selected.forEach((lap, i) => {
     const t = state.traces.get(lap); if (!t) return;
-    const x = interp(t.x, t.d, state.cursor), z = interp(t.z, t.d, state.cursor);
+    const [x, z] = mapPoint(interp(t.x, t.d, state.cursor), interp(t.z, t.d, state.cursor));
     ctx.beginPath(); ctx.arc(px(x), pz(z), 7 * dpr, 0, Math.PI * 2);
     ctx.fillStyle = COLOURS[i]; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2 * dpr; ctx.stroke();
   });
@@ -497,7 +564,9 @@ map.canvas.addEventListener("mousemove", e => {
   const mx = (e.clientX - r.left) * dpr, mz = (e.clientY - r.top) * dpr;
   let best = -1, bd = Infinity;
   for (let i = 0; i < tr.n; i += 2) {
-    const dx = map.fit.px(tr.x[i]) - mx, dz = map.fit.pz(tr.z[i]) - mz, dd = dx * dx + dz * dz;
+    if (!tr.ok[i]) continue;
+    const [x, z] = mapXY(tr, i);
+    const dx = map.fit.px(x) - mx, dz = map.fit.pz(z) - mz, dd = dx * dx + dz * dz;
     if (dd < bd) { bd = dd; best = i; }
   }
   if (best >= 0 && bd < (30 * dpr) ** 2) setCursor(tr.d[best]);

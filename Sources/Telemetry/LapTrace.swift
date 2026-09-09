@@ -68,7 +68,9 @@ struct TraceRecorder {
             current.removeAll(keepingCapacity: true)
             lastSampleMS = -1_000
         }
-        guard lap.currentLapTimeMS - lastSampleMS >= intervalMS else { return }
+        guard lap.currentLapTimeMS - lastSampleMS >= intervalMS,
+              motion.worldX != 0 || motion.worldZ != 0     // konum gelmeden kayit yok
+        else { return }
         lastSampleMS = lap.currentLapTimeMS
         current.append(TraceSample(
             timeMS: lap.currentLapTimeMS, distance: lap.lapDistance,
