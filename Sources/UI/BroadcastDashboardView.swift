@@ -9,31 +9,73 @@ struct BroadcastDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
 
-    private static let design = CGSize(width: 2170, height: 1000)
-
     var body: some View {
         GeometryReader { geo in
-            let scale = min(geo.size.width / Self.design.width,
-                            geo.size.height / Self.design.height)
-            let origin = CGPoint(x: (geo.size.width - Self.design.width * scale) / 2,
-                                 y: (geo.size.height - Self.design.height * scale) / 2)
+            let layout = BroadcastLayout(size: geo.size)
             Canvas(rendersAsynchronously: false) { context, _ in
                 var ctx = context
-                ctx.translateBy(x: origin.x, y: origin.y)
-                ctx.scaleBy(x: scale, y: scale)
-                BroadcastHUD(dash: dash).draw(in: &ctx)
+                BroadcastHUD(dash: dash).draw(in: &ctx, layout: layout)
             }
             .overlay {
                 // Vites uyarisi gostergenin (esnetilmis) elipsi icinde yanip soner.
-                let hud = BroadcastHUD(dash: dash)
-                ShiftFlashOverlay(active: dash.shiftFlash,
-                                  color: Color(hex: 0x63d6dd))
+                let frame = layout.centre(BroadcastHUD(dash: dash).dialFrame)
+                ShiftFlashOverlay(active: dash.shiftFlash, color: Color(hex: 0x63d6dd))
                     .clipShape(Ellipse())
-                    .frame(width: hud.dialFrame.width * scale, height: hud.dialFrame.height * scale)
-                    .position(x: origin.x + hud.dialFrame.midX * scale,
-                              y: origin.y + hud.dialFrame.midY * scale)
+                    .frame(width: frame.width, height: frame.height)
+                    .position(x: frame.midX, y: frame.midY)
             }
         }
+    }
+}
+
+/// Orta grup (cember, paneller, bloklar, pil) tasarim yuksekligini ekran
+/// yuksekligine oturtur; yan bantlar kalan genislige sigacak sekilde ayri
+/// olceklenir ve alt koselere, blok etiketleriyle ayni tabana hizalanir.
+struct BroadcastLayout {
+    let size: CGSize
+    let centreScale: CGFloat
+    let bandScale: CGFloat
+    let bandWidth: CGFloat
+    let bandHeight: CGFloat
+
+    /// Orta grubun tasarim alanindaki dusey araligi: esnetilmis bezel ustu
+    /// ile BRAKE / THROTTLE yazisinin alti.
+    static let designTop: CGFloat = 20
+    static let designBottom: CGFloat = 906
+    static let designCentreX: CGFloat = 1085
+
+    init(size: CGSize) {
+        self.size = size
+        let R: CGFloat = 340
+        centreScale = min(size.height / (Self.designBottom - Self.designTop), size.width / (R * 4.3))
+        bandWidth = R * 1.09
+        bandHeight = R * 1.0
+        let margin = size.width * 0.012
+        let free = size.width / 2 - R * 2.06 * centreScale - 2 * margin
+        bandScale = max(min(centreScale, free / bandWidth), 0.01)
+    }
+
+    /// Tasarim koordinatindaki orta grup dikdortgenini ekrana tasir.
+    func centre(_ rect: CGRect) -> CGRect {
+        let x = size.width / 2 + (rect.minX - Self.designCentreX) * centreScale
+        let span = (Self.designBottom - Self.designTop) * centreScale
+        let y = (size.height - span) / 2 + (rect.minY - Self.designTop) * centreScale
+        return CGRect(x: x, y: y, width: rect.width * centreScale, height: rect.height * centreScale)
+    }
+
+    func applyCentre(to ctx: inout GraphicsContext) {
+        let origin = centre(CGRect(x: 0, y: 0, width: 0, height: 0)).origin
+        ctx.translateBy(x: origin.x, y: origin.y)
+        ctx.scaleBy(x: centreScale, y: centreScale)
+    }
+
+    /// Bant icin yerel (0,0 kokenli) tasarim koordinatlarini ekrana tasir.
+    func applyBand(to ctx: inout GraphicsContext, side: BroadcastHUD.Side, bottomDesignY: CGFloat) {
+        let margin = size.width * 0.012
+        let bottom = centre(CGRect(x: 0, y: bottomDesignY, width: 0, height: 0)).minY
+        let x = side == .left ? margin : size.width - margin - bandWidth * bandScale
+        ctx.translateBy(x: x, y: bottom - bandHeight * bandScale)
+        ctx.scaleBy(x: bandScale, y: bandScale)
     }
 }
 
@@ -74,10 +116,15 @@ struct BroadcastHUD {
         return CGRect(x: CX - r, y: top, width: 2 * r, height: bottom - top)
     }
 
-    func draw(in ctx: inout GraphicsContext) {
-        drawDriverPlates(in: &ctx)
-        drawRightBand(in: &ctx)
+    func draw(in ctx: inout GraphicsContext, layout: BroadcastLayout) {
+        var left = ctx
+        layout.applyBand(to: &left, side: .left, bottomDesignY: CY + R * 1.22)
+        drawDriverPlates(in: &left, size: CGSize(width: layout.bandWidth, height: layout.bandHeight))
+        var right = ctx
+        layout.applyBand(to: &right, side: .right, bottomDesignY: CY + R * 1.22)
+        drawRightBand(in: &right, size: CGSize(width: layout.bandWidth, height: layout.bandHeight))
 
+        layout.applyCentre(to: &ctx)
         var stretched = ctx
         stretched.translateBy(x: 0, y: stretchBase)
         stretched.scaleBy(x: 1, y: stretch)
@@ -87,11 +134,23 @@ struct BroadcastHUD {
                       colour: Color(hex: 0x3fb0f0), label: "BRAKE")
         drawSlatBlock(in: &stretched, side: .right, lit: litCount(Double(dash.throttle)),
                       colour: Color(hex: 0x3ff06a), label: "THROTTLE")
-        drawLabelPanel(in: &stretched, side: .left, text: "RECHARGE")
-        drawLabelPanel(in: &stretched, side: .right, text: "DEPLOY")
+        drawLabelPanel(in: &stretched, side: .left, text: "RECHARGE",
+                       level: dash.harvestFraction, active: dash.brake > 0.08)
+        drawLabelPanel(in: &stretched, side: .right, text: "DEPLOY",
+                       level: deployLevel, active: deployActive)
         drawDial(in: &stretched)
 
         drawBattery(in: &ctx)
+    }
+
+    /// Tur icinde harcanan enerjinin limite orani; limit gelmemisse deploy modu.
+    private var deployLevel: Double {
+        dash.ersHarvestLimitPerLap > 0 ? dash.deployedFraction
+                                       : min(Double(dash.ersDeployMode) / 3, 1)
+    }
+
+    private var deployActive: Bool {
+        dash.ersDeployMode > 0 && dash.throttle > 0.3 && dash.ersStoreEnergy > 0
     }
 
     private func litCount(_ fraction: Double) -> Int {
@@ -198,17 +257,28 @@ struct BroadcastHUD {
 
     // MARK: RECHARGE / DEPLOY panelleri
 
-    private func drawLabelPanel(in ctx: inout GraphicsContext, side: Side, text: String) {
+    private func drawLabelPanel(in ctx: inout GraphicsContext, side: Side, text: String,
+                                level: Double, active: Bool) {
         let rIn = R * 1.125, rOut = R * 1.52, rMid = (rIn + rOut) / 2
         let aTop = -asin(0.56 * R / rMid), aBottom = asin(0.88 * R / rMid)
         let seg = roundedSegment(side, rIn: rIn, rOut: rOut, aTop: aTop, aBottom: aBottom, c: corner)
 
         let top = point(side, rMid, aTop).y, bottom = point(side, rMid, aBottom).y
-        let gradient = GraphicsContext.Shading.linearGradient(
-            Gradient(colors: [panelTop, panelBottom]),
-            startPoint: CGPoint(x: CX, y: top), endPoint: CGPoint(x: CX, y: bottom))
-        strokeRounded(&ctx, seg, panelEdge, extra: 3)
-        fillRounded(&ctx, seg, gradient, widthDelta: -2.5)
+        // Sonuk taban; ustune alttan yukari seviye kadar parlak dolgu.
+        strokeRounded(&ctx, seg, active ? .white : panelEdge, extra: 3)
+        fillRounded(&ctx, seg, .color(Color(hex: 0x123153)), widthDelta: -2.5)
+        let clamped = CGFloat(min(max(level, 0), 1))
+        if clamped > 0 {
+            let gradient = GraphicsContext.Shading.linearGradient(
+                Gradient(colors: [active ? Color(hex: 0x3f82c4) : panelTop, panelBottom]),
+                startPoint: CGPoint(x: CX, y: top), endPoint: CGPoint(x: CX, y: bottom))
+            var filled = ctx
+            let outerTop = point(side, rOut, aTop).y - corner
+            let outerBottom = point(side, rOut, aBottom).y + corner
+            let fillTop = outerBottom - (outerBottom - outerTop) * clamped
+            filled.clip(to: Path(CGRect(x: 0, y: fillTop, width: 2170, height: outerBottom - fillTop)))
+            fillRounded(&filled, seg, gradient, widthDelta: -2.5)
+        }
 
         // Harfler orta yaricap boyunca, dik, esit acisal aralikla
         let letters = Array(text)
@@ -216,7 +286,8 @@ struct BroadcastHUD {
         for (i, ch) in letters.enumerated() {
             let a = aTop + pad + (aBottom - aTop - 2 * pad) * CGFloat(i) / CGFloat(letters.count - 1)
             let p = point(side, rMid, a)
-            drawText(&ctx, String(ch), size: 47, weight: .heavy, italic: true, colour: panelInk,
+            drawText(&ctx, String(ch), size: 47, weight: .heavy, italic: true,
+                     colour: active ? .white : panelInk,
                      at: CGPoint(x: p.x, y: p.y + R * 0.055))
         }
     }
@@ -339,19 +410,17 @@ struct BroadcastHUD {
         var h: CGFloat { rect.height }
     }
 
-    private func drawSideBand(in ctx: inout GraphicsContext, side: Side) -> Band {
-        let dir: CGFloat = side == .left ? -1 : 1
-        let xIn = R * 2.06, xOut = R * 3.15, w = xOut - xIn, h = R * 1.0
-        let cx = CX + dir * (xIn + w / 2), cy = CY + R * 1.22 - h / 2
-        let rect = CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h)
+    private func drawSideBand(in ctx: inout GraphicsContext, size: CGSize) -> Band {
+        let inset: CGFloat = 2
+        let rect = CGRect(x: inset, y: inset, width: size.width - 2 * inset, height: size.height - 2 * inset)
         let path = Path(roundedRect: rect, cornerRadius: corner)
         ctx.fill(path, with: .color(blockFill))
         ctx.stroke(path, with: .color(blockEdge), lineWidth: 3)
         return Band(rect: rect)
     }
 
-    private func drawDriverPlates(in ctx: inout GraphicsContext) {
-        let band = drawSideBand(in: &ctx, side: .left)
+    private func drawDriverPlates(in ctx: inout GraphicsContext, size: CGSize) {
+        let band = drawSideBand(in: &ctx, size: size)
         let pad = R * 0.08
         let rows: [Rival?] = [dash.driverAhead, dash.player, dash.driverBehind]
         for (i, rival) in rows.enumerated() {
@@ -370,8 +439,8 @@ struct BroadcastHUD {
         }
     }
 
-    private func drawRightBand(in ctx: inout GraphicsContext) {
-        let band = drawSideBand(in: &ctx, side: .right)
+    private func drawRightBand(in ctx: inout GraphicsContext, size: CGSize) {
+        let band = drawSideBand(in: &ctx, size: size)
         let pad = R * 0.08, x0 = band.rect.minX + pad, x1 = band.rect.maxX - pad
 
         // Satir 1: ACTIVE AERO + cift cizgi
