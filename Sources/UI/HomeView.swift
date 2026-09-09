@@ -62,17 +62,7 @@ struct HomeView: View {
     // MARK: Zemin
 
     private var background: some View {
-        ZStack {
-            Color(red: 0.05, green: 0.06, blue: 0.08)
-            // Arkadaki dairesel yazi: resimdeki gibi hafif, dekoratif.
-            CircularText(text: "F1 26 TELEMETRY · STEERING WHEEL DISPLAY · ", radius: unit * 3.1)
-                .font(.system(size: unit * 0.42, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.05))
-                .offset(y: -unit * 0.4)
-            RadialGradient(colors: [Color(red: 0.16, green: 0.55, blue: 0.62).opacity(0.28), .clear],
-                           center: .center, startRadius: 0, endRadius: unit * 6)
-        }
-        .ignoresSafeArea()
+        Color(red: 0.05, green: 0.06, blue: 0.08).ignoresSafeArea()
     }
 
     // MARK: Ust cubuk
@@ -112,17 +102,18 @@ struct HomeView: View {
         let current = themes.firstIndex(of: selectedTheme) ?? 0
         let progress = -drag / step                  // surukleme ile ara konum
         return ZStack {
-            ForEach(-2...2, id: \.self) { slot in
-                let index = ((current + slot) % count + count) % count
-                let theme = themes[index]
-                let rel = CGFloat(slot) - progress   // 0 = merkez
+            // Kartlar temayla kimliklenir: secim degisince ayni kart yerinde
+            // kayar, icerigi degismez; boylece gecis surekli gorunur.
+            ForEach(themes) { theme in
+                let index = themes.firstIndex(of: theme) ?? 0
+                let dist = ((index - current + count / 2 + count) % count) - count / 2
+                let rel = CGFloat(dist) - progress   // 0 = merkez
                 let scale = max(0.5, 1 - abs(rel) * 0.26)
-                let z = 10 - abs(rel)
                 card(theme: theme, dash: dash, width: cardW, height: cardH, size: size)
                     .scaleEffect(scale)
                     .opacity(max(0.2, 1 - abs(rel) * 0.45))
                     .offset(x: rel * step)
-                    .zIndex(Double(z))
+                    .zIndex(Double(10 - abs(rel)))
                     .allowsHitTesting(false)
             }
         }
@@ -135,13 +126,16 @@ struct HomeView: View {
                     let projected = value.predictedEndTranslation.width
                     var move = 0
                     if projected < -step * 0.35 { move = 1 } else if projected > step * 0.35 { move = -1 }
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                        if move != 0 {
-                            let next = ((current + move) % count + count) % count
-                            selectedTheme = themes[next]
+                    if move != 0 {
+                        // Secimi degistirirken suruklemeyi ayni anda telafi et:
+                        // kartlar oldugu yerde kalir, sonra yumusakca yerine oturur.
+                        var still = Transaction(); still.disablesAnimations = true
+                        withTransaction(still) {
+                            selectedTheme = themes[((current + move) % count + count) % count]
+                            drag += CGFloat(move) * step
                         }
-                        drag = 0
                     }
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { drag = 0 }
                 }
         )
     }
@@ -283,7 +277,7 @@ struct ConnectionBadge: View {
 }
 
 /// Uyari ucgenine dokununca acilan kucuk kart: bes baslangic isigi,
-/// durum ve oyundaki ayar tarifi ile kurulum dugmesi.
+/// kisa durum yazisi ve kurulum dugmesi.
 struct ConnectionCard: View {
     let client: TelemetryClient
     let strings: Strings
@@ -291,23 +285,49 @@ struct ConnectionCard: View {
     let onOpenSetup: () -> Void
     let onClose: () -> Void
 
+    private let cycle: Double = 7.5
+
     var body: some View {
-        WaitingView(title: title,
-                    strings: strings,
-                    localIP: client.localIP,
-                    port: client.port.rawValue,
-                    unit: unit,
-                    previousIP: client.previousIP,
-                    onOpenSetup: onOpenSetup)
-            .overlay(alignment: .topTrailing) {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: unit * 0.3, weight: .black))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(unit * 0.3)
-                }
-                .buttonStyle(.plain)
+        VStack(spacing: unit * 0.4) {
+            TimelineView(.periodic(from: .now, by: 0.1)) { context in
+                let phase = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: cycle)
+                StartLightsView(litColumns: litColumns(phase: phase), unit: unit)
             }
+            Text(title)
+                .font(.system(size: unit * 0.4, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .tracking(2)
+            Button(action: onOpenSetup) {
+                Text(strings.setupButton)
+                    .font(.system(size: unit * 0.3, weight: .black, design: .rounded))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, unit * 0.6)
+                    .padding(.vertical, unit * 0.18)
+                    .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(unit * 0.6)
+        .background(.black.opacity(0.94), in: RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1))
+        .overlay(alignment: .topTrailing) {
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: unit * 0.28, weight: .black))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(unit * 0.3)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func litColumns(phase: Double) -> Int {
+        switch phase {
+        case ..<5: return Int(phase) + 1
+        case ..<6.5: return 5
+        default: return 0
+        }
     }
 
     private var title: String {
@@ -316,25 +336,6 @@ struct ConnectionCard: View {
         case .listening: return strings.waitingForData
         case .receiving: return strings.connected
         case .failed(let message): return strings.failure(message)
-        }
-    }
-}
-
-/// Bir cember boyunca dizilmis yazi (dekoratif zemin icin).
-struct CircularText: View {
-    let text: String
-    let radius: CGFloat
-
-    var body: some View {
-        let chars = Array(text)
-        let step = 2 * Double.pi / Double(chars.count)
-        ZStack {
-            ForEach(chars.indices, id: \.self) { i in
-                let angle = Double(i) * step
-                Text(String(chars[i]))
-                    .rotationEffect(.radians(angle + .pi / 2))
-                    .offset(x: radius * CGFloat(cos(angle)), y: radius * CGFloat(sin(angle)))
-            }
         }
     }
 }
