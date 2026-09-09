@@ -136,7 +136,7 @@ struct BroadcastHUD {
         stretched.translateBy(x: 0, y: -stretchBase)
 
         drawSlatBlock(in: &stretched, side: .left, lit: litCount(Double(dash.brake)),
-                      colour: Color(hex: 0x3fb0f0), label: "BRAKE")
+                      colour: Color(hex: 0xff3b3b), label: "BRAKE")
         drawSlatBlock(in: &stretched, side: .right, lit: litCount(Double(dash.throttle)),
                       colour: Color(hex: 0x3ff06a), label: "THROTTLE")
         drawLabelPanel(in: &stretched, side: .left, text: "RECHARGE",
