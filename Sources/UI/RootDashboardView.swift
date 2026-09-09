@@ -65,10 +65,17 @@ struct RootDashboardView: View {
                             removal: .move(edge: slide > 0 ? .leading : .trailing).combined(with: .opacity)))
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
-                .clipped()
                 .scaleEffect(pullScale(geo))
                 .offset(y: pull * 0.35)
-                .clipShape(RoundedRectangle(cornerRadius: pull > 0 ? unit * 0.35 : 0, style: .continuous))
+                // Yalnizca asagi cekilirken kirp; normalde panolar guvenli
+                // alanin disina (kenarlara, Dynamic Island bandina) tasabilir.
+                .mask {
+                    if pull > 0 {
+                        RoundedRectangle(cornerRadius: unit * 0.35, style: .continuous)
+                    } else {
+                        Color.black.padding(-geo.size.width)
+                    }
+                }
 
                 if showsThemePicker {
                     VStack(spacing: unit * 0.15) {
