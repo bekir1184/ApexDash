@@ -24,8 +24,6 @@ struct RootDashboardView: View {
         .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
     }
     @StateObject private var uploader = SessionUploader()
-    @State private var showsThemePicker = false
-    @State private var hideTask: Task<Void, Never>?
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
     private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .systemDefault }
@@ -47,13 +45,13 @@ struct RootDashboardView: View {
                              languageLabel: language.label,
                              hiddenTheme: showsHome ? nil : theme)
                         .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
+                        .opacity(showsHome ? 1 : min(1, pullProgress(geo) * 2))
                         .transition(.identity)
                 }
                 if !showsHome {
-                if pull == 0 {
-                    themeBackground(unit: unit)
-                        .ignoresSafeArea()
-                }
+                themeBackground(unit: unit)
+                    .ignoresSafeArea()
+                    .opacity(1 - pullProgress(geo))
 
                 ZStack {
                     if pull > 0 { themeBackground(unit: unit) }
@@ -84,14 +82,6 @@ struct RootDashboardView: View {
                 .zIndex(2)
                 .transition(.opacity)
 
-                if showsThemePicker {
-                    VStack(spacing: unit * 0.15) {
-                        themePicker(unit: unit)
-                        footer(unit: unit)
-                    }
-                    .padding(.horizontal, unit * 0.6)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
                 }
             }
             // Tam ekranda baglanti yoksa sag ustte kucuk uyari; dokununca kart acilir.
@@ -185,7 +175,6 @@ struct RootDashboardView: View {
                 uploader.send(uploadPayload, sessionID: sessionID)
             }
             .contentShape(Rectangle())
-            .onTapGesture { if !showsHome { revealPicker() } }
             .gesture(
                 DragGesture(minimumDistance: 20)
                     .onChanged { value in
@@ -202,7 +191,6 @@ struct RootDashboardView: View {
                             if pull > geo.size.height * 0.25 || value.predictedEndTranslation.height > geo.size.height * 0.6 {
                                 // Esik asildi: pano karuseldeki kartina iner, sonra menu devralir.
                                 showsConnection = false
-                                showsThemePicker = false
                                 landing = true
                                 withAnimation(.easeInOut(duration: 0.28)) { pull = Self.pullSpan(geo) }
                                 Task { @MainActor in
@@ -227,7 +215,6 @@ struct RootDashboardView: View {
                                     try? await Task.sleep(nanoseconds: 260_000_000)
                                     var still = Transaction(); still.disablesAnimations = true
                                     withTransaction(still) { themeID = target.rawValue; hdrag = 0 }
-                                    revealPicker()
                                 }
                             } else {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { hdrag = 0 }
@@ -264,6 +251,11 @@ struct RootDashboardView: View {
     /// Bu kadar cekilince pano tam olarak kartin yerine oturur.
     private static func pullSpan(_ geo: GeometryProxy) -> CGFloat { geo.size.height * 0.35 }
 
+    /// 0 = tam ekran, 1 = kartin yerinde.
+    private func pullProgress(_ geo: GeometryProxy) -> CGFloat {
+        min(max(pull / Self.pullSpan(geo), 0), 1)
+    }
+
     /// Asagi cekildikce pano, karuseldeki secili kartin cercevesine dogru
     /// kuculup kayar: parmakla ayni hizda, esikte tam yerinde.
     private func pullTransform(_ geo: GeometryProxy) -> (scale: CGFloat, offset: CGSize) {
@@ -296,72 +288,4 @@ struct RootDashboardView: View {
         }
     }
 
-    private func themePicker(unit: CGFloat) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: unit * 0.2) {
-            ForEach(DashTheme.allCases) { option in
-                Button {
-                    themeID = option.rawValue
-                    revealPicker()
-                } label: {
-                    Text(strings.themeTitle(option))
-                        .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
-                        .foregroundStyle(option == theme ? .black : .white.opacity(0.7))
-                        .padding(.horizontal, unit * 0.3)
-                        .padding(.vertical, unit * 0.14)
-                        .background(
-                            Capsule().fill(option == theme ? Color.white : Color.white.opacity(0.12))
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button {
-                showsConnection = false
-                withAnimation(.easeInOut(duration: 0.25)) { showsHome = true; showsThemePicker = false }
-            } label: {
-                Text(strings.menuButton)
-                    .font(.system(size: unit * 0.28, weight: .black, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, unit * 0.3)
-                    .padding(.vertical, unit * 0.14)
-                    .background(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
-            }
-            .buttonStyle(.plain)
-
-
-        }
-        .padding(unit * 0.14)
-        .fixedSize()
-        }
-        .background(Capsule().fill(.black.opacity(0.85)))
-        .padding(.bottom, unit * 0.25)
-    }
-
-    private func revealPicker() {
-        withAnimation(.easeOut(duration: 0.18)) { showsThemePicker = true }
-        hideTask?.cancel()
-        hideTask = Task {
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeIn(duration: 0.25)) { showsThemePicker = false }
-        }
-    }
-
-    private func footer(unit: CGFloat) -> some View {
-        HStack {
-            Text(verbatim: "F1 26 · UDP \(client.port.rawValue)")
-            Spacer()
-            if !sessionID.isEmpty {
-                Text(verbatim: uploader.lastError == nil ? "WEB \(sessionID)" : "WEB ?")
-                    .foregroundStyle(uploader.lastError == nil
-                                     ? Color(red: 0.24, green: 0.92, blue: 0.35).opacity(0.7)
-                                     : Color(red: 1, green: 0.4, blue: 0.35).opacity(0.8))
-            }
-            Text(verbatim: "\(client.packetsPerSecond) Hz")
-            Text(verbatim: client.localIP)
-        }
-        .font(.system(size: unit * 0.22, weight: .semibold, design: .monospaced))
-        .foregroundStyle(.white.opacity(0.22))
-    }
 }
