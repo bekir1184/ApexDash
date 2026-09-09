@@ -1,291 +1,314 @@
 import SwiftUI
 
+/// Kok gorunum. Tam ekran pano bir "sahne" olarak tek bir gorunumdur ve
+/// tek bir animasyonlu degerle (`stage`, 0 = tam ekran, 1 = karuseldeki
+/// kartin yerinde) surulur. Menuye gecis, SEC ve asagi cekme hep bu degeri
+/// hareket ettirir; iki durum arasinda gorunum degistirilmez, boylece gecis
+/// hicbir karede kopmaz. Sahne kartin yerine tam oturdugunda (1.0) kartla
+/// piksel piksel ayni oldugu icin yerini karta sessizce birakir.
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
     @AppStorage("appLanguage") private var languageID: String = AppLanguage.systemDefault.rawValue
     @AppStorage("udpPort") private var udpPort: Int = 20777
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
+    @AppStorage("webSession") private var sessionID: String = ""
     @State private var showsSetup = false
     @State private var showsLaps = false
-    /// Acilista karusel; SEC ile tam ekran panoya gecilir.
-    @State private var showsHome = !UserDefaults.standard.bool(forKey: "skipHome")   // test icin baslatma argumani
     @State private var showsConnection = false
-    /// Yatay kaydirma: pano parmakla birlikte kayar, komsu tema kenardan gelir.
-    @State private var hdrag: CGFloat = 0
-    /// Asagi cekme: pano parmakla birlikte kucularek iner, esik asilinca menuye biner.
-    @State private var pull: CGFloat = 0
-    @State private var landing = false
+
+    /// Sahne takili mi (tam ekran ya da gecis halinde). Takili degilse menu.
+    @State private var stageMounted = !UserDefaults.standard.bool(forKey: "skipHome") ? false : true
+    /// 0 = tam ekran, 1 = karuseldeki kartin yerinde.
+    @State private var stage: CGFloat = UserDefaults.standard.bool(forKey: "skipHome") ? 0 : 1
+    /// Parmakla asagi cekme surerken.
+    @State private var pulling = false
+    @State private var settling = false
     @State private var cardFrame: CGRect = .zero
-    @AppStorage("webSession") private var sessionID: String = ""
+    /// Tam ekran sayfalayicinin konumu; tema secimiyle esittir.
+    @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .dotMatrix
+
+    @StateObject private var uploader = SessionUploader()
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
     private var uploadPayload: SessionUploader.Payload {
         .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
     }
-    @StateObject private var uploader = SessionUploader()
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
     private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .systemDefault }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
+    private var inMenu: Bool { !stageMounted }
+    private var fullscreen: Bool { stageMounted && stage == 0 }
 
     var body: some View {
         GeometryReader { geo in
             // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
-            ZStack(alignment: .bottom) {
-                if showsHome || pull > 0 {
+            ZStack {
+                // Menu: sahne tam ekran degilken altta durur.
+                if stage > 0 || inMenu {
                     HomeView(client: client, strings: strings, unit: unit,
                              selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
-                             onSelect: { withAnimation(.easeInOut(duration: 0.25)) { showsHome = false } },
-                             onLaps: { withAnimation(.easeOut(duration: 0.2)) { showsLaps = true } },
+                             onSelect: { present(geo) },
+                             onLaps: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsLaps = true } },
                              onLanguage: { languageID = language.next.rawValue },
-                             onOpenSetup: { withAnimation(.easeOut(duration: 0.2)) { showsSetup = true } },
+                             onOpenSetup: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true } },
                              languageLabel: language.label,
-                             hiddenTheme: showsHome ? nil : theme)
+                             hidesCentreCard: stageMounted)
                         .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
-                        .opacity(showsHome ? 1 : min(1, pullProgress(geo) * 2))
-                        .transition(.identity)
+                        .opacity(min(1, stage * 2))
                 }
-                if !showsHome {
-                themeBackground(unit: unit)
-                    .ignoresSafeArea()
-                    .opacity(1 - pullProgress(geo))
 
-                ZStack {
-                    if pull > 0 { themeBackground(unit: unit) }
-                    // Mevcut pano parmakla kayar; komsu tema kaydirma yonunden gelir.
-                    dashboardPage(theme, geo: geo, unit: unit)
-                        .offset(x: hdrag)
-                    if hdrag != 0 {
-                        let neighbour = hdrag < 0 ? theme.next : theme.previous
-                        ZStack {
-                            themeBackground(for: neighbour, unit: unit)
-                            dashboardPage(neighbour, geo: geo, unit: unit)
-                        }
-                        .offset(x: hdrag + (hdrag < 0 ? geo.size.width : -geo.size.width))
-                    }
-                }
-                .frame(width: geo.size.width, height: geo.size.height)
-                // Yalnizca asagi cekilirken kirp; normalde panolar guvenli
-                // alanin disina (kenarlara, Dynamic Island bandina) tasabilir.
-                .mask {
-                    if pull > 0 {
-                        RoundedRectangle(cornerRadius: unit * 0.35 / pullTransform(geo).scale, style: .continuous)
-                    } else {
-                        Color.black.padding(-geo.size.width)
-                    }
-                }
-                .scaleEffect(pullTransform(geo).scale)
-                .offset(pullTransform(geo).offset)
-                .zIndex(2)
-                .transition(.opacity)
+                if stageMounted {
+                    // Tam ekranda tema zemini guvenli alanin disina da tasar.
+                    DashboardBackground(theme: theme, unit: unit)
+                        .ignoresSafeArea()
+                        .opacity(1 - stage)
 
+                    stageView(geo: geo, unit: unit)
                 }
             }
-            // Tam ekranda baglanti yoksa sag ustte kucuk uyari; dokununca kart acilir.
-            .overlay(alignment: .topTrailing) {
-                if !showsHome && !showsSetup && !showsLaps {
-                    VStack(alignment: .trailing, spacing: unit * 0.15) {
-                        if client.status != .receiving {
-                            ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
-                                            strings: strings, unit: unit) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                                    showsConnection.toggle()
-                                }
-                            }
-                        }
-                        if showsConnection {
-                            ConnectionCard(client: client, strings: strings, unit: unit * 0.62,
-                                           onOpenSetup: {
-                                               showsConnection = false
-                                               withAnimation(.easeOut(duration: 0.2)) { showsSetup = true }
-                                           },
-                                           onClose: { withAnimation { showsConnection = false } })
-                                .transition(.move(edge: .top).combined(with: .opacity))
-                        }
-                    }
-                    .padding(.top, unit * 0.3)
-                    .padding(.trailing, unit * 0.5)
-                }
-            }
-            .overlay {
-                // Yaris basi: oyun isik sayisini gonderdikce yanar, sonunce
-                // kisa sure yesil bir "GO" gorunur.
-                if dash.startLights > 0 {
-                    StartLightsView(litColumns: dash.startLights, unit: unit)
-                        .padding(unit * 0.4)
-                        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
-                        .transition(.scale(scale: 0.9).combined(with: .opacity))
-                } else if dash.lightsOutDate != nil {
-                    Text(verbatim: "GO")
-                        .font(.system(size: unit * 2.4, weight: .black, design: .rounded))
-                        .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
-                        .padding(unit * 0.5)
-                        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .animation(.easeOut(duration: 0.15), value: dash.startLights)
-            .animation(.easeOut(duration: 0.15), value: dash.lightsOutDate)
+            .overlay(alignment: .topTrailing) { connectionOverlay(unit: unit) }
+            .overlay { startLightsOverlay(unit: unit) }
             .overlay(alignment: .top) {
-                if let flash = dash.sectorFlash, client.status == .receiving, !showsHome {
+                if let flash = dash.sectorFlash, client.status == .receiving, fullscreen {
                     SectorFlashView(flash: flash, unit: unit)
                         .padding(.top, unit * 0.12)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dash.sectorFlash)
+            .animation(.spring(duration: 0.35, bounce: 0.2), value: dash.sectorFlash)
             .overlay {
                 if showsLaps {
-                    LapsView(laps: dash.completedLaps,
-                             bestSectorMS: dash.bestSectorMS,
-                             strings: strings,
-                             unit: unit,
-                             sessionID: $sessionID,
-                             uploader: uploader,
-                             payload: { uploadPayload }) { showsLaps = false }
-                    .transition(.opacity)
+                    LapsView(laps: dash.completedLaps, bestSectorMS: dash.bestSectorMS,
+                             strings: strings, unit: unit, sessionID: $sessionID,
+                             uploader: uploader, payload: { uploadPayload }) {
+                        withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsLaps = false }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .overlay {
                 if showsSetup {
-                    SetupView(port: $udpPort,
-                              strings: strings,
-                              localIP: client.localIP,
-                              unit: unit) {
+                    SetupView(port: $udpPort, strings: strings, localIP: client.localIP, unit: unit) {
                         didCompleteSetup = true
-                        showsSetup = false
+                        withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = false }
                     }
-                    .transition(.opacity)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .onAppear {
+                page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
                 if !didCompleteSetup { showsSetup = true }
             }
-            .onChange(of: udpPort) { _, new in
-                client.update(port: UInt16(new))
+            .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
+            .onChange(of: page) { _, new in
+                if let new, new != theme { themeID = new.rawValue }
+            }
+            .onChange(of: themeID) { _, _ in
+                if page != theme { page = theme }
             }
             // Yeni tur tamamlandiginda site kendiliginden guncellenir.
             .onChange(of: client.lapTraces.count) { _, _ in
                 guard !sessionID.isEmpty else { return }
                 uploader.send(uploadPayload, sessionID: sessionID)
             }
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 20)
-                    .onChanged { value in
-                        guard !showsHome, !landing else { return }
-                        let t = value.translation
-                        // Ilk yon karar verir: dikeyse cekme, yataysa tema kaydirma.
-                        if hdrag == 0 && (abs(t.height) > abs(t.width) || pull > 0) { pull = max(0, t.height) }
-                        else if pull == 0 { hdrag = t.width }
-                    }
-                    .onEnded { value in
-                        guard !showsHome, !landing else { return }
-                        let t = value.translation
-                        if pull > 0 {
-                            if pull > geo.size.height * 0.25 || value.predictedEndTranslation.height > geo.size.height * 0.6 {
-                                // Esik asildi: pano karuseldeki kartina iner, sonra menu devralir.
-                                showsConnection = false
-                                landing = true
-                                withAnimation(.easeInOut(duration: 0.28)) { pull = Self.pullSpan(geo) }
-                                Task { @MainActor in
-                                    // Yerine oturunca pano kartin ustunde kisa bir gecisle solar.
-                                    try? await Task.sleep(nanoseconds: 290_000_000)
-                                    withAnimation(.easeOut(duration: 0.18)) { showsHome = true }
-                                    try? await Task.sleep(nanoseconds: 200_000_000)
-                                    pull = 0
-                                    landing = false
-                                }
-                            } else {
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { pull = 0 }
-                            }
-                        } else if hdrag != 0 {
-                            let w = geo.size.width
-                            let projected = value.predictedEndTranslation.width
-                            let commit = abs(projected) > w * 0.3 && (projected < 0) == (hdrag < 0)
-                            if commit {
-                                let target = hdrag < 0 ? theme.next : theme.previous
-                                withAnimation(.easeOut(duration: 0.25)) { hdrag = hdrag < 0 ? -w : w }
-                                Task { @MainActor in
-                                    try? await Task.sleep(nanoseconds: 260_000_000)
-                                    var still = Transaction(); still.disablesAnimations = true
-                                    withTransaction(still) { themeID = target.rawValue; hdrag = 0 }
-                                }
-                            } else {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { hdrag = 0 }
-                            }
-                        }
-                    }
-            )
         }
         // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
         .ignoresSafeArea(edges: .vertical)
         // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
         .overlay {
-            if !showsHome && theme != .realistic && theme != .broadcast {
+            if fullscreen && theme != .realistic && theme != .broadcast {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
-        
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
     }
 
-    /// Tek bir temanin tam ekran panosu.
-    private func dashboardPage(_ page: DashTheme, geo: GeometryProxy, unit: CGFloat) -> some View {
-        DashboardContent(theme: page, dash: dash, unit: unit, strings: strings)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, unit * 0.16)
-            // Gercekci temada govde cercevesi yatay guvenli alanin disina,
-            // Dynamic Island bandinin uzerine tasar; orada sadece isiklar var.
-            .padding(.horizontal, page == .realistic
-                     ? -max(max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) - unit * 0.34, 0)
-                     : 0)
+    // MARK: - Sahne
+
+    /// Tam ekran pano: temalar arasinda sistemin sayfalayicisiyla gecilir.
+    /// Butun sahne `stage` degerine gore kartin cercevesine dogru kuculur.
+    private func stageView(geo: GeometryProxy, unit: CGFloat) -> some View {
+        let t = stageTransform(geo)
+        let corner = unit * 0.35
+        // Sayfalar guvenli alan dahil tam ekran genisliginde; icerik kendi
+        // icinde guvenli alana cekilir. Boylece sayfalama ekran kenariyla hizali.
+        let lead = geo.safeAreaInsets.leading, trail = geo.safeAreaInsets.trailing
+        let fullW = geo.size.width + lead + trail
+        return ZStack {
+            DashboardBackground(theme: theme, unit: unit)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(DashTheme.allCases) { item in
+                        ZStack {
+                            DashboardBackground(theme: item, unit: unit)
+                            DashboardContent(theme: item, dash: dash, unit: unit, strings: strings)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .padding(.vertical, unit * 0.16)
+                                // Gercekci temada govde cercevesi Dynamic Island
+                                // bandinin uzerine tasar; digerleri guvenli alanda kalir.
+                                .padding(.leading, item == .realistic ? min(lead, unit * 0.34) : lead)
+                                .padding(.trailing, item == .realistic ? min(trail, unit * 0.34) : trail)
+                        }
+                        .frame(width: fullW, height: geo.size.height)
+                        .id(item)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $page)
+            .scrollDisabled(stage > 0)
+            .frame(width: fullW, height: geo.size.height)
+            .ignoresSafeArea(.container, edges: .horizontal)
+        }
+        .frame(width: geo.size.width, height: geo.size.height)
+        .compositingGroup()
+        .mask {
+            if stage > 0 {
+                RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous)
+            } else {
+                Color.black.padding(-geo.size.width)
+            }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: corner / t.scale, style: .continuous)
+                .stroke(Color.white.opacity(0.35), lineWidth: 1.5 / t.scale)
+                .opacity(stage)
+        }
+        .scaleEffect(t.scale)
+        .offset(t.offset)
+        .shadow(color: .black.opacity(0.6 * stage), radius: corner * 1.4, y: corner * 0.6)
+        .simultaneousGesture(pullGesture(geo))
     }
 
-    /// Bu kadar cekilince pano tam olarak kartin yerine oturur.
-    private static func pullSpan(_ geo: GeometryProxy) -> CGFloat { geo.size.height * 0.35 }
+    /// Bu kadar cekilince sahne tam olarak kartin yerine oturur.
+    private func pullSpan(_ geo: GeometryProxy) -> CGFloat { geo.size.height * 0.35 }
 
-    /// 0 = tam ekran, 1 = kartin yerinde.
-    private func pullProgress(_ geo: GeometryProxy) -> CGFloat {
-        min(max(pull / Self.pullSpan(geo), 0), 1)
-    }
-
-    /// Asagi cekildikce pano, karuseldeki secili kartin cercevesine dogru
-    /// kuculup kayar: parmakla ayni hizda, esikte tam yerinde.
-    private func pullTransform(_ geo: GeometryProxy) -> (scale: CGFloat, offset: CGSize) {
-        let p = min(max(pull / Self.pullSpan(geo), 0), 1)
+    /// Sahnenin ekrandaki donusumu: kartin cercevesine dogru olcek ve kayma.
+    private func stageTransform(_ geo: GeometryProxy) -> (scale: CGFloat, offset: CGSize) {
+        let p = min(max(stage, 0), 1)
         let origin = geo.frame(in: .global).origin
         let target: CGRect = cardFrame == .zero
-            ? CGRect(x: geo.size.width * 0.25, y: geo.size.height * 0.2, width: geo.size.width * 0.5, height: geo.size.width * 0.5 / 2.16)
+            ? CGRect(x: geo.size.width * 0.25, y: geo.size.height * 0.2,
+                     width: geo.size.width * 0.5, height: geo.size.height * 0.5)
             : cardFrame.offsetBy(dx: -origin.x, dy: -origin.y)
         let endScale = target.width / geo.size.width
         let scale = 1 - p * (1 - endScale)
-        let dx = (target.midX - geo.size.width / 2) * p
-        let dy = (target.midY - geo.size.height / 2) * p
-        return (scale, CGSize(width: dx, height: dy))
+        return (scale, CGSize(width: (target.midX - geo.size.width / 2) * p,
+                              height: (target.midY - geo.size.height / 2) * p))
     }
 
-    /// Tema zemini ekranin tamamini kaplar; nokta dokusu Dynamic Island'in
-    /// altinda da devam ettigi icin panel her yerde ayni gorunur.
-    private func themeBackground(unit: CGFloat) -> some View {
-        themeBackground(for: theme, unit: unit)
+    /// Asagi cekme: sahne parmakla birlikte kartin yerine iner. Yatay
+    /// hareket sayfalayicinin; ilk yon karar verir.
+    private func pullGesture(_ geo: GeometryProxy) -> some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { value in
+                guard stageMounted, !settling else { return }
+                let t = value.translation
+                if !pulling {
+                    guard abs(t.height) > abs(t.width) * 1.2, t.height > 0 else { return }
+                    pulling = true
+                    showsConnection = false
+                }
+                stage = min(max(t.height / pullSpan(geo), 0), 1)
+            }
+            .onEnded { value in
+                guard pulling else { return }
+                pulling = false
+                let projected = value.predictedEndTranslation.height / pullSpan(geo)
+                if stage > 0.4 || projected > 1.1 { dismiss() } else { restore() }
+            }
     }
 
-    @ViewBuilder
-    private func themeBackground(for theme: DashTheme, unit: CGFloat) -> some View {
-        switch theme {
-        case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
-        // Ekranin disinda kalan yer direksiyon govdesi; sarı uyari sadece
-        // LCD'nin kendisinde yanar, gercek araclardaki gibi.
-        case .realistic: RealisticPalette.bezel
-        case .modern, .game, .broadcast: theme.background
+    /// Menuden tam ekrana: sahne kartin ustune biner ve buyur.
+    private func present(_ geo: GeometryProxy) {
+        guard !stageMounted else { return }
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) { stage = 1; stageMounted = true; page = theme }
+        settling = true
+        withAnimation(.spring(duration: 0.55, bounce: 0.12), completionCriteria: .logicallyComplete) {
+            stage = 0
+        } completion: {
+            settling = false
         }
     }
 
+    /// Tam ekrandan menuye: sahne kartin yerine oturur, sonra karta birakir.
+    private func dismiss() {
+        settling = true
+        withAnimation(.spring(duration: 0.5, bounce: 0.1), completionCriteria: .logicallyComplete) {
+            stage = 1
+        } completion: {
+            var still = Transaction(); still.disablesAnimations = true
+            withTransaction(still) { stageMounted = false; stage = 1 }
+            settling = false
+        }
+    }
+
+    private func restore() {
+        settling = true
+        withAnimation(.spring(duration: 0.45, bounce: 0.15), completionCriteria: .logicallyComplete) {
+            stage = 0
+        } completion: {
+            settling = false
+        }
+    }
+
+    // MARK: - Ust katmanlar
+
+    @ViewBuilder
+    private func connectionOverlay(unit: CGFloat) -> some View {
+        if fullscreen && !showsSetup && !showsLaps {
+            VStack(alignment: .trailing, spacing: unit * 0.15) {
+                if client.status != .receiving {
+                    ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
+                                    strings: strings, unit: unit) {
+                        withAnimation(.spring(duration: 0.35, bounce: 0.15)) { showsConnection.toggle() }
+                    }
+                }
+                if showsConnection {
+                    ConnectionCard(client: client, strings: strings, unit: unit * 0.62,
+                                   onOpenSetup: {
+                                       showsConnection = false
+                                       withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true }
+                                   },
+                                   onClose: { withAnimation(.spring(duration: 0.3)) { showsConnection = false } })
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .padding(.top, unit * 0.3)
+            .padding(.trailing, unit * 0.5)
+            .transition(.opacity)
+        }
+    }
+
+    /// Yaris basi: oyun isik sayisini gonderdikce yanar, sonunce kisa sure
+    /// yesil bir "GO" gorunur.
+    @ViewBuilder
+    private func startLightsOverlay(unit: CGFloat) -> some View {
+        Group {
+            if dash.startLights > 0 {
+                StartLightsView(litColumns: dash.startLights, unit: unit)
+                    .padding(unit * 0.4)
+                    .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+            } else if dash.lightsOutDate != nil {
+                Text(verbatim: "GO")
+                    .font(.system(size: unit * 2.4, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
+                    .padding(unit * 0.5)
+                    .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.3, bounce: 0.25), value: dash.startLights)
+        .animation(.spring(duration: 0.3, bounce: 0.25), value: dash.lightsOutDate)
+    }
 }

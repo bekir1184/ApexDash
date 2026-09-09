@@ -1,7 +1,10 @@
 import SwiftUI
 
 /// Acilis ekrani: temalar yatay bir karuselde yan yana durur, secili olan
-/// onde ve buyuk. Sola saga kaydirilir, sonsuz doner; SEC ile tam ekrana gecilir.
+/// onde ve buyuk. Kaydirma sistemin ScrollView'i ile yapilir (momentum,
+/// lastik etkisi ve hizlanma sistemin kendi egrileri), gorunum gecisleri
+/// scrollTransition ile parmaga baglidir. Liste, sonsuz donsun diye tema
+/// dizisinin tekrarlarindan olusur ve bos anda ortaya geri alinir.
 struct HomeView: View {
     /// Gozlenmez: onizlemeler 10 Hz ile TimelineView icinden okur, boylece
     /// bes pano birden her paketle yeniden cizilmez.
@@ -14,20 +17,24 @@ struct HomeView: View {
     let onLanguage: () -> Void
     let onOpenSetup: () -> Void
     let languageLabel: String
-    /// Asagi cekme sirasinda gizlenen kart: pano oraya inerken bos kalir.
-    var hiddenTheme: DashTheme? = nil
+    /// Ortadaki kart gizli tutulur: tam ekran panonun sahnesi oraya oturur.
+    var hidesCentreCard = false
 
-    @State private var drag: CGFloat = 0
+    @State private var position: Int?
     @State private var showsConnection = false
 
     private let themes = DashTheme.allCases
+    /// Tekrar sayisi tek: orta blok tam ortada kalir.
+    private let repeats = 9
+    private var itemCount: Int { themes.count * repeats }
+    private var middleBase: Int { themes.count * (repeats / 2) }
 
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
             let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
             ZStack {
-                background
+                Color(red: 0.05, green: 0.06, blue: 0.08).ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     header
@@ -36,7 +43,7 @@ struct HomeView: View {
                     TimelineView(.periodic(from: .now, by: 0.1)) { _ in
                         let live = client.status == .receiving
                         let dash = live ? client.dash : DashboardModel.demo
-                        carousel(in: size, dash: dash)
+                        carousel(size: size, cardW: cardW, cardH: cardH, dash: dash)
                     }
                     .frame(height: cardH * 1.12)
                     titleAndDots
@@ -57,14 +64,22 @@ struct HomeView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showsConnection)
+            .animation(.spring(duration: 0.35, bounce: 0.15), value: showsConnection)
+            .onAppear {
+                if position == nil { position = middleBase + (themes.firstIndex(of: selectedTheme) ?? 0) }
+            }
+            .onChange(of: position) { _, new in
+                guard let new else { return }
+                let theme = themes[new % themes.count]
+                if theme != selectedTheme { selectedTheme = theme }
+            }
+            .onChange(of: selectedTheme) { _, new in
+                // Disaridan (tam ekran kaydirmasindan) gelen secim: en yakin tekrara git.
+                guard let current = position, themes[current % themes.count] != new else { return }
+                let target = nearestIndex(of: new, to: current)
+                withAnimation(.spring(duration: 0.45, bounce: 0.1)) { position = target }
+            }
         }
-    }
-
-    // MARK: Zemin
-
-    private var background: some View {
-        Color(red: 0.05, green: 0.06, blue: 0.08).ignoresSafeArea()
     }
 
     // MARK: Ust cubuk
@@ -97,52 +112,59 @@ struct HomeView: View {
 
     // MARK: Karusel
 
-    private func carousel(in size: CGSize, dash: DashboardModel) -> some View {
-        let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
-        let step = cardW * 0.66                      // kartlar arasi mesafe: yandakiler kenardan gorunur
-        let count = themes.count
-        let current = themes.firstIndex(of: selectedTheme) ?? 0
-        let progress = -drag / step                  // surukleme ile ara konum
-        return ZStack {
-            // Kartlar temayla kimliklenir: secim degisince ayni kart yerinde
-            // kayar, icerigi degismez; boylece gecis surekli gorunur.
-            ForEach(themes) { theme in
-                let index = themes.firstIndex(of: theme) ?? 0
-                let dist = ((index - current + count / 2 + count) % count) - count / 2
-                let rel = CGFloat(dist) - progress   // 0 = merkez
-                let scale = max(0.5, 1 - abs(rel) * 0.26)
-                card(theme: theme, dash: dash, width: cardW, height: cardH, size: size)
-                    .scaleEffect(scale)
-                    .opacity(max(0.2, 1 - abs(rel) * 0.45))
-                    .offset(x: rel * step)
-                    .zIndex(Double(10 - abs(rel)))
-                    .onTapGesture {
-                        if dist == 0 { onSelect() }
-                        else { withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { selectedTheme = theme } }
-                    }
+    private func carousel(size: CGSize, cardW: CGFloat, cardH: CGFloat, dash: DashboardModel) -> some View {
+        let sidePad = (size.width - cardW) / 2
+        return ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(0..<itemCount, id: \.self) { index in
+                    let theme = themes[index % themes.count]
+                    let isCentre = index == position
+                    DashboardCard(theme: theme, dash: dash, strings: strings,
+                                  fullSize: size, width: cardW, cornerRadius: unit * 0.35,
+                                  highlighted: isCentre)
+                        .opacity(isCentre && hidesCentreCard ? 0 : 1)
+                        .background {
+                            if isCentre {
+                                GeometryReader { g in
+                                    Color.clear.preference(key: CardFrameKey.self, value: g.frame(in: .global))
+                                }
+                            }
+                        }
+                        .scrollTransition(.interactive, axis: .horizontal) { content, phase in
+                            content
+                                .scaleEffect(1 - abs(phase.value) * 0.26)
+                                .opacity(1 - abs(phase.value) * 0.45)
+                        }
+                        .frame(width: cardW, height: cardH)
+                        .onTapGesture {
+                            if isCentre { onSelect() }
+                            else { withAnimation(.spring(duration: 0.45, bounce: 0.1)) { position = index } }
+                        }
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollClipDisabled()
+        .safeAreaPadding(.horizontal, sidePad)
+        .scrollPosition(id: $position)
+        .frame(width: size.width)
+        .onScrollPhaseChange { _, phase in
+            // Kenarlara yaklasinca, kimse bakmazken ortadaki esdegere atla.
+            guard phase == .idle, let current = position else { return }
+            let band = themes.count * 2
+            if current < band || current > itemCount - band {
+                var still = Transaction(); still.disablesAnimations = true
+                withTransaction(still) { position = middleBase + current % themes.count }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 8)
-                .onChanged { drag = $0.translation.width }
-                .onEnded { value in
-                    let projected = value.predictedEndTranslation.width
-                    var move = 0
-                    if projected < -step * 0.35 { move = 1 } else if projected > step * 0.35 { move = -1 }
-                    if move != 0 {
-                        // Secimi degistirirken suruklemeyi ayni anda telafi et:
-                        // kartlar oldugu yerde kalir, sonra yumusakca yerine oturur.
-                        var still = Transaction(); still.disablesAnimations = true
-                        withTransaction(still) {
-                            selectedTheme = themes[((current + move) % count + count) % count]
-                            drag += CGFloat(move) * step
-                        }
-                    }
-                    withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { drag = 0 }
-                }
-        )
+    }
+
+    private func nearestIndex(of theme: DashTheme, to current: Int) -> Int {
+        let want = themes.firstIndex(of: theme) ?? 0
+        let base = current - current % themes.count
+        let candidates = [base + want - themes.count, base + want, base + want + themes.count]
+        return candidates.min { abs($0 - current) < abs($1 - current) } ?? current
     }
 
     private var titleAndDots: some View {
@@ -151,6 +173,8 @@ struct HomeView: View {
                 .font(.system(size: unit * 0.34, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
                 .tracking(unit * 0.05)
+                .contentTransition(.numericText())
+                .animation(.spring(duration: 0.3), value: selectedTheme)
             HStack(spacing: unit * 0.12) {
                 ForEach(themes) { theme in
                     Circle()
@@ -158,49 +182,7 @@ struct HomeView: View {
                         .frame(width: unit * 0.1, height: unit * 0.1)
                 }
             }
-        }
-    }
-
-    /// Bir temanin canli onizlemesi: pano tam ekran boyutunda cizilip karta
-    /// olceklenir, boylece tam ekrandaki yerlesimin aynisi gorunur.
-    private func card(theme: DashTheme, dash: DashboardModel, width: CGFloat, height: CGFloat,
-                      size: CGSize) -> some View {
-        let full = size
-        let scale = width / full.width
-        let fullUnit = min(full.width / 15.2, full.height / 8.2)
-        return ZStack {
-            themeBackground(theme, unit: fullUnit)
-            DashboardContent(theme: theme, dash: dash, unit: fullUnit, strings: strings)
-                .padding(.vertical, fullUnit * 0.16)
-        }
-        .frame(width: full.width, height: full.height)
-        .clipped()
-        .compositingGroup()
-        .scaleEffect(scale)
-        .frame(width: width, height: height)
-        .clipShape(RoundedRectangle(cornerRadius: unit * 0.35, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: unit * 0.35, style: .continuous)
-                .stroke(Color.white.opacity(theme == selectedTheme ? 0.35 : 0.12), lineWidth: 1.5)
-        )
-        .shadow(color: .black.opacity(0.6), radius: unit * 0.5, y: unit * 0.2)
-        .opacity(theme == hiddenTheme ? 0 : 1)
-        .background {
-            // Secili kartin ekrandaki yeri: kok gorunum panoyu buraya indirir.
-            if theme == selectedTheme {
-                GeometryReader { g in
-                    Color.clear.preference(key: CardFrameKey.self, value: g.frame(in: .global))
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func themeBackground(_ theme: DashTheme, unit: CGFloat) -> some View {
-        switch theme {
-        case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
-        case .realistic: RealisticPalette.bezel
-        case .modern, .game, .broadcast: theme.background
+            .animation(.spring(duration: 0.3), value: selectedTheme)
         }
     }
 
@@ -209,9 +191,9 @@ struct HomeView: View {
     private var footer: some View {
         ZStack {
             HStack {
-                pill(strings.lapsButton, filled: false, action: onLaps)
+                pill(strings.lapsButton, action: onLaps)
                 Spacer()
-                pill(languageLabel, filled: false, action: onLanguage)
+                pill(languageLabel, action: onLanguage)
             }
             Button(action: onSelect) {
                 Text(strings.selectButton)
@@ -222,11 +204,11 @@ struct HomeView: View {
                     .padding(.vertical, unit * 0.2)
                     .background(Capsule().fill(Color.white))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScaleStyle())
         }
     }
 
-    private func pill(_ title: String, filled: Bool, action: @escaping () -> Void) -> some View {
+    private func pill(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: unit * 0.24, weight: .black, design: .rounded))
@@ -235,11 +217,71 @@ struct HomeView: View {
                 .padding(.vertical, unit * 0.14)
                 .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
     }
 }
 
-/// Karuseldeki secili kartin global cercevesi.
+/// Dugmeye basinca hafifce kuculur; sistem dugmelerinin dokunusu gibi.
+struct PressScaleStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.spring(duration: 0.2, bounce: 0.2), value: configuration.isPressed)
+    }
+}
+
+/// Bir temanin pano karti: pano tam ekran boyutunda cizilip `width`'e
+/// olceklenir. Karusel kartlari ve tam ekran sahne ayni gorunumu kullanir,
+/// boylece ikisi ust uste geldiginde piksel piksel ortusur.
+struct DashboardCard: View {
+    let theme: DashTheme
+    let dash: DashboardModel
+    let strings: Strings
+    let fullSize: CGSize
+    let width: CGFloat
+    let cornerRadius: CGFloat
+    var highlighted = false
+
+    var body: some View {
+        let scale = width / fullSize.width
+        let fullUnit = min(fullSize.width / 15.2, fullSize.height / 8.2)
+        ZStack {
+            DashboardBackground(theme: theme, unit: fullUnit)
+            DashboardContent(theme: theme, dash: dash, unit: fullUnit, strings: strings)
+                .padding(.vertical, fullUnit * 0.16)
+        }
+        .frame(width: fullSize.width, height: fullSize.height)
+        .clipped()
+        .compositingGroup()
+        .scaleEffect(scale)
+        .frame(width: width, height: fullSize.height * scale)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(Color.white.opacity(highlighted ? 0.35 : 0.12), lineWidth: 1.5)
+        )
+        .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
+    }
+}
+
+/// Tema zemini.
+struct DashboardBackground: View {
+    let theme: DashTheme
+    let unit: CGFloat
+
+    var body: some View {
+        switch theme {
+        case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
+        // Ekranin disinda kalan yer direksiyon govdesi; sari uyari sadece
+        // LCD'nin kendisinde yanar, gercek araclardaki gibi.
+        case .realistic: RealisticPalette.bezel
+        case .modern, .game, .broadcast: theme.background
+        }
+    }
+}
+
+/// Karuseldeki ortadaki kartin global cercevesi.
 struct CardFrameKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
@@ -283,6 +325,7 @@ struct ConnectionBadge: View {
                         .frame(width: unit * 0.16, height: unit * 0.16)
                         .shadow(color: Color(red: 0.24, green: 0.92, blue: 0.35).opacity(0.8), radius: unit * 0.1)
                     Text(verbatim: "\(strings.connected) · \(hz) Hz")
+                        .contentTransition(.numericText())
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(Color(red: 0.97, green: 0.78, blue: 0.15))
@@ -296,8 +339,9 @@ struct ConnectionBadge: View {
             .background(Capsule().fill(.black.opacity(0.5)))
             .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .allowsHitTesting(status != .receiving)
+        .animation(.spring(duration: 0.3), value: status == .receiving)
     }
 }
 
@@ -330,7 +374,7 @@ struct ConnectionCard: View {
                     .padding(.vertical, unit * 0.18)
                     .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScaleStyle())
         }
         .padding(unit * 0.6)
         .background(.black.opacity(0.94), in: RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous))
@@ -343,7 +387,7 @@ struct ConnectionCard: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(unit * 0.3)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScaleStyle())
         }
     }
 
