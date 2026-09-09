@@ -52,8 +52,8 @@ struct BroadcastLayout {
         strip = CGRect(x: margin, y: size.height - stripH, width: size.width - 2 * margin, height: stripH)
         let areaH = size.height - stripH - gap
         centreScale = min(areaH / (Self.designBottom - Self.designTop), size.width / (R * 4.1))
-        // Bloklarin dis kenari 1.96R'de; genislik buna gore yayilir, en fazla %45 esner.
-        centreScaleX = min((size.width - 2 * margin) / (R * 4.0), centreScale * 1.45)
+        // Bloklarin dis kenari 1.96R'de; genislik buna gore yayilir, en fazla %20 esner.
+        centreScaleX = min((size.width - 2 * margin) / (R * 4.0), centreScale * 1.2)
     }
 
     /// Tasarim koordinatindaki orta grup dikdortgenini ekrana tasir.
