@@ -38,7 +38,7 @@ struct SetupView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(action: onDone) {
-                Text(strings.startButton)
+                Text(strings.close)
                     .font(.system(size: unit * 0.36, weight: .black, design: .monospaced))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
