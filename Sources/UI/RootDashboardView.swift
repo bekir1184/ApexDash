@@ -13,6 +13,7 @@ struct RootDashboardView: View {
     @AppStorage("udpPort") private var udpPort: Int = 20777
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
+    @AppStorage("shiftTorch") private var shiftTorch = false
     @State private var showsSetup = false
     @State private var showsLaps = false
     @State private var showsConnection = false
@@ -113,6 +114,14 @@ struct RootDashboardView: View {
                 if !didCompleteSetup { showsSetup = true }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
+            // Vites uyarisi: ekranla birlikte telefonun flasi (ayarlardan acilir).
+            .onChange(of: dash.shiftFlash) { _, on in
+                ShiftTorch.shared.update(active: on && fullscreen && client.status == .receiving,
+                                         enabled: shiftTorch)
+            }
+            .onChange(of: shiftTorch) { _, enabled in
+                ShiftTorch.shared.update(active: dash.shiftFlash && fullscreen, enabled: enabled)
+            }
             .onChange(of: page) { _, new in
                 if let new, new != theme { themeID = new.rawValue }
             }

@@ -5,6 +5,7 @@ import SwiftUI
 /// adresi de buradan kopyalanir.
 struct SetupView: View {
     @Binding var port: Int
+    @AppStorage("shiftTorch") private var shiftTorch = false
     let strings: Strings
     let localIP: String
     let unit: CGFloat
@@ -37,6 +38,8 @@ struct SetupView: View {
                 .foregroundStyle(.white.opacity(0.35))
                 .fixedSize(horizontal: false, vertical: true)
 
+            torchRow
+
             Button(action: onDone) {
                 Text(strings.startButton)
                     .font(.system(size: unit * 0.36, weight: .black, design: .monospaced))
@@ -54,6 +57,31 @@ struct SetupView: View {
         .contentShape(Rectangle())
         .onTapGesture { portFocused = false }
         .onAppear { portText = "\(port)" }
+    }
+
+    // MARK: - Flas
+
+    private var torchRow: some View {
+        HStack(spacing: unit * 0.3) {
+            VStack(alignment: .leading, spacing: unit * 0.04) {
+                Text(strings.torchToggle)
+                    .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
+                    .foregroundStyle(.white)
+                Text(verbatim: strings.torchNote)
+                    .font(.system(size: unit * 0.22, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: unit * 0.3)
+            Toggle("", isOn: $shiftTorch)
+                .labelsHidden()
+                .tint(accent)
+        }
+        .padding(unit * 0.3)
+        .background(
+            RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous)
+                .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+        )
     }
 
     // MARK: - Telefon tarafi

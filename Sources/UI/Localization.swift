@@ -86,6 +86,11 @@ struct Strings {
     var startButton: String { pick("BASLA", "START") }
     var setupButton: String { pick("KURULUMU AC", "OPEN SETUP") }
     var selectButton: String { pick("SEÇ", "SELECT") }
+    var torchToggle: String { pick("VITES UYARISINDA FLAS", "FLASH ON SHIFT WARNING") }
+    var torchNote: String {
+        pick("Devir sinira dayaninca ekranla birlikte telefonun flasi da yanip soner.",
+             "When revs hit the limit the phone's flash blinks in sync with the screen.")
+    }
     var menuButton: String { pick("MENÜ", "MENU") }
     var connected: String { pick("BAĞLI", "CONNECTED") }
     var notConnected: String { pick("BAĞLANTI YOK", "NOT CONNECTED") }
