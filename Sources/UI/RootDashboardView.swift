@@ -15,6 +15,7 @@ struct RootDashboardView: View {
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
     @State private var showsSetup = false
+    @State private var showsSettings = false
     @State private var showsLaps = false
     @State private var showsConnection = false
 
@@ -60,9 +61,8 @@ struct RootDashboardView: View {
                              selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
                              onSelect: { present(geo) },
                              onLaps: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsLaps = true } },
-                             onLanguage: { languageID = language.next.rawValue },
+                             onSettings: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSettings = true } },
                              onOpenSetup: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true } },
-                             languageLabel: language.label,
                              hidesCentreCard: stageMounted,
                              frozenDash: frozenDash)
                         .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
@@ -88,25 +88,7 @@ struct RootDashboardView: View {
                 }
             }
             .animation(.spring(duration: 0.35, bounce: 0.2), value: dash.sectorFlash)
-            .overlay {
-                if showsLaps {
-                    LapsView(laps: dash.completedLaps, bestSectorMS: dash.bestSectorMS,
-                             strings: strings, unit: unit, sessionID: $sessionID,
-                             uploader: uploader, payload: { uploadPayload }) {
-                        withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsLaps = false }
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .overlay {
-                if showsSetup {
-                    SetupView(port: $udpPort, strings: strings, localIP: client.localIP, unit: unit) {
-                        didCompleteSetup = true
-                        withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = false }
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
+            .overlay { sheets(unit: unit) }
             .onAppear {
                 page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
@@ -285,9 +267,38 @@ struct RootDashboardView: View {
 
     // MARK: - Ust katmanlar
 
+    /// Turlar, ayarlar ve baglanti ekranlari; alttan gelir.
+    @ViewBuilder
+    private func sheets(unit: CGFloat) -> some View {
+        let spring = Animation.spring(duration: 0.35, bounce: 0.1)
+        ZStack {
+            if showsLaps {
+                LapsView(laps: dash.completedLaps, bestSectorMS: dash.bestSectorMS,
+                         strings: strings, unit: unit, sessionID: $sessionID,
+                         uploader: uploader, payload: { uploadPayload }) {
+                    withAnimation(spring) { showsLaps = false }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if showsSettings {
+                SettingsView(languageID: $languageID, strings: strings, unit: unit,
+                             onOpenConnection: { withAnimation(spring) { showsSetup = true } },
+                             onClose: { withAnimation(spring) { showsSettings = false } })
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if showsSetup {
+                SetupView(port: $udpPort, strings: strings, localIP: client.localIP, unit: unit) {
+                    didCompleteSetup = true
+                    withAnimation(spring) { showsSetup = false }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+    }
+
     @ViewBuilder
     private func connectionOverlay(unit: CGFloat) -> some View {
-        if fullscreen && !showsSetup && !showsLaps {
+        if fullscreen && !showsSetup && !showsLaps && !showsSettings {
             VStack(alignment: .trailing, spacing: unit * 0.15) {
                 if client.status != .receiving {
                     ConnectionBadge(status: client.status, hz: client.packetsPerSecond,

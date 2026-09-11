@@ -14,9 +14,8 @@ struct HomeView: View {
     @Binding var selectedTheme: DashTheme
     let onSelect: () -> Void
     let onLaps: () -> Void
-    let onLanguage: () -> Void
+    let onSettings: () -> Void
     let onOpenSetup: () -> Void
-    let languageLabel: String
     /// Ortadaki kart gizli tutulur: tam ekran panonun sahnesi oraya oturur.
     var hidesCentreCard = false
     /// Gecis sirasinda onizlemeler bu sabit veriyle cizilir.
@@ -195,7 +194,7 @@ struct HomeView: View {
             HStack {
                 pill(strings.lapsButton, action: onLaps)
                 Spacer()
-                pill(languageLabel, action: onLanguage)
+                pill(strings.settingsButton, action: onSettings)
             }
             Button(action: onSelect) {
                 Text(strings.selectButton)

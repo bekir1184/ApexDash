@@ -71,7 +71,12 @@ struct Strings {
              "IP CHANGED: \(old) → \(new). Update the address in the game.")
     }
 
-    var setupTitle: String { pick("KURULUM", "SETUP") }
+    var setupTitle: String { pick("BAĞLANTI", "CONNECTION") }
+    var settingsTitle: String { pick("AYARLAR", "SETTINGS") }
+    var settingsButton: String { pick("AYARLAR", "SETTINGS") }
+    var connectionTitle: String { pick("BAĞLANTI", "CONNECTION") }
+    var connectionSubtitle: String { pick("IP adresi, port ve oyun ayarları", "IP address, port and game settings") }
+    var languageTitle: String { pick("DİL", "LANGUAGE") }
     var setupIntro: String {
         pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",
              "The game sends telemetry to this phone. Enter these values in the game exactly.")
@@ -84,7 +89,7 @@ struct Strings {
              "Broadcast must stay off: iOS only receives broadcast traffic with an Apple-approved entitlement.")
     }
     var startButton: String { pick("BASLA", "START") }
-    var setupButton: String { pick("KURULUMU AC", "OPEN SETUP") }
+    var setupButton: String { pick("BAĞLANTI", "CONNECTION") }
     var selectButton: String { pick("SEÇ", "SELECT") }
     var torchToggle: String { pick("VITES UYARISINDA FLAS", "FLASH ON SHIFT WARNING") }
     var torchNote: String {
