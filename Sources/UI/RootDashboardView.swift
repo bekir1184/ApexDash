@@ -14,6 +14,7 @@ struct RootDashboardView: View {
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
+    @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
     @State private var showsSetup = false
     @State private var showsSettings = false
     @State private var showsLaps = false
@@ -310,6 +311,13 @@ struct RootDashboardView: View {
                              onOpenConnection: { withAnimation(spring) { showsSetup = true } },
                              onClose: { withAnimation(spring) { showsSettings = false } })
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if !didShowFlashWarning {
+                FlashWarningView(strings: strings, unit: unit) {
+                    withAnimation(.easeOut(duration: 0.3)) { didShowFlashWarning = true }
+                }
+                .transition(.opacity)
+                .zIndex(10)
             }
             if showsSetup {
                 SetupView(port: $udpPort, strings: strings, localIP: client.localIP, unit: unit) {

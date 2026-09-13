@@ -1,6 +1,29 @@
 import Foundation
 
-/// F1 26 (F1 25 + 2026 Season Pack) UDP spesifikasyonu, packetFormat = 2026.
+/// Desteklenen UDP bicimleri. Iki oyunun paket duzeni bir kismi disinda
+/// aynidir; farklar burada toplanir, ayristiricilar buradan okur.
+///
+/// F1 25 (2025): 22 arac, telemetride DRS baytı ve uint16 motor sicakligi,
+/// durum paketinde tur basina toplama limiti yok, hareket paketinde G
+/// kuvvetleri float, aktif aero / overtake paketi (16) hic gonderilmez.
+/// F1 26 (2026): 24 arac, DRS kaldirildi, yerine aktif aero ve overtake.
+enum PacketFormat: UInt16 {
+    case f125 = 2025
+    case f126 = 2026
+
+    /// Paketlerdeki arac dizisi uzunlugu.
+    var cars: Int { self == .f126 ? 24 : 22 }
+    var telemetryStride: Int { self == .f126 ? 59 : 60 }
+    var statusStride: Int { self == .f126 ? 59 : 55 }
+    var participantStride: Int { self == .f126 ? 60 : 57 }
+    var motionStride: Int { self == .f126 ? 54 : 60 }
+    /// Iki bicimde de ayni.
+    var lapStride: Int { 57 }
+    /// 2026 kurallari: DRS yok, aktif aero ve overtake var.
+    var hasActiveAero: Bool { self == .f126 }
+    var label: String { self == .f126 ? "F1 26" : "F1 25" }
+}
+
 enum PacketID: UInt8 {
     case motion = 0
     case session = 1
@@ -24,7 +47,7 @@ enum PacketID: UInt8 {
 struct PacketHeader {
     static let size = 29
 
-    let packetFormat: UInt16
+    let format: PacketFormat
     let gameYear: UInt8
     let packetVersion: UInt8
     let packetID: PacketID
@@ -48,9 +71,11 @@ struct PacketHeader {
               let playerIdx = r.uint8(),
               r.uint8() != nil             // secondaryPlayerCarIndex
         else { return nil }
-        guard let id = PacketID(rawValue: rawID) else { return nil }
+        guard let id = PacketID(rawValue: rawID),
+              let packetFormat = PacketFormat(rawValue: format)
+        else { return nil }
 
-        self.packetFormat = format
+        self.format = packetFormat
         self.gameYear = year
         self.packetVersion = version
         self.packetID = id
@@ -61,9 +86,8 @@ struct PacketHeader {
     }
 }
 
-/// Packet ID 6 - CarTelemetryData (arac basina 59 byte, paket 1448 byte)
+/// Packet ID 6 - CarTelemetryData (arac basina F1 26'da 59, F1 25'te 60 byte)
 struct CarTelemetry {
-    static let stride = 59
 
     var speedKPH: Int = 0
     var throttle: Float = 0
@@ -78,12 +102,15 @@ struct CarTelemetry {
     var tyreInnerTemps: [Int] = [0, 0, 0, 0]
     var engineTemp: Int = 0
     var tyrePressures: [Float] = [0, 0, 0, 0]
+    /// Yalnizca F1 25: DRS acik mi. 2026 kurallarinda bu alan kullanilmaz.
+    var drsActive: Bool = false
 
     init() {}
 
-    init?(data: Data, carIndex: Int) {
-        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
-        guard r.remaining >= Self.stride else { return nil }
+    init?(data: Data, carIndex: Int, format: PacketFormat) {
+        let stride = format.telemetryStride
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * stride)
+        guard r.remaining >= stride else { return nil }
         guard let speed = r.uint16(),
               let throttle = r.float(),
               let steer = r.float(),
@@ -91,7 +118,7 @@ struct CarTelemetry {
               r.uint8() != nil,             // clutch
               let gear = r.int8(),
               let rpm = r.uint16(),
-              r.uint8() != nil,             // m_drs - 2026 kurallarinda kullanilmiyor
+              let drs = r.uint8(),          // F1 25'te DRS; F1 26'da kullanilmaz
               let revPercent = r.uint8(),
               let revBits = r.uint16()
         else { return nil }
@@ -104,6 +131,7 @@ struct CarTelemetry {
         self.engineRPM = Int(rpm)
         self.revLightsPercent = Int(revPercent)
         self.revLightsBits = revBits
+        self.drsActive = !format.hasActiveAero && drs == 1
 
         var brakes: [Int] = []
         for _ in 0..<4 { guard let v = r.uint16() else { return nil }; brakes.append(Int(v)) }
@@ -111,14 +139,22 @@ struct CarTelemetry {
         for _ in 0..<4 { guard let v = r.uint8() else { return nil }; surface.append(Int(v)) }
         var inner: [Int] = []
         for _ in 0..<4 { guard let v = r.uint8() else { return nil }; inner.append(Int(v)) }
-        guard let engineTemp = r.uint8() else { return nil }
+        // Motor sicakligi: F1 26'da tek bayt, F1 25'te iki bayt.
+        let engineTemp: Int
+        if format.hasActiveAero {
+            guard let v = r.uint8() else { return nil }
+            engineTemp = Int(v)
+        } else {
+            guard let v = r.uint16() else { return nil }
+            engineTemp = Int(v)
+        }
         var pressures: [Float] = []
         for _ in 0..<4 { guard let v = r.float() else { return nil }; pressures.append(v) }
 
         self.brakeTemps = brakes
         self.tyreSurfaceTemps = surface
         self.tyreInnerTemps = inner
-        self.engineTemp = Int(engineTemp)
+        self.engineTemp = engineTemp
         self.tyrePressures = pressures
     }
 }
@@ -168,7 +204,6 @@ struct CarTelemetry2 {
 /// Packet ID 7 - CarStatusData (arac basina 59 byte, paket 1445 byte).
 /// Faz 1 icin sadece rev bar ve limiter isigi gereken alanlari okuyoruz.
 struct CarStatus {
-    static let stride = 59
 
     var pitLimiterOn: Bool = false
     var fuelRemainingLaps: Float = 0
@@ -184,12 +219,15 @@ struct CarStatus {
     var ersHarvestedThisLap: Float = 0
     var ersHarvestLimitPerLap: Float = 0
     var ersDeployedThisLap: Float = 0
+    /// Yalnizca F1 25: DRS kullanilabilir mi.
+    var drsAllowed: Bool = false
 
     init() {}
 
-    init?(data: Data, carIndex: Int) {
-        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
-        guard r.remaining >= Self.stride else { return nil }
+    init?(data: Data, carIndex: Int, format: PacketFormat) {
+        let stride = format.statusStride
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * stride)
+        guard r.remaining >= stride else { return nil }
         r.skip(4)                            // tractionControl, abs, fuelMix, frontBrakeBias
         guard let limiter = r.uint8() else { return nil }
         r.skip(8)                            // fuelInTank, fuelCapacity
@@ -198,16 +236,22 @@ struct CarStatus {
               let idleRPM = r.uint16(),
               let maxGears = r.uint8()
         else { return nil }
-        r.skip(6)                            // drsAllowed, drsActivationDistance, lastik bilgileri
+        guard let drsAllowed = r.uint8() else { return nil }
+        r.skip(5)                            // drsActivationDistance, lastik bilgileri
         guard let flag = r.int8() else { return nil }
         r.skip(8)                            // enginePowerICE, enginePowerMGUK
         guard let ersStore = r.float(),
               let deployMode = r.uint8(),
               let harvestMGUK = r.float(),
-              let harvestMGUH = r.float(),
-              let harvestLimit = r.float(),
-              let deployed = r.float()
+              let harvestMGUH = r.float()
         else { return nil }
+        // Tur basina toplama limiti yalnizca F1 26'da var.
+        var harvestLimit: Float = 0
+        if format.hasActiveAero {
+            guard let limit = r.float() else { return nil }
+            harvestLimit = limit
+        }
+        guard let deployed = r.float() else { return nil }
 
         self.pitLimiterOn = limiter == 1
         self.fuelRemainingLaps = fuelLaps
@@ -220,11 +264,13 @@ struct CarStatus {
         self.ersHarvestedThisLap = harvestMGUK + harvestMGUH
         self.ersHarvestLimitPerLap = harvestLimit
         self.ersDeployedThisLap = deployed
+        self.drsAllowed = !format.hasActiveAero && drsAllowed == 1
     }
 }
 
 /// Packet ID 2 - LapData (arac basina 57 byte, paket 1399 byte)
 struct LapData {
+    /// Iki bicimde de arac basina 57 byte.
     static let stride = 57
 
     var lastLapTimeMS: Int = 0
@@ -241,9 +287,9 @@ struct LapData {
     var sector: Int = 0
     var currentLapInvalid: Bool = false
 
-    init?(data: Data, carIndex: Int) {
-        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
-        guard r.remaining >= Self.stride else { return nil }
+    init?(data: Data, carIndex: Int, format: PacketFormat = .f126) {
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * format.lapStride)
+        guard r.remaining >= format.lapStride else { return nil }
         guard let lastLap = r.uint32(),
               let currentLap = r.uint32()
         else { return nil }
@@ -282,8 +328,6 @@ struct LapData {
 /// Packet ID 4 - ParticipantData (arac basina 60 byte, paket 1470 byte).
 /// Bes saniyede bir gelir; isimler ve takim renkleri buradan.
 struct Participant {
-    static let stride = 60
-
     var name: String = ""
     var raceNumber: Int = 0
     var teamColour: (red: Double, green: Double, blue: Double)?
@@ -295,15 +339,18 @@ struct Participant {
 }
 
 enum ParticipantsPacket {
-    static func parse(_ data: Data) -> [Participant] {
+    static func parse(_ data: Data, format: PacketFormat) -> [Participant] {
         var reader = ByteReader(data, offset: PacketHeader.size)
         guard reader.uint8() != nil else { return [] }      // m_numActiveCars
 
+        let stride = format.participantStride
+        // F1 26'da surucu / ag / takim kimlikleri uint16; F1 25'te uint8.
+        let idBytes = format.hasActiveAero ? 8 : 5
         var result: [Participant] = []
-        for index in 0..<24 {
-            var r = ByteReader(data, offset: PacketHeader.size + 1 + index * Participant.stride)
-            guard r.remaining >= Participant.stride else { break }
-            r.skip(8)                                        // ai, driverId, networkId, teamId, myTeam
+        for index in 0..<format.cars {
+            var r = ByteReader(data, offset: PacketHeader.size + 1 + index * stride)
+            guard r.remaining >= stride else { break }
+            r.skip(idBytes)                                  // ai, driverId, networkId, teamId, myTeam
             guard let raceNumber = r.uint8() else { break }
             r.skip(1)                                        // nationality
 
@@ -332,8 +379,8 @@ enum ParticipantsPacket {
 
 extension LapData {
     /// Butun araclarin yaris pozisyonu; onundeki ve arkandakini bulmak icin.
-    static func positions(in data: Data) -> [Int] {
-        (0..<24).map { index in
+    static func positions(in data: Data, format: PacketFormat) -> [Int] {
+        (0..<format.cars).map { index in
             var r = ByteReader(data, offset: PacketHeader.size + index * LapData.stride + 32)
             return Int(r.uint8() ?? 0)
         }
@@ -368,7 +415,6 @@ enum GameEvent {
 /// Packet ID 0 - Motion (arac basina 54 byte). Pist haritasi ve G kuvveti
 /// icin oyuncunun dunya konumu ve ivmeleri.
 struct CarMotion {
-    static let stride = 54
 
     var worldX: Float = 0
     var worldY: Float = 0
@@ -381,21 +427,33 @@ struct CarMotion {
 
     init() {}
 
-    init?(data: Data, carIndex: Int) {
-        var r = ByteReader(data, offset: PacketHeader.size + carIndex * Self.stride)
-        guard r.remaining >= Self.stride else { return nil }
+    init?(data: Data, carIndex: Int, format: PacketFormat) {
+        let stride = format.motionStride
+        var r = ByteReader(data, offset: PacketHeader.size + carIndex * stride)
+        guard r.remaining >= stride else { return nil }
         guard let x = r.float(), let y = r.float(), let z = r.float(),
               let vx = r.float(), let vy = r.float(), let vz = r.float()
         else { return nil }
         r.skip(12)                                  // forward/right yon vektorleri
-        guard let gLat = r.uint16(), let gLong = r.uint16() else { return nil }
-        r.skip(2)                                   // gForceVertical
+        // G kuvvetleri: F1 26'da 1000 ile carpilmis int16, F1 25'te float.
+        let lateral: Float, longitudinal: Float
+        if format.hasActiveAero {
+            guard let gLat = r.uint16(), let gLong = r.uint16() else { return nil }
+            r.skip(2)                               // gForceVertical
+            lateral = Float(Int16(bitPattern: gLat)) / 1000
+            longitudinal = Float(Int16(bitPattern: gLong)) / 1000
+        } else {
+            guard let gLat = r.float(), let gLong = r.float() else { return nil }
+            r.skip(4)                               // gForceVertical
+            lateral = gLat
+            longitudinal = gLong
+        }
         guard let yaw = r.float() else { return nil }
         worldX = x; worldY = y; worldZ = z
         speedMS = (vx * vx + vy * vy + vz * vz).squareRoot()
         self.yaw = yaw
-        gLateral = Float(Int16(bitPattern: gLat)) / 1000
-        gLongitudinal = Float(Int16(bitPattern: gLong)) / 1000
+        gLateral = lateral
+        gLongitudinal = longitudinal
     }
 }
 

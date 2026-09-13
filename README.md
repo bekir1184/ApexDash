@@ -1,112 +1,128 @@
 # F1Dash
 
-iPhone'u F1 26'nin gercek direksiyon ekranina ceviren SwiftUI dashboard.
-Oyunun UDP telemetri cikisini (packetFormat **2026**) dogrudan dinler, ara sunucu yok.
+Turns an iPhone into the steering wheel display of **F1 25** and **F1 26**.
+It listens to the game's UDP telemetry output directly. No PC in the loop, no
+server, no account, no ads, no tracking.
 
-## Neler var
+Free and open source under the MIT licence.
 
-- 15 LED'lik devir seridi (`m_revLightsBitValue`); shift noktasinda tum ekran yanip soner
-- Dev vites gostergesi, hiz, RPM ve RPM bari
-- Gaz / fren cubuklari
-- Dort kose lastik (yuzey + ic) ve fren diski sicakliklari, calisma araligina gore renkli
-- Tur suresi ve yaninda onundeki araca delta: yaklasiyorsa yesil, uzaklasiyorsa kirmizi
-- 2026 kurallari: **OVERTAKE** (manual override) ve **AERO X/Z** (aktif aero) — DRS yok
-- En iyi tura gore canli delta ve renk kodlu sektor sureleri
-- Wi-Fi degisince otomatik yeniden baglanma; IP degistiyse bekleme ekraninda uyari
-- Yaris basi: oyunun gonderdigi start isiklari (Event `STLG`/`LGOT`) ekranda yanar
-- FIA bayraklari (`m_vehicleFiaFlags`) ve gecersiz tur uyarisi
-- Pit limiter uyarisi
-- Ekran uyku kilidi kapali, sadece yatay
+---
 
-## Tasarim temalari
+## What it does
 
-Ekrana dokunup secilir, yana kaydirarak da gecis yapilir; secim saklanir.
-Ayni cubuktaki **TR / EN** dugmesi arayuz dilini degistirir; uygulama telefonun
-dili Turkce degilse Ingilizce baslar (gosterge etiketleri
-her iki dilde de ayni kalir).
+Five dashboard themes, live at the game's send rate. Swipe sideways to change
+theme, pull down for the menu.
 
-| Tema | Gorunum |
+| Theme | Look |
 | --- | --- |
-| `MODERN` | Bosch DDU tarzi, yuksek kontrastli temiz duzen |
-| `DOT MATRIX` | **Varsayilan.** Gercek direksiyon LCD'si gibi nokta-matris panel; her sekil LED noktalarina ayrilir. Ustte iki gosterge: sari **BATTERY** (arka plani sarj oraninda dolar, depo dolunca yanip soner) ve mor **STRAIGHT MODE** (aktif aero hazir olup gecilmediyse yanip soner, gecilince tam yanar). Nokta dokusu ekranin tamamini kaplar |
-| `REALISTIC` | Gercek F1 direksiyon ekraninin (Bosch / McLaren Applied tipi) taklidi: koyu zemin, ustte delta / durum / tur suresi, solda hiz, ortada dev vites ve altinda batarya, sagda yakit, altta lastik ve fren sicakliklari, en altta batarya seridi. Ekran, LED seridini tasiyan bir govde cercevesinin icinde oturur; iki yanindaki dikey kumeler FIA bayraklarini gosterir (sari ve mavi yanip soner, tur sayilmiyorsa yesil yanip soner). **Pit limiter devredeyken LCD sariya doner**, gercek araclardaki gibi |
-| `YAYIN` | Yayin grafiklerindeki mavi HUD: ortada yuvarlak hiz gostergesi (km/h ve mph), BOOST ile overtake pili ve altinda batarya, daireyi saracak sekilde egilmis dort segment sutunu (BRAKE, RECHARGE, DEPLOY, THROTTLE), solda onundeki ve arkandaki sofurun mavi egik plakalari, sagda aktif aero, vites siralamasi ve tek renk devir cetveli |
-| `OYUN` | F1 26'nin kokpit ici direksiyon ekraninin birebir kopyasi: KPH / tur suresi + delta / yakit, ortada dev vites, L ve P kutulari, dort kose lastik sicakligi ve segmentli ERS bandi |
+| `MODERN` | Bosch DDU style: high contrast, clean layout |
+| `DOT MATRIX` | Real wheel LCD look; every shape resolves into LED dots |
+| `REALISTIC` | A real F1 wheel display inside a bezel that carries the rev LEDs, with FIA flag clusters down both sides and a yellow LCD under pit limiter |
+| `BROADCAST` | The blue TV halo HUD: round speed dial, BOOST and OVERTAKE, concentric RECHARGE / DEPLOY panels, BRAKE / THROTTLE slat blocks, battery, and a gear and rev strip along the bottom |
+| `GAME` | A copy of the in-game cockpit wheel display |
 
-## Kurulum ekrani
+Shown on every theme:
 
-Ilk acilista cikar; bekleme ekranindaki **KURULUMU AC / OPEN SETUP** dugmesiyle
-her zaman geri gelir. Dinlenen portu buradan degistirirsin (dinleyici aninda
-yeniden kurulur), telefonun IP adresini kopyalarsin ve oyunda girilecek butun
-degerler karsi sutunda yazar.
+- 15 LED rev strip driven by `m_revLightsBitValue`; the whole screen flashes at
+  the shift point, and the phone's flash can blink in sync if you enable it
+- Gear, speed, RPM, throttle and brake
+- Tyre surface and inner temperatures, brake disc temperatures, colour coded
+- Lap time, delta to the car ahead, live delta to your own best lap, and
+  sector times coloured against your best
+- Start lights driven by the game's own `STLG` / `LGOT` events
+- FIA flags, invalid lap warning, pit limiter
+- **F1 26**: OVERTAKE (manual override) and ACTIVE AERO, because DRS is gone
+- **F1 25**: DRS, in the same places
 
-## Bekleme ekrani
+## Lap analysis in your browser
 
-Veri gelene kadar pistteki baslangic isiklari yanar: bes kolon soldan saga
-yanar, hepsi yanik kalir, soner ve bastan baslar. Altinda oyunda yapilmasi
-gereken ayarlar ve telefonun IP adresi yazar.
+Finished laps upload themselves to <https://f1dash-app.vercel.app>. Open the
+page, scan its QR code from the LAPS screen, and every lap you complete lands
+there on its own.
 
-## Oyun ayarlari (Ayarlar › Telemetri)
+Each lap carries a full 20 Hz trace: position, speed, throttle, brake, steering,
+gear, RPM, ERS store and deployment, G forces. The page draws the track map
+coloured by speed, pedals, ERS or sector, synchronised distance charts with a
+shared cursor, lap-to-lap time delta, and a corner table with brake points,
+entry, apex and exit speeds.
 
-| Ayar | Deger |
+Sessions are keyed by a six character code and are deleted after 14 days.
+
+## Game setup (Settings › Telemetry)
+
+| Setting | Value |
 | --- | --- |
 | UDP Telemetry | On |
 | UDP Broadcast Mode | **Off** |
-| UDP IP Address | iPhone'un IP'si (uygulama sag altta gosterir) |
-| UDP Port | 20777 (uygulamadaki kurulum ekraninda degistirilebilir) |
+| UDP IP Address | your iPhone's IP, shown in the app |
+| UDP Port | 20777, changeable in the app |
 | UDP Send Rate | 60 Hz |
-| UDP Format | 2026 |
+| UDP Format | 2026 or 2025 |
 | Your Telemetry | Public |
 
-> **Broadcast neden kapali?** iOS 14'ten beri broadcast/multicast trafigi almak
-> Apple onayli `com.apple.developer.networking.multicast` yetkisi gerektiriyor.
-> Unicast (dogrudan iPhone IP'sine) bu yetkiye ihtiyac duymaz. iPhone'un IP'si
-> degismesin diye modemde DHCP rezervasyonu vermek isabetli olur.
+> **Why is broadcast off?** Since iOS 14, receiving broadcast or multicast
+> traffic needs Apple's `com.apple.developer.networking.multicast` entitlement.
+> Unicast straight to the phone's IP does not. Reserve the phone's address in
+> your router so it stops changing.
 
-## Gelistirme
+## Photosensitivity
+
+The shift warning flashes the screen rapidly, and can flash the phone's LED
+too. The LED is **off by default** and a warning appears on first launch. If
+you are sensitive to flashing light, leave both off.
+
+## Packet layout
+
+Verified against the official EA specifications: *Data Output from F1 25* and
+the *2026 Season Pack Telemetry Output Structures*. The header is 29 bytes,
+little endian, packed. Differences between the two games are collected in
+`PacketFormat` and covered by tests.
+
+| Packet | F1 25 | F1 26 |
+| --- | --- | --- |
+| Cars per packet | 22 | 24 |
+| Car Telemetry (6) | 60 B per car, DRS byte, 16-bit engine temp | 59 B per car, 8-bit engine temp |
+| Car Status (7) | 55 B per car | 59 B per car, adds ERS harvest limit per lap |
+| Lap Data (2) | 57 B per car | 57 B per car |
+| Participants (4) | 57 B per car, 8-bit ids | 60 B per car, 16-bit ids |
+| Motion (0) | 60 B per car, float G forces | 54 B per car, quantised G forces |
+| Car Telemetry 2 (16) | not sent | 10 B per car: active aero, overtake |
+
+## Development
 
 ```bash
-xcodegen generate                 # F1Dash.xcodeproj uretir
+xcodegen generate          # writes F1Dash.xcodeproj
 open F1Dash.xcodeproj
 ```
 
-Oyun acik olmadan test icin sahte telemetri:
+Fake telemetry, so you can work without the game running:
 
 ```bash
-python3 Tools/f1_sim.py 127.0.0.1      # iOS Simulator
-python3 Tools/f1_sim.py 192.168.1.42   # gercek iPhone
+python3 Tools/f1_sim.py 127.0.0.1                 # Simulator, F1 26 layout
+python3 Tools/f1_sim.py 127.0.0.1 --format=2025   # F1 25 layout
+python3 Tools/f1_sim.py 192.168.1.42              # a real iPhone
 ```
 
-## Paket duzeni
+Tests cover the binary parsing for both formats, byte by byte:
 
-Spesifikasyon: EA Forums "F1 25: 2026 Season Pack UDP Specification"
-(resmi "2026 Season Pack Telemetry Output Structures" dosyasiyla dogrulandi).
-Header 29 byte, little-endian, packed. Kullanilan paketler:
+```bash
+xcodebuild test -scheme F1Dash -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
 
-| ID | Paket | Boyut | Arac basina |
-| --- | --- | --- | --- |
-| 6 | Car Telemetry | 1448 | 59 byte |
-| 7 | Car Status | 1445 | 59 byte |
-| 2 | Lap Data | 1399 | 57 byte |
-| 16 | Car Telemetry 2 (aktif aero, overtake) | 269 | 10 byte |
+Requires iOS 17.
 
-## Tur kaydi ve web
+## How this was built
 
-Tamamlanan turlar sektor sureleriyle saklanir. Tema cubugundaki **TURLAR /
-LAPS** dugmesi listeyi acar: en iyi tur mor, sektorler kendi renkleriyle.
-Gonderim otomatiktir: eslestikten sonra her tur bitisinde turlarin tamami
-gonderilir, ayrica yirmi saniyede bir tekrar denenir; panonun alt satirinda
-`WEB <kod>` yaziyorsa baglanti ayakta demektir.
+This app was written with an AI coding assistant, which is why the commit log
+carries `Co-Authored-By` lines. The design was drawn by hand against reference
+frames, the packet offsets were verified against EA's published specifications
+and confirmed against real sessions, and the parsing is covered by tests. Judge
+it on those, not on who typed it.
 
-**Laptopta izlemek icin:** <https://f1dash-app.vercel.app> adresini ac; sayfa
-bir oturum kodu ve QR gosterir. Telefondaki TURLAR ekraninda **QR OKUT**'a
-basip o QR'i okut; bundan sonra her tur bitisinde turlar sayfaya kendiliginden
-duser (sayfa uc saniyede bir yoklar). Baglanmadan da **CSV PAYLAS** ile dosyayi
-disari cikarip sayfaya birakabilirsin.
+## Licence and trademarks
 
-## Sirada
+MIT. See [LICENSE](LICENSE).
 
-- Sektor sureleri ve en iyi tura gore canli delta (paket 2 + 11)
-- Lastik asinma ve hasar (paket 10), lastik basinci
-- ERS deploy modunun ekranda gosterilmesi
-- Takim renk temalari, ozellestirilebilir kutu yerlesimi
+Not affiliated with, endorsed by, or connected to Formula One, EA, or
+Codemasters. F1 and Formula 1 are trademarks of Formula One Licensing BV, used
+here only to say which games this reads telemetry from.

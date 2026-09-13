@@ -91,6 +91,11 @@ struct Strings {
     var startButton: String { pick("BASLA", "START") }
     var setupButton: String { pick("BAĞLANTI", "CONNECTION") }
     var selectButton: String { pick("SEÇ", "SELECT") }
+    var flashWarningTitle: String { pick("IŞIK UYARISI", "FLASHING LIGHTS") }
+    var flashWarningBody: String {
+        pick("Vites zamanı geldiğinde ekran hızla yanıp söner ve ayarlardan açılırsa telefonun flaşı da kullanılır. Işığa duyarlı epilepsiniz varsa bu uyarıları kapalı tutun.",
+             "The screen flashes rapidly at the shift point, and the phone's flash can be used too if you enable it. If you have photosensitive epilepsy, keep these warnings off.")
+    }
     var torchToggle: String { pick("VITES UYARISINDA FLAS", "FLASH ON SHIFT WARNING") }
     var torchNote: String {
         pick("Devir sinira dayaninca ekranla birlikte telefonun flasi da yanip soner.",

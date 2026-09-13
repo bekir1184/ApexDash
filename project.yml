@@ -2,7 +2,7 @@ name: F1Dash
 options:
   bundleIdPrefix: com.bekirersever
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "17.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -28,3 +28,13 @@ targets:
         INFOPLIST_KEY_NSLocalNetworkUsageDescription: "F1 26 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli."
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         TARGETED_DEVICE_FAMILY: "1,2"
+  F1DashTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests
+    dependencies:
+      - target: F1Dash
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

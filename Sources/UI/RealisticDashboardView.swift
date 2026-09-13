@@ -178,8 +178,8 @@ struct RealisticDashboardView: View {
 
     private var status: String {
         if limiter { return "PIT LIMITER" }
-        if dash.aeroStraightMode { return "STRAIGHT" }
-        if dash.aeroAvailable { return "AERO READY" }
+        if dash.aeroEngaged { return dash.usesDRS ? "DRS ON" : "STRAIGHT" }
+        if dash.aeroReady { return dash.usesDRS ? "DRS READY" : "AERO READY" }
         return dash.ersModeText
     }
 

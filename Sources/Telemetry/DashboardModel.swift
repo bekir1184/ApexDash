@@ -49,6 +49,10 @@ struct DashboardModel {
     var overtakeAvailable: Bool = false
     var overtakeActive: Bool = false
     var is2026Regulations: Bool = false
+    /// F1 25 oynaniyorsa DRS gosterilir, 2026 kurallarinda aktif aero.
+    var usesDRS: Bool = false
+    var drsActive: Bool = false
+    var drsAllowed: Bool = false
 
     // LapData (paket 2)
     var currentLapTimeMS: Int = 0
@@ -80,6 +84,24 @@ struct DashboardModel {
     var player: Rival?
     var driverBehind: Rival?
 
+    // MARK: - Oyuna gore etiketler
+    //
+    // F1 25'te DRS var, 2026 kurallarinda yok: yerini overtake modu ve aktif
+    // aero aldi. Ekranlar bu uc ozelligi okur, hangi oyunun bagli oldugunu
+    // bilmek zorunda kalmaz.
+
+    /// Guc rozeti: 2026'da OVERTAKE, F1 25'te DRS.
+    var boostLabel: String { usesDRS ? "DRS" : "OVERTAKE" }
+    var boostActive: Bool { usesDRS ? drsActive : overtakeActive }
+    var boostAvailable: Bool { usesDRS ? drsAllowed : overtakeAvailable }
+
+    /// Aero rozeti: 2026'da kanat modu, F1 25'te yine DRS.
+    var aeroLabel: String { usesDRS ? "DRS" : (aeroStraightMode ? "AERO Z" : "AERO X") }
+    var aeroEngaged: Bool { usesDRS ? drsActive : aeroStraightMode }
+    var aeroReady: Bool { usesDRS ? drsAllowed : aeroAvailable }
+    /// Uzun etiket: yayin ve dot matrix temalarinda satir basligi.
+    var aeroTitle: String { usesDRS ? "DRS" : "ACTIVE AERO" }
+
     var gearLabel: String {
         switch gear {
         case -1: return "R"
@@ -96,6 +118,12 @@ struct DashboardModel {
 
     /// Vites degistirme uyarisi: son LED'ler yaninca.
     var shiftFlash: Bool { revLightsPercent >= 97 }
+
+    mutating func apply(_ t: CarTelemetry, format: PacketFormat) {
+        usesDRS = !format.hasActiveAero
+        drsActive = t.drsActive
+        apply(t)
+    }
 
     mutating func apply(_ t: CarTelemetry) {
         speedKPH = t.speedKPH
@@ -219,6 +247,7 @@ struct DashboardModel {
         ersHarvestedThisLap = s.ersHarvestedThisLap
         ersHarvestLimitPerLap = s.ersHarvestLimitPerLap
         ersDeployedThisLap = s.ersDeployedThisLap
+        drsAllowed = s.drsAllowed
     }
 
     mutating func apply(_ t: CarTelemetry2) {

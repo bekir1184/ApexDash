@@ -52,11 +52,11 @@ struct DotMatrixDashboardView: View {
     /// Aktif aero: 2026'da DRS'in yerini alan X (viraj) / Z (duz) modu.
     /// Kullanilabilir hale gelip de gecilmediyse yanip soner.
     private var straightModeBanner: some View {
-        let engaged = dash.aeroStraightMode
-        let waiting = dash.aeroAvailable && !engaged
+        let engaged = dash.aeroEngaged
+        let waiting = dash.aeroReady && !engaged
         return TimelineView(.periodic(from: .now, by: 0.35)) { context in
             let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.35) % 2 == 0
-            banner(text: "STRAIGHT MODE",
+            banner(text: dash.usesDRS ? "DRS" : "STRAIGHT MODE",
                    detail: "",
                    color: aeroMagenta,
                    filled: engaged || (waiting && phase),

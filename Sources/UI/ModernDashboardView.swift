@@ -41,11 +41,12 @@ struct ModernDashboardView: View {
                     .foregroundStyle(.white.opacity(0.4))
             }
             HStack(spacing: unit * 0.25) {
-                badge(text: "OVERTAKE", active: dash.overtakeActive, ready: dash.overtakeAvailable,
+                badge(text: dash.boostLabel, active: dash.boostActive, ready: dash.boostAvailable,
                       color: Color(red: 0.99, green: 0.78, blue: 0.15))
-                badge(text: dash.aeroStraightMode ? "AERO Z" : "AERO X",
-                      active: dash.aeroStraightMode, ready: dash.aeroAvailable,
-                      color: Color(red: 0.24, green: 0.78, blue: 1.0))
+                if !dash.usesDRS {
+                    badge(text: dash.aeroLabel, active: dash.aeroEngaged, ready: dash.aeroReady,
+                          color: Color(red: 0.24, green: 0.78, blue: 1.0))
+                }
                 if dash.pitLimiterOn {
                     badge(text: "PIT", active: true, ready: true,
                           color: Color(red: 1.0, green: 0.35, blue: 0.35))

@@ -150,15 +150,17 @@ struct HomeView: View {
         .safeAreaPadding(.horizontal, sidePad)
         .scrollPosition(id: $position)
         .frame(width: size.width)
-        .onScrollPhaseChange { _, phase in
-            // Kenarlara yaklasinca, kimse bakmazken ortadaki esdegere atla.
-            guard phase == .idle, let current = position else { return }
-            let band = themes.count * 2
-            if current < band || current > itemCount - band {
-                var still = Transaction(); still.disablesAnimations = true
-                withTransaction(still) { position = middleBase + current % themes.count }
-            }
-        }
+        .modifier(RecentreOnIdle(recentre: recentreIfNearEdge))
+    }
+
+    /// Sonsuz donus: kenarlara yaklasinca, kimse bakmazken listenin ortasindaki
+    /// esdeger karta atlanir. Kaydirma konumu ayni kartta kaldigi icin gorunmez.
+    private func recentreIfNearEdge() {
+        guard let current = position else { return }
+        let band = themes.count * 2
+        guard current < band || current > itemCount - band else { return }
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) { position = middleBase + current % themes.count }
     }
 
     private func nearestIndex(of theme: DashTheme, to current: Int) -> Int {
@@ -219,6 +221,33 @@ struct HomeView: View {
                 .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
         }
         .buttonStyle(PressScaleStyle())
+    }
+}
+
+/// Kaydirma durunca listeyi ortalar. iOS 18'de kaydirma evresi dogrudan
+/// bildirilir; iOS 17'de parmak birakildiktan kisa sure sonra denenir.
+struct RecentreOnIdle: ViewModifier {
+    let recentre: () -> Void
+    @State private var pending: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollPhaseChange { _, phase in
+                if phase == .idle { recentre() }
+            }
+        } else {
+            content.simultaneousGesture(
+                DragGesture(minimumDistance: 4).onEnded { _ in
+                    pending?.cancel()
+                    pending = Task { @MainActor in
+                        // Momentum bitene kadar bekle, sonra sessizce ortala.
+                        try? await Task.sleep(for: .milliseconds(700))
+                        guard !Task.isCancelled else { return }
+                        recentre()
+                    }
+                }
+            )
+        }
     }
 }
 

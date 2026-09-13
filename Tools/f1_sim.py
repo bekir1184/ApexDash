@@ -5,8 +5,9 @@ Oyun acik olmadan dashboard'u test etmek icin gercek paket duzeninde
 (packetFormat=2026) sahte veri gonderir.
 
 Kullanim:
-    python3 Tools/f1_sim.py 192.168.1.42      # iPhone'un IP'si
-    python3 Tools/f1_sim.py 127.0.0.1         # Simulator icin
+    python3 Tools/f1_sim.py 192.168.1.42            # iPhone'un IP'si
+    python3 Tools/f1_sim.py 127.0.0.1               # Simulator icin
+    python3 Tools/f1_sim.py 127.0.0.1 --format=2025 # F1 25 paket duzeni
 """
 import math
 import socket
@@ -14,25 +15,43 @@ import struct
 import sys
 import time
 
-CARS = 24
+# Bicim: 2026 (varsayilan) ya da 2025. Paket duzenleri birkac alanda ayrilir.
+FORMAT = 2026
 PLAYER = 0
 RATE_HZ = 60
 
+
+def is_2026():
+    return FORMAT == 2026
+
+
+def cars():
+    return 24 if is_2026() else 22
+
+
 HEADER_FMT = "<HBBBBBQfIIBB"          # 29 byte
-TELEMETRY_FMT = "<HfffBbHBBH4H4B4BB4f4B"   # 59 byte
-TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte
-PARTICIPANT_FMT = "<BHHHBBB32sBBHBB12B"   # 60 byte
+# F1 26: motor sicakligi tek bayt (59). F1 25: iki bayt (60).
+TELEMETRY_FMT_2026 = "<HfffBbHBBH4H4B4BB4f4B"
+TELEMETRY_FMT_2025 = "<HfffBbHBBH4H4B4BH4f4B"
+TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte, yalnizca F1 26
+# F1 26: surucu/ag/takim kimlikleri uint16 (60). F1 25: uint8 (57).
+PARTICIPANT_FMT_2026 = "<BHHHBBB32sBBHBB12B"
+PARTICIPANT_FMT_2025 = "<BBBBBBB32sBBHBB12B"
 NAMES = ["Bekir Ersever", "Lewis Hamilton", "George Russell", "Max Verstappen",
          "Charles Leclerc", "Lando Norris"]
 # oyuncu 4. sirada; onunde 3, arkasinda 5 var
 POSITIONS = [4, 3, 5, 1, 2, 6]
-LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte
-STATUS_FMT = "<BBBBBfffHHBBHBBBbfffBffffB"  # 59 byte
+LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte, iki bicimde de ayni
+# F1 26'da tur basina toplama limiti var (59), F1 25'te yok (55).
+STATUS_FMT_2026 = "<BBBBBfffHHBBHBBBbfffBffffB"
+STATUS_FMT_2025 = "<BBBBBfffHHBBHBBBbfffBfffB"
+# F1 26: G kuvvetleri 1000 ile carpilmis int16 (54). F1 25: float (60).
+MOTION_FMT_2026 = "<ffffffhhhhhhhhhfff"
+MOTION_FMT_2025 = "<ffffffhhhhhhffffff"
 
 MAX_RPM = 15000
 IDLE_RPM = 4000
 
-MOTION_FMT = "<ffffffhhhhhhhhhfff"   # 54 byte
 SESSION_HEAD_FMT = "<BbbBHBb"        # weather, trackTemp, airTemp, totalLaps, trackLength, sessionType, trackId
 SESSION_SIZE = 926 - 29
 
@@ -84,19 +103,22 @@ TRACK = Track()
 
 
 def motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long):
+    fmt = MOTION_FMT_2026 if is_2026() else MOTION_FMT_2025
+    head = (
+        x, 0.0, z,
+        v_ms * math.cos(yaw), 0.0, v_ms * math.sin(yaw),
+        int(math.cos(yaw) * 32767), 0, int(math.sin(yaw) * 32767),
+        int(-math.sin(yaw) * 32767), 0, int(math.cos(yaw) * 32767),
+    )
+    # F1 26 G kuvvetlerini 1000 ile carpilmis tamsayi olarak tasir.
+    forces = ((int(g_lat * 1000), int(g_long * 1000), 1000) if is_2026()
+              else (g_lat, g_long, 1.0))
     payload = b""
-    for car in range(CARS):
+    for car in range(cars()):
         if car == PLAYER:
-            payload += struct.pack(
-                MOTION_FMT, x, 0.0, z,
-                v_ms * math.cos(yaw), 0.0, v_ms * math.sin(yaw),
-                int(math.cos(yaw) * 32767), 0, int(math.sin(yaw) * 32767),
-                int(-math.sin(yaw) * 32767), 0, int(math.cos(yaw) * 32767),
-                int(g_lat * 1000), int(g_long * 1000), 1000,
-                yaw, 0.0, 0.0,
-            )
+            payload += struct.pack(fmt, *head, *forces, yaw, 0.0, 0.0)
         else:
-            payload += bytes(54)
+            payload += bytes(struct.calcsize(fmt))
     return header(0, frame) + payload
 
 
@@ -108,8 +130,8 @@ def session_packet(frame):
 def header(packet_id, frame):
     return struct.pack(
         HEADER_FMT,
-        2026,          # packetFormat
-        26,            # gameYear
+        FORMAT,        # packetFormat
+        FORMAT % 100,  # gameYear
         1, 0,          # major, minor
         1,             # packetVersion
         packet_id,
@@ -134,12 +156,13 @@ def event_packet(frame, code, payload=b""):
 
 
 def participants_packet(frame):
-    payload = struct.pack("<B", CARS)
-    for car in range(CARS):
+    fmt = PARTICIPANT_FMT_2026 if is_2026() else PARTICIPANT_FMT_2025
+    payload = struct.pack("<B", cars())
+    for car in range(cars()):
         name = (NAMES[car] if car < len(NAMES) else f"Driver {car}").encode()[:31]
         colours = [0, 210, 190] + [0] * 9 if car == PLAYER else [220, 40, 40] + [0] * 9
         payload += struct.pack(
-            PARTICIPANT_FMT,
+            fmt,
             0, car, 0, 1, 1 if car == PLAYER else 0, car + 1, 76,
             name, 1, 1, 0, 4, 1, *colours,
         )
@@ -149,7 +172,7 @@ def participants_packet(frame):
 def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
                    s1_ms=0, s2_ms=0, distance=0.0, sector=0, last_lap_ms=0):
     payload = b""
-    for car in range(CARS):
+    for car in range(cars()):
         if car == PLAYER:
             payload += struct.pack(
                 LAPDATA_FMT,
@@ -174,14 +197,16 @@ def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
     return header(2, frame) + payload
 
 
-def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, tyre_temp=98, steer=0.0):
+def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, tyre_temp=98,
+                     steer=0.0, drs=0):
     percent = int(max(0, min(100, (rpm - IDLE_RPM) / (MAX_RPM - IDLE_RPM) * 100)))
+    fmt = TELEMETRY_FMT_2026 if is_2026() else TELEMETRY_FMT_2025
     payload = b""
-    for car in range(CARS):
+    for car in range(cars()):
         if car == PLAYER:
             payload += struct.pack(
-                TELEMETRY_FMT,
-                int(speed), throttle, steer, brake, 0, gear, int(rpm), 0,
+                fmt,
+                int(speed), throttle, steer, brake, 0, gear, int(rpm), drs,
                 percent, rev_bits(percent),
                 brake_temp + 40, brake_temp, brake_temp - 30, brake_temp - 60,
                 tyre_temp, tyre_temp + 6, tyre_temp - 4, tyre_temp + 12,
@@ -189,14 +214,14 @@ def telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp=380, t
                 *([23.5] * 4), *([0] * 4),
             )
         else:
-            payload += bytes(59)
+            payload += bytes(struct.calcsize(fmt))
     payload += struct.pack("<BBb", 255, 255, 0)
     return header(6, frame) + payload
 
 
 def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
     payload = b""
-    for car in range(CARS):
+    for car in range(cars()):
         if car == PLAYER:
             payload += struct.pack(
                 TELEMETRY2_FMT,
@@ -210,32 +235,39 @@ def telemetry2_packet(frame, overtake_ready, overtake_active, straight_mode):
 
 
 def status_packet(frame, ers=4_000_000.0, limiter=0, flag=1,
-                  harvest=0.0, deployed=0.0):
+                  harvest=0.0, deployed=0.0, drs_allowed=0):
+    fmt = STATUS_FMT_2026 if is_2026() else STATUS_FMT_2025
+    common = (
+        1, 0, 1, 55, limiter,          # tc, abs, fuelMix, brakeBias, pitLimiter
+        90.0, 110.0, 12.5,             # fuel
+        MAX_RPM, IDLE_RPM, 8,          # maxRPM, idleRPM, maxGears
+        drs_allowed, 0,                # drsAllowed, drsActivationDistance
+        18, 18, 4, flag,               # actual/visual compound, tyre age, fia flag
+        0.0, 0.0, ers,                 # ICE, MGUK, ers store
+        2,                             # ers deploy mode
+        harvest * 0.6, harvest * 0.4,  # harvested MGU-K, MGU-H
+    )
+    tail = (4_000_000.0, deployed, 0) if is_2026() else (deployed, 0)
     payload = b""
-    for car in range(CARS):
+    for car in range(cars()):
         if car == PLAYER:
-            payload += struct.pack(
-                STATUS_FMT,
-                1, 0, 1, 55, limiter,      # tc, abs, fuelMix, brakeBias, pitLimiter
-                90.0, 110.0, 12.5,         # fuel
-                MAX_RPM, IDLE_RPM, 8,      # maxRPM, idleRPM, maxGears
-                0, 0,                      # drsAllowed, drsActivationDistance
-                18, 18, 4, flag,           # actual/visual compound, tyre age, fia flag
-                0.0, 0.0, ers,             # ICE, MGUK, ers store
-                2,                         # ers deploy mode
-                harvest * 0.6, harvest * 0.4, 4_000_000.0, deployed,  # harvestMGUK/H, limit, deployed
-                0,                         # networkPaused
-            )
+            payload += struct.pack(fmt, *common, *tail)
         else:
-            payload += bytes(59)
+            payload += bytes(struct.calcsize(fmt))
     return header(7, frame) + payload
 
 
 def main():
-    target = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
-    port = int(sys.argv[2]) if len(sys.argv) > 2 else 20777
+    global FORMAT
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    for a in sys.argv[1:]:
+        if a.startswith("--format"):
+            FORMAT = int(a.split("=")[1]) if "=" in a else 2025
+    target = args[0] if args else "127.0.0.1"
+    port = int(args[1]) if len(args) > 1 else 20777
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print(f"F1 26 sim -> {target}:{port} @ {RATE_HZ} Hz  (Ctrl+C ile durdur)")
+    print(f"F1 {FORMAT % 100} sim -> {target}:{port} @ {RATE_HZ} Hz, "
+          f"{cars()} arac  (Ctrl+C ile durdur)")
 
     frame = 0
     distance = 0.0
@@ -284,8 +316,11 @@ def main():
 
         brake_temp = int(260 + 640 * brake + 60 * math.sin(t))
         tyre_temp = int(88 + 26 * phase + 6 * math.sin(t * 0.7))
+        # F1 25'te DRS: duz yolda ve hizliyken acik.
+        drs = 1 if (not is_2026() and curv == 0 and speed > 200) else 0
         sock.sendto(
-            telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp, steer),
+            telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp,
+                             steer, drs),
             (target, port),
         )
         sock.sendto(motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long), (target, port))
@@ -315,13 +350,17 @@ def main():
             flag = 3 if cycle < 5 else (2 if cycle < 10 else 1)
             harvest = 4_000_000.0 * (0.2 + 0.6 * abs(math.sin(t * 0.15)))
             deployed = 4_000_000.0 * (0.1 + 0.5 * abs(math.cos(t * 0.2)))
-            sock.sendto(status_packet(frame, ers, limiter, flag, harvest, deployed), (target, port))
-            sock.sendto(
-                telemetry2_packet(frame, overtake_ready=phase > 0.3,
-                                  overtake_active=0.45 < phase < 0.6,
-                                  straight_mode=curv == 0 and speed > 200),
-                (target, port),
-            )
+            sock.sendto(status_packet(frame, ers, limiter, flag, harvest, deployed,
+                                      drs_allowed=1 if drs else 0),
+                        (target, port))
+            # Aktif aero / overtake paketi yalnizca 2026'da var.
+            if is_2026():
+                sock.sendto(
+                    telemetry2_packet(frame, overtake_ready=phase > 0.3,
+                                      overtake_active=0.45 < phase < 0.6,
+                                      straight_mode=curv == 0 and speed > 200),
+                    (target, port),
+                )
         frame += 1
         time.sleep(1 / RATE_HZ)
 

@@ -138,7 +138,7 @@ struct BroadcastHUD {
         1 - min(max(Double(dash.ersDeployedThisLap) / 4_000_000, 0), 1)
     }
 
-    private var deployActive: Bool { dash.ersTrend < 0 || dash.overtakeActive }
+    private var deployActive: Bool { dash.ersTrend < 0 || dash.boostActive }
 
     private func litCount(_ fraction: Double) -> Int {
         Int((min(max(fraction, 0), 1) * 10).rounded())
@@ -357,11 +357,11 @@ struct BroadcastHUD {
 
         let box = Path(roundedRect: CGRect(x: CX - R * 0.72, y: CY + R * 0.28,
                                            width: R * 1.44, height: R * 0.22), cornerRadius: 5)
-        let available = dash.overtakeAvailable || dash.overtakeActive
-        ctx.fill(box, with: .color(dash.overtakeActive ? green : Color(hex: 0x0b2a16)))
+        let available = dash.boostAvailable || dash.boostActive
+        ctx.fill(box, with: .color(dash.boostActive ? green : Color(hex: 0x0b2a16)))
         ctx.stroke(box, with: .color(green.opacity(available ? 1 : 0.3)), lineWidth: 5)
-        drawText(&ctx, "OVERTAKE", size: 52, weight: .bold, italic: false,
-                 colour: dash.overtakeActive ? .black : green.opacity(available ? 1 : 0.35), tracking: 2,
+        drawText(&ctx, dash.boostLabel, size: 52, weight: .bold, italic: false,
+                 colour: dash.boostActive ? .black : green.opacity(available ? 1 : 0.35), tracking: 2,
                  at: CGPoint(x: CX, y: CY + R * 0.43))
         _ = centre
     }
@@ -373,7 +373,7 @@ struct BroadcastHUD {
         let rect = CGRect(x: CX - bw / 2, y: by, width: bw, height: bh)
         let body = Path(roundedRect: rect, cornerRadius: bh * 0.30)
         // Oyundaki gibi: normalde sari, Overtake devredeyken maviye doner.
-        let blue = dash.overtakeActive
+        let blue = dash.boostActive
         let empty = blue ? Color(hex: 0x21497f) : Color(hex: 0x5a4a12)
         let full = blue ? Color(hex: 0x3980d0) : Color(hex: 0xf0c330)
         let edge = blue ? Color(hex: 0x7bbfe4) : Color(hex: 0xffe27a)
@@ -415,8 +415,8 @@ struct BroadcastHUD {
         let midY = rect.midY
 
         // Sol: ACTIVE AERO + cift cizgi
-        let aero = dash.aeroStraightMode
-        drawText(&ctx, "ACTIVE AERO", size: k * 24, weight: .heavy, italic: true,
+        let aero = dash.aeroEngaged
+        drawText(&ctx, dash.aeroTitle, size: k * 24, weight: .heavy, italic: true,
                  colour: aero ? .white : Color(hex: 0x6f8797), anchor: .leading,
                  at: CGPoint(x: x0, y: midY + k * 8))
         let sx = x0 + k * 170

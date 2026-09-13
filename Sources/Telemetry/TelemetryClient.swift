@@ -35,6 +35,8 @@ final class TelemetryClient: ObservableObject {
     /// Tamamlanan turlarin ayrintili izleri (siteye gonderim icin).
     @Published private(set) var lapTraces: [LapTrace] = []
     @Published private(set) var sessionInfo = SessionInfo()
+    /// Son paketin bicimi; ekranlar DRS mi aktif aero mu gosterecegini buna sorar.
+    @Published private(set) var packetFormat: PacketFormat = .f126
     private let pathMonitor = NWPathMonitor()
     private var monitoring = false
     private var packetCounter = 0
@@ -133,7 +135,9 @@ final class TelemetryClient: ObservableObject {
     }
 
     private func handle(_ data: Data) {
-        guard let header = PacketHeader(data), header.packetFormat == 2026 else { return }
+        guard let header = PacketHeader(data) else { return }
+        let format = header.format
+        if format != packetFormat { packetFormat = format }
         packetCounter += 1
         lastPacketDate = Date()
         status = .receiving
@@ -141,30 +145,32 @@ final class TelemetryClient: ObservableObject {
         let idx = header.playerCarIndex
         switch header.packetID {
         case .carTelemetry:
-            guard let t = CarTelemetry(data: data, carIndex: idx) else { return }
-            dash.apply(t)
+            guard let t = CarTelemetry(data: data, carIndex: idx, format: format) else { return }
+            dash.apply(t, format: format)
             recorder.telemetry = t
         case .carTelemetry2:
-            guard let t = CarTelemetry2(data: data, carIndex: idx) else { return }
+            guard format.hasActiveAero,
+                  let t = CarTelemetry2(data: data, carIndex: idx) else { return }
             dash.apply(t)
             recorder.telemetry2 = t
         case .motion:
-            guard let m = CarMotion(data: data, carIndex: idx) else { return }
+            guard let m = CarMotion(data: data, carIndex: idx, format: format) else { return }
             recorder.motion = m
         case .session:
             guard let info = SessionInfo(data: data) else { return }
             if info != sessionInfo { sessionInfo = info }
         case .lapData:
-            guard let l = LapData(data: data, carIndex: idx) else { return }
+            guard let l = LapData(data: data, carIndex: idx, format: format) else { return }
             dash.apply(l)
             recorder.ingest(l)
             if recorder.traces.count != lapTraces.count { lapTraces = recorder.traces }
             updateDeltaTrend(l.deltaToCarInFrontMS)
             timing.ingest(l)
             dash.applyTiming(timing)
-            updateRivals(positions: LapData.positions(in: data), playerPosition: l.carPosition)
+            updateRivals(positions: LapData.positions(in: data, format: format),
+                         playerPosition: l.carPosition)
         case .carStatus:
-            guard let s = CarStatus(data: data, carIndex: idx) else { return }
+            guard let s = CarStatus(data: data, carIndex: idx, format: format) else { return }
             dash.apply(s)
             recorder.status = s
         case .event:
@@ -179,7 +185,7 @@ final class TelemetryClient: ObservableObject {
                 break
             }
         case .participants:
-            let list = ParticipantsPacket.parse(data)
+            let list = ParticipantsPacket.parse(data, format: format)
             if !list.isEmpty { participants = list }
         default:
             break
