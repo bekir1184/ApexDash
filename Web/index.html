@@ -4,25 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apex Dash · Telemetri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #07090c; --panel: #0e1218; --panel2: #131922; --line: rgba(255,255,255,.08);
-    --ink: #eef2f6; --dim: #7f8797; --purple: #b45cff; --green: #3ce85a; --yellow: #f5d92b;
+    /* Uygulamayla ayni: lacivert zemin, kirmizi vurgu. */
+    --bg: #121219; --panel: #1a1a23; --panel2: #21212c; --line: rgba(255,255,255,.09);
+    --stripe: #292933;
+    --ink: #f1f2f5; --dim: #87879a; --accent: #e10600;
+    /* Veri renkleri anlam tasir, degismez. */
+    --purple: #b45cff; --green: #3ce85a; --yellow: #f5d92b;
     --red: #ff4438; --cyan: #3fd9c9; --blue: #4aa3ff;
     --c1: #3fd9c9; --c2: #ff7a3d; --c3: #b45cff;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 13px/1.45 "Inter", -apple-system, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; background: var(--bg); color: var(--ink); position: relative;
+         font: 13px/1.45 "Saira", -apple-system, "Segoe UI", system-ui, sans-serif; }
+  /* Uygulamadaki gibi, zemine yatik iki serit. */
+  body::before {
+    content: ""; position: fixed; inset: -20vh -20vw; z-index: -1; pointer-events: none;
+    background:
+      linear-gradient(110.3deg, transparent 28%, var(--stripe) 28%, var(--stripe) 39%, transparent 39%),
+      linear-gradient(110.3deg, transparent 46%, var(--stripe) 46%, var(--stripe) 57%, transparent 57%);
+  }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
   b, th, .label { letter-spacing: .12em; text-transform: uppercase; font-size: 10.5px; color: var(--dim); font-weight: 700; }
 
   /* ---- ust cubuk */
   .top { display: flex; align-items: center; gap: 22px; padding: 12px 20px; border-bottom: 1px solid var(--line);
-         background: linear-gradient(180deg, #0d1117, #090b0f); position: sticky; top: 0; z-index: 5; }
+         background: rgba(18,18,25,.92); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 5; }
   .top h1 { margin: 0; font-size: 17px; letter-spacing: .32em; font-weight: 900; }
-  .top h1 span { color: var(--cyan); }
+  .top h1 span { color: var(--accent); }
   .top .meta { display: flex; gap: 22px; margin-left: auto; align-items: center; }
   .top .meta div { display: flex; flex-direction: column; line-height: 1.15; }
   .top .meta u { text-decoration: none; font-size: 14px; font-weight: 700; }
@@ -31,20 +45,20 @@
   .status.live i { background: var(--green); box-shadow: 0 0 8px var(--green); }
 
   /* ---- eslesme */
-  .pair { display: flex; gap: 22px; align-items: center; margin: 18px 20px 0; background: var(--panel);
+  .pair { display: flex; gap: 22px; align-items: center; margin: 18px 20px 0; background: rgba(26,26,35,.92);
           border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
   .pair img { width: 176px; height: 176px; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 10px; }
-  .pair .code { font-size: 34px; letter-spacing: .3em; font-weight: 900; }
+  .pair .code { font-size: 34px; letter-spacing: .3em; font-weight: 900; color: var(--accent); }
   .pair p { margin: 6px 0 0; color: var(--dim); max-width: 460px; }
   .btn { background: none; border: 1px solid var(--line); color: var(--dim); border-radius: 999px;
          padding: 6px 14px; font: inherit; font-size: 11px; letter-spacing: .1em; cursor: pointer; }
-  .btn:hover { color: var(--ink); border-color: var(--dim); }
+  .btn:hover { color: var(--ink); border-color: var(--accent); }
   .hidden { display: none !important; }
 
   /* ---- yerlesim */
   .grid { display: grid; grid-template-columns: 300px 1fr; gap: 18px; padding: 18px 20px 60px; }
   @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .panel { background: rgba(26,26,35,.92); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
   .panel h2 { margin: 0 0 10px; font-size: 11px; letter-spacing: .18em; color: var(--dim); font-weight: 800;
               display: flex; align-items: center; gap: 10px; }
   .panel h2 .spacer { flex: 1; }
@@ -55,7 +69,7 @@
   th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
   tr.lap { cursor: pointer; }
   tr.lap:hover td { background: rgba(255,255,255,.03); }
-  tr.best td:nth-child(3) { color: var(--purple); font-weight: 700; }
+  tr.best td:nth-child(3) { color: var(--purple); font-weight: 800; }
   .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -2px; }
   .sw.on { border-color: transparent; }
   .gap { color: var(--yellow); font-size: 11px; }
@@ -76,7 +90,7 @@
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
   .seg button { background: none; border: 0; color: var(--dim); padding: 5px 10px; font: inherit; font-size: 10.5px;
                 letter-spacing: .1em; cursor: pointer; }
-  .seg button.on { background: rgba(63,217,201,.15); color: var(--cyan); }
+  .seg button.on { background: rgba(225,6,0,.18); color: #ff6b63; }
 
   /* ---- grafikler */
   .charts { position: relative; }
@@ -88,7 +102,7 @@
   .readout u { text-decoration: none; display: block; font-size: 15px; font-weight: 700; }
 
   /* ---- viraj tablosu */
-  .corners td:first-child { font-weight: 800; color: var(--cyan); }
+  .corners td:first-child { font-weight: 800; color: var(--accent); }
   .empty { color: var(--dim); padding: 30px; text-align: center; }
   footer { color: var(--dim); font-size: 11px; padding: 0 20px 30px; }
 </style>
