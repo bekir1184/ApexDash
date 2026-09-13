@@ -17,10 +17,20 @@ struct SetupView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: unit * 0.26) {
-            Text(strings.setupTitle)
-                .font(Typeface.digits(unit * 0.5, .black))
-                .foregroundStyle(.white)
-                .tracking(4)
+            HStack {
+                Text(strings.setupTitle)
+                    .font(Typeface.digits(unit * 0.5, .black))
+                    .foregroundStyle(.white)
+                    .tracking(4)
+                Spacer()
+                Button(action: onDone) {
+                    Image(systemName: "xmark")
+                        .font(Typeface.font(unit * 0.34, .black))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .padding(unit * 0.2)
+                }
+                .buttonStyle(PressScaleStyle())
+            }
 
             Text(verbatim: strings.setupIntro)
                 .font(Typeface.digits(unit * 0.3, .semibold))
@@ -37,15 +47,7 @@ struct SetupView: View {
                 .foregroundStyle(.white.opacity(0.35))
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: onDone) {
-                Text(strings.close)
-                    .font(Typeface.digits(unit * 0.36, .black))
-                    .foregroundStyle(Palette.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, unit * 0.2)
-                    .background(Capsule().fill(accent))
-            }
-            .buttonStyle(.plain)
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)

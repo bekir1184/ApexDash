@@ -11,6 +11,9 @@ struct RootDashboardView: View {
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
     /// Bos deger "otomatik" demek: telefonun dili kullanilir.
     @AppStorage("appLanguage") private var languageID: String = ""
+    /// Dil ayari once iki durumluydu ve ilk dokunusta bir dile kilitliyordu.
+    /// Eski kayit bir kez temizlenir, boylece uygulama otomatige doner.
+    @AppStorage("languagePreferenceReset") private var didResetLanguage = false
     @AppStorage("udpPort") private var udpPort: Int = 20777
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
@@ -99,6 +102,10 @@ struct RootDashboardView: View {
     private func observed<V: View>(_ view: V) -> some View {
         view
             .onAppear {
+                if !didResetLanguage {
+                    languageID = ""
+                    didResetLanguage = true
+                }
                 page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
