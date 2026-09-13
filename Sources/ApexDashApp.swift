@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct F1DashApp: App {
+struct ApexDashApp: App {
     @StateObject private var client = TelemetryClient()
 
     var body: some Scene {

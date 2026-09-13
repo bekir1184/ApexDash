@@ -1,4 +1,4 @@
-# F1Dash
+# Apex Dash
 
 Turns an iPhone into the steering wheel display of **F1 25** and **F1 26**.
 It listens to the game's UDP telemetry output directly. No PC in the loop, no
@@ -36,7 +36,7 @@ Shown on every theme:
 
 ## Lap analysis in your browser
 
-Finished laps upload themselves to <https://f1dash-app.vercel.app>. Open the
+Finished laps upload themselves to <https://apexdash-app.vercel.app>. Open the
 page, scan its QR code from the LAPS screen, and every lap you complete lands
 there on its own.
 
@@ -91,8 +91,8 @@ little endian, packed. Differences between the two games are collected in
 ## Development
 
 ```bash
-xcodegen generate          # writes F1Dash.xcodeproj
-open F1Dash.xcodeproj
+xcodegen generate          # writes ApexDash.xcodeproj
+open ApexDash.xcodeproj
 ```
 
 Fake telemetry, so you can work without the game running:
@@ -106,7 +106,7 @@ python3 Tools/f1_sim.py 192.168.1.42              # a real iPhone
 Tests cover the binary parsing for both formats, byte by byte:
 
 ```bash
-xcodebuild test -scheme F1Dash -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -scheme ApexDash -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 Requires iOS 17.

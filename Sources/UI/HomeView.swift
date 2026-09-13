@@ -91,7 +91,7 @@ struct HomeView: View {
                 Image(systemName: "flag.checkered")
                     .font(.system(size: unit * 0.5, weight: .black))
                     .foregroundStyle(Color(red: 0.25, green: 0.85, blue: 0.79))
-                Text(verbatim: "F1")
+                Text(verbatim: "APEX")
                     .font(.system(size: unit * 0.52, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
                 + Text(verbatim: "DASH")

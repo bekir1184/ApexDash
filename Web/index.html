@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>F1Dash · Telemetri</title>
+<title>Apex Dash · Telemetri</title>
 <style>
   :root {
     --bg: #07090c; --panel: #0e1218; --panel2: #131922; --line: rgba(255,255,255,.08);
@@ -96,7 +96,7 @@
 <body>
 
 <div class="top">
-  <h1>F1<span>DASH</span></h1>
+  <h1>APEX<span>DASH</span></h1>
   <span class="label">Telemetri Analizi</span>
   <div class="meta">
     <div><b>Pist</b><u id="trackName">—</u></div>
@@ -143,7 +143,7 @@
   </section>
 </div>
 
-<footer>Veri telefondaki F1Dash uygulamasından gelir. Bir tur bittiğinde 20 Hz'lik izi otomatik yüklenir; sayfa 3 saniyede bir yoklar.</footer>
+<footer>Veri telefondaki Apex Dash uygulamasından gelir. Bir tur bittiğinde 20 Hz'lik izi otomatik yüklenir; sayfa 3 saniyede bir yoklar.</footer>
 
 <script src="/qrcode.js"></script>
 <script>
@@ -173,9 +173,9 @@ function newCode() {
 function sessionId() {
   const params = new URLSearchParams(location.search);
   let id = (params.get("s") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (id.length < 4) id = (localStorage.getItem("f1dash-session") || "").toUpperCase();
+  if (id.length < 4) id = (localStorage.getItem("apexdash-session") || "").toUpperCase();
   if (id.length < 4) id = newCode();
-  localStorage.setItem("f1dash-session", id);
+  localStorage.setItem("apexdash-session", id);
   params.set("s", id);
   history.replaceState(null, "", `${location.pathname}?${params}`);
   return id;
@@ -193,12 +193,12 @@ function renderPair(connected) {
   pair.innerHTML = `${qr.createImgTag(5, 8)}
     <div>
       <div class="code">${session}</div>
-      <p>Telefondaki F1Dash uygulamasında <b>TURLAR</b> ekranını aç, <b>QR OKUT</b>'a bas ve bu kodu okut.
+      <p>Telefondaki Apex Dash uygulamasında <b>TURLAR</b> ekranını aç, <b>QR OKUT</b>'a bas ve bu kodu okut.
          Her tur bittiğinde tüm telemetri buraya kendiliğinden düşer.</p>
       <button class="btn" onclick="resetSession()">YENİ KOD</button>
     </div>`;
 }
-function resetSession() { localStorage.removeItem("f1dash-session"); location.href = location.pathname; }
+function resetSession() { localStorage.removeItem("apexdash-session"); location.href = location.pathname; }
 
 // ---------------------------------------------------------------- durum
 const state = {

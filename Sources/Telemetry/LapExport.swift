@@ -2,7 +2,7 @@ import Foundation
 
 /// Tur kayitlarini disari cikarma: CSV dosyasi ve siteye gotururen QR.
 enum LapExport {
-    static let siteURL = "https://f1dash-app.vercel.app"
+    static let siteURL = "https://apexdash-app.vercel.app"
 
     static func csv(_ laps: [CompletedLap]) -> String {
         let formatter = ISO8601DateFormatter()
@@ -20,7 +20,7 @@ enum LapExport {
 
     /// Paylasim sayfasina verilecek gecici dosya.
     static func csvFile(_ laps: [CompletedLap]) -> URL? {
-        let name = "f1dash-laps-\(Int(Date().timeIntervalSince1970)).csv"
+        let name = "apexdash-laps-\(Int(Date().timeIntervalSince1970)).csv"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
         do {
             try csv(laps).write(to: url, atomically: true, encoding: .utf8)

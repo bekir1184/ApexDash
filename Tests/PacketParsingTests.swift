@@ -1,5 +1,5 @@
 import XCTest
-@testable import F1Dash
+@testable import ApexDash
 
 /// Paketleri bayt bayt kurup ayristiriciya veren testler. Iki oyunun
 /// duzeni farkli oldugu icin her sey iki bicimde de dogrulanir.

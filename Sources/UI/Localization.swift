@@ -43,8 +43,8 @@ struct Strings {
     }
     var scanQR: String { pick("QR OKUT", "SCAN QR") }
     var scanHint: String {
-        pick("Laptopta f1dash-app.vercel.app adresini ac ve oradaki QR'i okut.",
-             "Open f1dash-app.vercel.app on your laptop and scan the QR there.")
+        pick("Laptopta apexdash-app.vercel.app adresini ac ve oradaki QR'i okut.",
+             "Open apexdash-app.vercel.app on your laptop and scan the QR there.")
     }
     func connectedTo(_ code: String) -> String {
         pick("SITEYE BAGLI · \(code)", "CONNECTED · \(code)")
@@ -55,8 +55,8 @@ struct Strings {
         pick("son gonderim \(time)", "last sent \(time)")
     }
     var cameraDenied: String {
-        pick("Kamera izni yok. Ayarlar › F1Dash'ten acabilirsin.",
-             "No camera access. Enable it in Settings › F1Dash.")
+        pick("Kamera izni yok. Ayarlar › Apex Dash'ten acabilirsin.",
+             "No camera access. Enable it in Settings › Apex Dash.")
     }
 
     var shareCSV: String { pick("CSV PAYLAS", "SHARE CSV") }
