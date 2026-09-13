@@ -87,10 +87,7 @@ struct HomeView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: unit * 0.16) {
-                Image(systemName: "flag.checkered")
-                    .font(Typeface.font(unit * 0.5, .black))
-                    .foregroundStyle(Palette.accent)
+            HStack(spacing: 0) {
                 Text(verbatim: "APEX")
                     .font(Typeface.font(unit * 0.52, .black))
                     .foregroundStyle(.white)

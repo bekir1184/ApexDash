@@ -30,6 +30,7 @@
 		6111625078E8AB3293AD3D04 /* FlashWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */; };
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
 		7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421795F1F46A0D96A98E27F7 /* Localization.swift */; };
+		81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 425E7F8ABFB292E799328D6B /* Assets.xcassets */; };
 		848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */; };
 		890022026B39A0AE479BCEE2 /* ModernDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */; };
 		8905D201FC60CFB46CB32E5D /* Saira-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */; };
@@ -79,6 +80,7 @@
 		35FDB733B3C447A2D1327CB2 /* RevLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevLightsView.swift; sourceTree = "<group>"; };
 		40418B585559552200C7D352 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		421795F1F46A0D96A98E27F7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		425E7F8ABFB292E799328D6B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealisticDashboardView.swift; sourceTree = "<group>"; };
 		528970F575D7C7DE3D11948A /* LapExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapExport.swift; sourceTree = "<group>"; };
 		56622242113FF35F0E80210C /* SAIRA-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SAIRA-OFL.txt"; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 		DDB215417B866D6193F89557 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				425E7F8ABFB292E799328D6B /* Assets.xcassets */,
 				F129C766FF91AF87A108253A /* Fonts */,
 			);
 			path = Resources;
@@ -300,6 +303,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */,
 				B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */,
 				40498FE0B4C007F83055065A /* Saira-Black.ttf in Resources */,
 				8905D201FC60CFB46CB32E5D /* Saira-Bold.ttf in Resources */,
