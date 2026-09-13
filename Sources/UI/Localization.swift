@@ -104,6 +104,27 @@ struct Strings {
     var connectionTitle: String { pick("BAĞLANTI", "CONNECTION") }
     var connectionSubtitle: String { pick("IP adresi, port ve oyun ayarları", "IP address, port and game settings") }
     var languageTitle: String { pick("DİL", "LANGUAGE") }
+    var webGuideTitle: String { pick("TELEMETRİ SİTESİ", "TELEMETRY SITE") }
+    var webGuideSubtitle: String {
+        pick("Turlarını laptopta aç ve incele", "Open and study your laps on a laptop")
+    }
+    var webGuideIntro: String {
+        pick("Her turun tam telemetrisi laptobundaki sayfaya kendiliğinden gider: pist haritası, hız, gaz, fren, direksiyon, ERS ve viraj viraj karşılaştırma.",
+             "Every lap uploads itself to the page on your laptop: track map, speed, throttle, brake, steering, ERS, and a corner by corner comparison.")
+    }
+    var webGuideStep1: String {
+        pick("Laptopta tarayıcıyı aç ve bu adrese git. Sayfa bir kod ve QR gösterir.",
+             "Open a browser on your laptop and go to this address. The page shows a code and a QR.")
+    }
+    var webGuideStep2: String {
+        pick("Telefonda menüdeki TURLAR ekranını aç, QR OKUT'a bas ve laptoptaki QR'ı okut.",
+             "On the phone open LAPS from the menu, tap SCAN QR and scan the QR on the laptop.")
+    }
+    var webGuideStep3: String {
+        pick("Hazır. Her tur bitişinde o turun izi sayfaya düşer; sayfayı açık bırakman yeter.",
+             "Done. Each finished lap lands on the page by itself; just leave it open.")
+    }
+    var webGuideNotPaired: String { pick("Henüz eşleşmedi", "Not paired yet") }
     var automaticLanguage: String { pick("OTO", "AUTO") }
     var setupIntro: String {
         pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",

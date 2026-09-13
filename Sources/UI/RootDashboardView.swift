@@ -21,6 +21,8 @@ struct RootDashboardView: View {
     @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
     @State private var showsSetup = false
     @State private var showsSettings = false
+    /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
+    @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
     @State private var showsLaps = false
     @State private var showsConnection = false
 
@@ -319,8 +321,15 @@ struct RootDashboardView: View {
             if showsSettings {
                 SettingsView(languageID: $languageID, strings: strings, unit: unit,
                              onOpenConnection: { withAnimation(spring) { showsSetup = true } },
+                             onOpenWebGuide: { withAnimation(spring) { showsWebGuide = true } },
                              onClose: { withAnimation(spring) { showsSettings = false } })
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if showsWebGuide {
+                WebGuideView(strings: strings, unit: unit, sessionID: sessionID) {
+                    withAnimation(spring) { showsWebGuide = false }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             if !didShowFlashWarning {
                 FlashWarningView(strings: strings, unit: unit) {

@@ -3,6 +3,10 @@ import Foundation
 /// Tur kayitlarini disari cikarma: CSV dosyasi ve siteye gotururen QR.
 enum LapExport {
     static let siteURL = "https://apexdash-app.vercel.app"
+    /// Rehberde ve ekranlarda gosterilen yalin adres.
+    static var siteHost: String {
+        siteURL.replacingOccurrences(of: "https://", with: "")
+    }
 
     static func csv(_ laps: [CompletedLap]) -> String {
         let formatter = ISO8601DateFormatter()

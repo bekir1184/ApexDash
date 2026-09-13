@@ -31,6 +31,7 @@
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
 		7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421795F1F46A0D96A98E27F7 /* Localization.swift */; };
 		81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 425E7F8ABFB292E799328D6B /* Assets.xcassets */; };
+		8461FB61ACBCCB22E36F33D5 /* WebGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5222EB6F53F247A66653A84 /* WebGuideView.swift */; };
 		848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */; };
 		890022026B39A0AE479BCEE2 /* ModernDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */; };
 		8905D201FC60CFB46CB32E5D /* Saira-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */; };
@@ -100,6 +101,7 @@
 		AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Regular.ttf"; sourceTree = "<group>"; };
 		B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootDashboardView.swift; sourceTree = "<group>"; };
 		B18A785D9AA723C02BE0B5E2 /* Typeface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typeface.swift; sourceTree = "<group>"; };
+		B5222EB6F53F247A66653A84 /* WebGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebGuideView.swift; sourceTree = "<group>"; };
 		C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Medium.ttf"; sourceTree = "<group>"; };
 		C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApexDashApp.swift; sourceTree = "<group>"; };
 		CF1E40F9B00F4F714A20E863 /* BroadcastDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastDashboardView.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				B18A785D9AA723C02BE0B5E2 /* Typeface.swift */,
 				2E9EC280D6D6980935FB039D /* TyreTempsView.swift */,
 				5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */,
+				B5222EB6F53F247A66653A84 /* WebGuideView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -363,6 +366,7 @@
 				4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */,
 				6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */,
 				3CA503570BD78982F9481DC0 /* WaitingView.swift in Sources */,
+				8461FB61ACBCCB22E36F33D5 /* WebGuideView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

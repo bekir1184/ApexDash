@@ -7,6 +7,7 @@ struct SettingsView: View {
     let strings: Strings
     let unit: CGFloat
     let onOpenConnection: () -> Void
+    let onOpenWebGuide: () -> Void
     let onClose: () -> Void
 
     private let accent = Palette.accent
@@ -31,6 +32,16 @@ struct SettingsView: View {
             // Baglanti
             Button(action: onOpenConnection) {
                 row(title: strings.connectionTitle, subtitle: strings.connectionSubtitle) {
+                    Image(systemName: "chevron.right")
+                        .font(Typeface.font(unit * 0.3, .black))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+            }
+            .buttonStyle(PressScaleStyle())
+
+            // Telemetri sitesi
+            Button(action: onOpenWebGuide) {
+                row(title: strings.webGuideTitle, subtitle: strings.webGuideSubtitle) {
                     Image(systemName: "chevron.right")
                         .font(Typeface.font(unit * 0.3, .black))
                         .foregroundStyle(.white.opacity(0.5))
