@@ -69,7 +69,7 @@ struct SettingsView: View {
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Palette.ground)
+        .background(StripedBackground())
     }
 
     private func row<Trailing: View>(title: String, subtitle: String?,

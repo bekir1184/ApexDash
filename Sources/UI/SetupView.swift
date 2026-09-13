@@ -50,7 +50,7 @@ struct SetupView: View {
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Palette.ground)
+        .background(StripedBackground())
         .contentShape(Rectangle())
         .onTapGesture { portFocused = false }
         .onAppear { portText = "\(port)" }

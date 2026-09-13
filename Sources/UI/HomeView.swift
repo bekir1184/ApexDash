@@ -35,7 +35,7 @@ struct HomeView: View {
             let size = geo.size
             let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
             ZStack {
-                Palette.ground.ignoresSafeArea()
+                StripedBackground()
 
                 VStack(spacing: 0) {
                     header
