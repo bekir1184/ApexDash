@@ -41,13 +41,13 @@ struct SettingsView: View {
             // Dil
             row(title: strings.languageTitle, subtitle: nil) {
                 HStack(spacing: 0) {
-                    ForEach(AppLanguage.allCases) { option in
+                    ForEach(LanguagePreference.allCases) { option in
                         let on = option.rawValue == languageID
                         Button { languageID = option.rawValue } label: {
-                            Text(verbatim: option.label)
+                            Text(verbatim: option.label(strings))
                                 .font(Typeface.font(unit * 0.26, .black))
                                 .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
-                                .padding(.horizontal, unit * 0.36)
+                                .padding(.horizontal, unit * 0.3)
                                 .padding(.vertical, unit * 0.12)
                                 .background(Capsule().fill(on ? Palette.accent : Color.clear))
                         }

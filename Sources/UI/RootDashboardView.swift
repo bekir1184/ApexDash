@@ -9,7 +9,8 @@ import SwiftUI
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
-    @AppStorage("appLanguage") private var languageID: String = AppLanguage.systemDefault.rawValue
+    /// Bos deger "otomatik" demek: telefonun dili kullanilir.
+    @AppStorage("appLanguage") private var languageID: String = ""
     @AppStorage("udpPort") private var udpPort: Int = 20777
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
@@ -42,7 +43,9 @@ struct RootDashboardView: View {
     }
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
-    private var language: AppLanguage { AppLanguage(rawValue: languageID) ?? .systemDefault }
+    private var language: AppLanguage {
+        (LanguagePreference(rawValue: languageID) ?? .automatic).resolved
+    }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
     /// Ekranda gosterilen veri: baglanti yokken menu onizlemeleriyle ayni

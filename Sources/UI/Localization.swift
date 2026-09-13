@@ -16,6 +16,33 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var next: AppLanguage { self == .turkish ? .english : .turkish }
 }
 
+/// Kullanicinin dil tercihi. Varsayilan "otomatik": telefonun dili neyse o.
+/// Bir dil secilirse telefon dili degisse de o dilde kalir; otomatike
+/// donunce yeniden telefonu izler.
+enum LanguagePreference: String, CaseIterable, Identifiable {
+    case automatic = ""
+    case turkish = "tr"
+    case english = "en"
+
+    var id: String { rawValue }
+
+    var resolved: AppLanguage {
+        switch self {
+        case .automatic: return .systemDefault
+        case .turkish: return .turkish
+        case .english: return .english
+        }
+    }
+
+    func label(_ strings: Strings) -> String {
+        switch self {
+        case .automatic: return strings.automaticLanguage
+        case .turkish: return "TR"
+        case .english: return "EN"
+        }
+    }
+}
+
 /// Ekranda gecen az sayidaki cumle icin basit bir metin tablosu.
 /// Gostergelerin kendi etiketleri (KPH, FUEL, LAP...) her iki dilde de ayni
 /// kaldigi icin burada yer almiyor.
@@ -77,6 +104,7 @@ struct Strings {
     var connectionTitle: String { pick("BAĞLANTI", "CONNECTION") }
     var connectionSubtitle: String { pick("IP adresi, port ve oyun ayarları", "IP address, port and game settings") }
     var languageTitle: String { pick("DİL", "LANGUAGE") }
+    var automaticLanguage: String { pick("OTO", "AUTO") }
     var setupIntro: String {
         pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",
              "The game sends telemetry to this phone. Enter these values in the game exactly.")
