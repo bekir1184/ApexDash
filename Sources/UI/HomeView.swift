@@ -89,13 +89,13 @@ struct HomeView: View {
         HStack {
             HStack(spacing: unit * 0.16) {
                 Image(systemName: "flag.checkered")
-                    .font(.system(size: unit * 0.5, weight: .black))
+                    .font(Typeface.font(unit * 0.5, .black))
                     .foregroundStyle(Palette.accent)
                 Text(verbatim: "APEX")
-                    .font(.system(size: unit * 0.52, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 0.52, .black))
                     .foregroundStyle(.white)
                 + Text(verbatim: "DASH")
-                    .font(.system(size: unit * 0.52, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 0.52, .black))
                     .foregroundStyle(Palette.accent)
             }
             .tracking(unit * 0.06)
@@ -173,7 +173,7 @@ struct HomeView: View {
     private var titleAndDots: some View {
         VStack(spacing: unit * 0.14) {
             Text(strings.themeTitle(selectedTheme))
-                .font(.system(size: unit * 0.34, weight: .black, design: .rounded))
+                .font(Typeface.font(unit * 0.34, .black))
                 .foregroundStyle(.white)
                 .tracking(unit * 0.05)
                 .contentTransition(.numericText())
@@ -200,7 +200,7 @@ struct HomeView: View {
             }
             Button(action: onSelect) {
                 Text(strings.selectButton)
-                    .font(.system(size: unit * 0.32, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 0.32, .black))
                     .foregroundStyle(Palette.onAccent)
                     .tracking(unit * 0.05)
                     .padding(.horizontal, unit * 1.1)
@@ -214,7 +214,7 @@ struct HomeView: View {
     private func pill(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: unit * 0.24, weight: .black, design: .rounded))
+                .font(Typeface.font(unit * 0.24, .black))
                 .foregroundStyle(.white.opacity(0.8))
                 .padding(.horizontal, unit * 0.36)
                 .padding(.vertical, unit * 0.14)
@@ -362,7 +362,7 @@ struct ConnectionBadge: View {
                     Text(strings.notConnected)
                 }
             }
-            .font(.system(size: unit * 0.22, weight: .heavy, design: .rounded))
+            .font(Typeface.font(unit * 0.22, .heavy))
             .foregroundStyle(.white.opacity(0.85))
             .padding(.horizontal, unit * 0.3)
             .padding(.vertical, unit * 0.12)
@@ -393,12 +393,12 @@ struct ConnectionCard: View {
                 StartLightsView(litColumns: litColumns(phase: phase), unit: unit)
             }
             Text(title)
-                .font(.system(size: unit * 0.4, weight: .black, design: .rounded))
+                .font(Typeface.font(unit * 0.4, .black))
                 .foregroundStyle(.white)
                 .tracking(2)
             Button(action: onOpenSetup) {
                 Text(strings.setupButton)
-                    .font(.system(size: unit * 0.3, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 0.3, .black))
                     .foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, unit * 0.6)
                     .padding(.vertical, unit * 0.18)
@@ -413,7 +413,7 @@ struct ConnectionCard: View {
         .overlay(alignment: .topTrailing) {
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: unit * 0.28, weight: .black))
+                    .font(Typeface.font(unit * 0.28, .black))
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(unit * 0.3)
             }

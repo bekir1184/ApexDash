@@ -466,7 +466,7 @@ struct BroadcastHUD {
                           weight: Font.Weight, italic: Bool, colour: Color, tracking: CGFloat = 0,
                           anchor: HorizontalAlignment = .center, at point: CGPoint) {
         var text = Text(verbatim: string)
-            .font(.system(size: size, weight: weight))
+            .font(Typeface.font(size, weight))
             .foregroundColor(colour)
             .tracking(tracking)
         if italic { text = text.italic() }

@@ -8,14 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		160A7205436138981F98A758 /* ByteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B03317C3CEAF76EC70FC71 /* ByteReader.swift */; };
+		206DB912B0FF95887B7768BD /* Saira-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */; };
 		20E2603CC2EC508073BC6D77 /* DotMatrixEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402716F54863E44811C2959 /* DotMatrixEffect.swift */; };
 		2778EBD11D8DB0A0A27E6FF8 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62142A6E18D317F91D53AF82 /* SetupView.swift */; };
+		2C2D95A8804662CB278FFD8B /* Saira-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */; };
 		31587BF704B74C177D7C3FCC /* ShiftFlashOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDFE873E35C11A0A241F921 /* ShiftFlashOverlay.swift */; };
 		32EF03C89D380AD91FBE8BDD /* BroadcastDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1E40F9B00F4F714A20E863 /* BroadcastDashboardView.swift */; };
 		353EDC6E900977F9EA028E4C /* RevLightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FDB733B3C447A2D1327CB2 /* RevLightsView.swift */; };
 		366F3F2310E718EE3DA0CB06 /* PacketParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */; };
 		3CA503570BD78982F9481DC0 /* WaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */; };
+		40498FE0B4C007F83055065A /* Saira-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 759926D4971C7CA2BF2B675B /* Saira-Black.ttf */; };
 		4173261F129B82C52541959B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1689804A80A8FDA2DAAB0AC7 /* HomeView.swift */; };
+		4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18A785D9AA723C02BE0B5E2 /* Typeface.swift */; };
 		4C55E03491F2E67742AE9EB7 /* LapTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838B03534F8726569779170A /* LapTiming.swift */; };
 		50359040D33CE1CE6642FB55 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD717D5DFA547B616504051 /* QRScannerView.swift */; };
 		52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BA05288D4012C11EF8CD89 /* Theme.swift */; };
@@ -28,17 +32,21 @@
 		7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421795F1F46A0D96A98E27F7 /* Localization.swift */; };
 		848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */; };
 		890022026B39A0AE479BCEE2 /* ModernDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */; };
+		8905D201FC60CFB46CB32E5D /* Saira-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */; };
 		8D3DD991CEDFB2738566B95F /* LapTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31017EA7558068EDA014C956 /* LapTrace.swift */; };
 		98AC3A92A58ECF8886BB8B8E /* RealisticDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */; };
 		9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF9E52820C0DD046259B7F /* PedalBarsView.swift */; };
 		A1E9F6817F84BFE3D80968AA /* SessionUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166654FAD8D73B237BDB4AEC /* SessionUploader.swift */; };
 		AA03D81F5DBC4B793928FD94 /* RootDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */; };
+		AFB9199670F2CA48F63DFAAD /* Saira-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */; };
 		B1BAFB2A6B5918BE133216E0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB5CB276ACF999183003EBB /* SettingsView.swift */; };
+		B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 56622242113FF35F0E80210C /* SAIRA-OFL.txt */; };
 		B574C53CFBBB238FA278C6A3 /* LapExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528970F575D7C7DE3D11948A /* LapExport.swift */; };
 		C2D5B8A69632DBFA7717A41F /* SectorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */; };
 		CFA90CB50BD5A6C02AB8C0F6 /* Packets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649A94D840EE45BF903A68F /* Packets.swift */; };
 		DC368D282C3F6DF61ABE55AD /* GameDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */; };
 		DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CA98442171449A28BA231B /* StartLightsView.swift */; };
+		DD9BE6B9886F7B253B25394E /* Saira-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */; };
 		EE09C6D27EA2BFC1A8659052 /* LapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D757B2C0EF365F3B821A7677 /* LapsView.swift */; };
 		F73E54228C0195530E2A48EB /* DotMatrixDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F75832D998633683E86EC9 /* DotMatrixDashboardView.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +64,7 @@
 /* Begin PBXFileReference section */
 		0AD717D5DFA547B616504051 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
 		10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashWarningView.swift; sourceTree = "<group>"; };
+		1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-ExtraBold.ttf"; sourceTree = "<group>"; };
 		1649A94D840EE45BF903A68F /* Packets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packets.swift; sourceTree = "<group>"; };
 		166654FAD8D73B237BDB4AEC /* SessionUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionUploader.swift; sourceTree = "<group>"; };
 		1689804A80A8FDA2DAAB0AC7 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -68,26 +77,34 @@
 		31017EA7558068EDA014C956 /* LapTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapTrace.swift; sourceTree = "<group>"; };
 		34B03317C3CEAF76EC70FC71 /* ByteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteReader.swift; sourceTree = "<group>"; };
 		35FDB733B3C447A2D1327CB2 /* RevLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevLightsView.swift; sourceTree = "<group>"; };
+		40418B585559552200C7D352 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		421795F1F46A0D96A98E27F7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealisticDashboardView.swift; sourceTree = "<group>"; };
 		528970F575D7C7DE3D11948A /* LapExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapExport.swift; sourceTree = "<group>"; };
+		56622242113FF35F0E80210C /* SAIRA-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SAIRA-OFL.txt"; sourceTree = "<group>"; };
 		58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernDashboardView.swift; sourceTree = "<group>"; };
 		5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingView.swift; sourceTree = "<group>"; };
 		62142A6E18D317F91D53AF82 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketParsingTests.swift; sourceTree = "<group>"; };
+		759926D4971C7CA2BF2B675B /* Saira-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Black.ttf"; sourceTree = "<group>"; };
 		75DF9E52820C0DD046259B7F /* PedalBarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedalBarsView.swift; sourceTree = "<group>"; };
 		838B03534F8726569779170A /* LapTiming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapTiming.swift; sourceTree = "<group>"; };
 		83CA98442171449A28BA231B /* StartLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLightsView.swift; sourceTree = "<group>"; };
 		8BB5CB276ACF999183003EBB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9402716F54863E44811C2959 /* DotMatrixEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMatrixEffect.swift; sourceTree = "<group>"; };
+		94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-SemiBold.ttf"; sourceTree = "<group>"; };
 		A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDashboardView.swift; sourceTree = "<group>"; };
 		A82A52F16E2574492B934ACF /* ShiftTorch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTorch.swift; sourceTree = "<group>"; };
+		AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Regular.ttf"; sourceTree = "<group>"; };
 		B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootDashboardView.swift; sourceTree = "<group>"; };
+		B18A785D9AA723C02BE0B5E2 /* Typeface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typeface.swift; sourceTree = "<group>"; };
+		C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Medium.ttf"; sourceTree = "<group>"; };
 		C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApexDashApp.swift; sourceTree = "<group>"; };
 		CF1E40F9B00F4F714A20E863 /* BroadcastDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastDashboardView.swift; sourceTree = "<group>"; };
 		D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryClient.swift; sourceTree = "<group>"; };
 		D757B2C0EF365F3B821A7677 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectorViews.swift; sourceTree = "<group>"; };
+		ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Bold.ttf"; sourceTree = "<group>"; };
 		F641A1E78C2B0916F202F012 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -96,6 +113,7 @@
 		154B51969E4BC42260154DE7 = {
 			isa = PBXGroup;
 			children = (
+				DDB215417B866D6193F89557 /* Resources */,
 				85398726809FAB0B5FB5B9D5 /* Sources */,
 				610D0E164AFAD8B5A33ACDC6 /* Tests */,
 				E11DACDAF7F5DA71F0A6B972 /* Products */,
@@ -130,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */,
+				40418B585559552200C7D352 /* Info.plist */,
 				5DAFFABAC48DD1A094088C92 /* Telemetry */,
 				B627EC6D4C9ACCFF156306CE /* UI */,
 			);
@@ -160,10 +179,19 @@
 				2FDFE873E35C11A0A241F921 /* ShiftFlashOverlay.swift */,
 				83CA98442171449A28BA231B /* StartLightsView.swift */,
 				23BA05288D4012C11EF8CD89 /* Theme.swift */,
+				B18A785D9AA723C02BE0B5E2 /* Typeface.swift */,
 				2E9EC280D6D6980935FB039D /* TyreTempsView.swift */,
 				5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		DDB215417B866D6193F89557 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F129C766FF91AF87A108253A /* Fonts */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		E11DACDAF7F5DA71F0A6B972 /* Products */ = {
@@ -173,6 +201,20 @@
 				1E1D1F7593D8A7E63733A3A4 /* ApexDashTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F129C766FF91AF87A108253A /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				56622242113FF35F0E80210C /* SAIRA-OFL.txt */,
+				759926D4971C7CA2BF2B675B /* Saira-Black.ttf */,
+				ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */,
+				1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */,
+				C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */,
+				AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */,
+				94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -201,6 +243,7 @@
 			buildConfigurationList = D78FB81F670A36E5998B4E4F /* Build configuration list for PBXNativeTarget "ApexDash" */;
 			buildPhases = (
 				96D99195C01BD1853E2B15F8 /* Sources */,
+				B62FCD9E16F7B39AFC5E329F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -252,6 +295,23 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		B62FCD9E16F7B39AFC5E329F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */,
+				40498FE0B4C007F83055065A /* Saira-Black.ttf in Resources */,
+				8905D201FC60CFB46CB32E5D /* Saira-Bold.ttf in Resources */,
+				DD9BE6B9886F7B253B25394E /* Saira-ExtraBold.ttf in Resources */,
+				206DB912B0FF95887B7768BD /* Saira-Medium.ttf in Resources */,
+				2C2D95A8804662CB278FFD8B /* Saira-Regular.ttf in Resources */,
+				AFB9199670F2CA48F63DFAAD /* Saira-SemiBold.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		805DF98F3A1B02F8F9B15E79 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -296,6 +356,7 @@
 				DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */,
 				848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */,
 				52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */,
+				4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */,
 				6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */,
 				3CA503570BD78982F9481DC0 /* WaitingView.swift in Sources */,
 			);
@@ -317,14 +378,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Apex Dash";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "F1 26 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -340,14 +394,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Apex Dash";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "F1 26 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

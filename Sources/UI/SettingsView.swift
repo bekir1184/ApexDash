@@ -15,13 +15,13 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: unit * 0.3) {
             HStack {
                 Text(strings.settingsTitle)
-                    .font(.system(size: unit * 0.5, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 0.5, .black))
                     .foregroundStyle(.white)
                     .tracking(4)
                 Spacer()
                 Button(action: onClose) {
                     Image(systemName: "xmark")
-                        .font(.system(size: unit * 0.34, weight: .black))
+                        .font(Typeface.font(unit * 0.34, .black))
                         .foregroundStyle(.white.opacity(0.7))
                         .padding(unit * 0.2)
                 }
@@ -32,7 +32,7 @@ struct SettingsView: View {
             Button(action: onOpenConnection) {
                 row(title: strings.connectionTitle, subtitle: strings.connectionSubtitle) {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: unit * 0.3, weight: .black))
+                        .font(Typeface.font(unit * 0.3, .black))
                         .foregroundStyle(.white.opacity(0.5))
                 }
             }
@@ -45,7 +45,7 @@ struct SettingsView: View {
                         let on = option.rawValue == languageID
                         Button { languageID = option.rawValue } label: {
                             Text(verbatim: option.label)
-                                .font(.system(size: unit * 0.26, weight: .black, design: .rounded))
+                                .font(Typeface.font(unit * 0.26, .black))
                                 .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
                                 .padding(.horizontal, unit * 0.36)
                                 .padding(.vertical, unit * 0.12)
@@ -77,11 +77,11 @@ struct SettingsView: View {
         HStack(spacing: unit * 0.3) {
             VStack(alignment: .leading, spacing: unit * 0.04) {
                 Text(title)
-                    .font(.system(size: unit * 0.28, weight: .heavy, design: .rounded))
+                    .font(Typeface.font(unit * 0.28, .heavy))
                     .foregroundStyle(.white)
                 if let subtitle {
                     Text(verbatim: subtitle)
-                        .font(.system(size: unit * 0.22, weight: .semibold, design: .rounded))
+                        .font(Typeface.font(unit * 0.22, .semibold))
                         .foregroundStyle(.white.opacity(0.45))
                         .fixedSize(horizontal: false, vertical: true)
                 }

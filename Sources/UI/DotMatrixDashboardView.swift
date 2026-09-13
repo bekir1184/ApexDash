@@ -71,10 +71,10 @@ struct DotMatrixDashboardView: View {
         let foreground: Color = filled ? .black : (dimmed ? .white.opacity(0.3) : color)
         return HStack(spacing: unit * 0.16) {
             Text(text)
-                .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.46, .black))
             if !detail.isEmpty {
                 Text(verbatim: detail)
-                    .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.46, .black))
                     .opacity(0.9)
             }
         }
@@ -145,12 +145,12 @@ struct DotMatrixDashboardView: View {
     private func panel(value: String, caption: String, tint: Color) -> some View {
         VStack(spacing: 0) {
             Text(verbatim: value)
-                .font(.system(size: unit * 0.58, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.58, .black))
                 .foregroundStyle(tint)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
             Text(caption)
-                .font(.system(size: unit * 0.3, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.3, .heavy))
                 .foregroundStyle(cyan)
         }
         .frame(maxWidth: .infinity)
@@ -172,7 +172,7 @@ struct DotMatrixDashboardView: View {
                 tyreCell(index: 0, label: "RL")
             }
             Text(verbatim: dash.gearLabel)
-                .font(.system(size: unit * 3.0, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 3.0, .black))
                 .foregroundStyle(dash.shiftFlash ? Color(red: 0.55, green: 0.45, blue: 1.0) : .white)
                 .animation(.easeOut(duration: 0.08), value: dash.shiftFlash)
                 .frame(maxWidth: .infinity)
@@ -189,15 +189,15 @@ struct DotMatrixDashboardView: View {
         let brake = dash.brakeTemps.indices.contains(index) ? dash.brakeTemps[index] : 0
         return VStack(spacing: 0) {
             Text(label)
-                .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.26, .heavy))
                 .foregroundStyle(.white.opacity(0.45))
             Text(verbatim: "\(surface)°")
-                .font(.system(size: unit * 0.52, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.52, .black))
                 .foregroundStyle(TempScale.tyre(surface))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(verbatim: "\(brake)°")
-                .font(.system(size: unit * 0.28, weight: .bold, design: .monospaced))
+                .font(Typeface.digits(unit * 0.28, .bold))
                 .foregroundStyle(TempScale.brake(brake))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -217,20 +217,20 @@ struct DotMatrixDashboardView: View {
             batteryColumn
             VStack(alignment: .leading, spacing: unit * 0.04) {
                 Text(verbatim: "\(Int(dash.ersFraction * 100))%")
-                    .font(.system(size: unit * 0.68, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.68, .black))
                     .foregroundStyle(.white)
                 Text("BATTERY")
-                    .font(.system(size: unit * 0.32, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.32, .black))
                     .foregroundStyle(batteryYellow)
                 Text(dash.ersModeText)
-                    .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.28, .heavy))
                     .foregroundStyle(cyan)
                 Spacer(minLength: 0)
                 Text(verbatim: "P\(max(dash.carPosition, 1))")
-                    .font(.system(size: unit * 0.6, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.6, .black))
                     .foregroundStyle(.white)
                 Text(verbatim: "LAP \(dash.currentLapNum)")
-                    .font(.system(size: unit * 0.32, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.32, .heavy))
                     .foregroundStyle(cyan)
             }
         }
@@ -289,15 +289,15 @@ struct DotMatrixDashboardView: View {
         HStack(spacing: unit * 0.16) {
             HStack(alignment: .firstTextBaseline, spacing: unit * 0.25) {
                 Text(verbatim: dash.currentLapTimeText)
-                    .font(.system(size: unit * 0.72, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.72, .black))
                     .foregroundStyle(dash.currentLapInvalid ? Color(red: 1, green: 0.4, blue: 0.4) : .white)
                 if dash.deltaToBestMS != nil {
                     Text(verbatim: dash.deltaToBestText)
-                        .font(.system(size: unit * 0.46, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.46, .black))
                         .foregroundStyle(bestDeltaColor)
                 } else if dash.deltaToCarInFrontMS > 0 {
                     Text(verbatim: dash.deltaToFrontText)
-                        .font(.system(size: unit * 0.44, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.44, .black))
                         .foregroundStyle(deltaColor)
                 }
             }
@@ -311,7 +311,7 @@ struct DotMatrixDashboardView: View {
                 .frame(width: unit * 3.6)
 
             Text(verbatim: "\(dash.speedKPH) KM/H")
-                .font(.system(size: unit * 0.62, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.62, .black))
                 .foregroundStyle(.white)
                 .frame(width: unit * 3.4)
                 .padding(.vertical, unit * 0.08)

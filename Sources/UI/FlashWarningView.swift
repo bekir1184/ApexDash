@@ -13,23 +13,23 @@ struct FlashWarningView: View {
     var body: some View {
         VStack(spacing: unit * 0.3) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: unit * 0.9, weight: .black))
+                .font(Typeface.font(unit * 0.9, .black))
                 .foregroundStyle(Palette.alert)
 
             Text(strings.flashWarningTitle)
-                .font(.system(size: unit * 0.42, weight: .black, design: .rounded))
+                .font(Typeface.font(unit * 0.42, .black))
                 .foregroundStyle(.white)
                 .tracking(2)
 
             Text(verbatim: strings.flashWarningBody)
-                .font(.system(size: unit * 0.28, weight: .semibold, design: .rounded))
+                .font(Typeface.font(unit * 0.28, .semibold))
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: unit * 14)
 
             Text(verbatim: "\(remaining)")
-                .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.26, .heavy))
                 .foregroundStyle(.white.opacity(0.35))
                 .contentTransition(.numericText(countsDown: true))
         }

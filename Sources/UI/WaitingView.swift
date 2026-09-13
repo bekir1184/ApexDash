@@ -26,7 +26,7 @@ struct WaitingView: View {
 
             if let previousIP {
                 Text(verbatim: strings.addressChanged(from: previousIP, to: localIP))
-                    .font(.system(size: unit * 0.26, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.26, .heavy))
                     .foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, unit * 0.3)
                     .padding(.vertical, unit * 0.12)
@@ -34,7 +34,7 @@ struct WaitingView: View {
             }
 
             Text(title)
-                .font(.system(size: unit * 0.5, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.5, .black))
                 .foregroundStyle(.white)
                 .tracking(2)
 
@@ -78,7 +78,7 @@ struct WaitingView: View {
             HStack(spacing: unit * 0.3) {
                 Button(action: onOpenSetup) {
                     Text(strings.setupButton)
-                        .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.26, .black))
                         .foregroundStyle(Palette.onAccent)
                         .padding(.horizontal, unit * 0.3)
                         .padding(.vertical, unit * 0.12)
@@ -91,6 +91,6 @@ struct WaitingView: View {
             }
             .padding(.top, unit * 0.12)
         }
-        .font(.system(size: unit * 0.28, weight: .semibold, design: .monospaced))
+        .font(Typeface.digits(unit * 0.28, .semibold))
     }
 }

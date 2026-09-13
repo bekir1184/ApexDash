@@ -370,7 +370,7 @@ struct RootDashboardView: View {
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             } else if dash.lightsOutDate != nil {
                 Text(verbatim: "GO")
-                    .font(.system(size: unit * 2.4, weight: .black, design: .rounded))
+                    .font(Typeface.font(unit * 2.4, .black))
                     .foregroundStyle(Palette.live)
                     .padding(unit * 0.5)
                     .background(Palette.deep.opacity(0.92), in: RoundedRectangle(cornerRadius: unit * 0.3))

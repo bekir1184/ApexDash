@@ -22,7 +22,7 @@ struct LapsView: View {
 
             if laps.isEmpty {
                 Text(verbatim: strings.noLaps)
-                    .font(.system(size: unit * 0.32, weight: .semibold, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.32, .semibold))
                     .foregroundStyle(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
@@ -41,13 +41,13 @@ struct LapsView: View {
     private var header: some View {
         HStack {
             Text(strings.lapsTitle)
-                .font(.system(size: unit * 0.44, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.44, .black))
                 .foregroundStyle(.white)
                 .tracking(4)
             Spacer()
             Button(action: onClose) {
                 Text(strings.close)
-                    .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.26, .black))
                     .foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, unit * 0.3)
                     .padding(.vertical, unit * 0.12)
@@ -93,8 +93,8 @@ struct LapsView: View {
 
     private func cell(_ text: String, width: CGFloat, header: Bool, tint: Color? = nil) -> some View {
         Text(verbatim: text)
-            .font(.system(size: header ? unit * 0.22 : unit * 0.3,
-                          weight: header ? .heavy : .bold, design: .monospaced))
+            .font(Typeface.digits(header ? unit * 0.22 : unit * 0.3,
+                                  header ? .heavy : .bold))
             .foregroundStyle(header ? .white.opacity(0.4) : (tint ?? .white))
             .frame(width: width, alignment: .trailing)
     }
@@ -111,7 +111,7 @@ struct LapsView: View {
             if sessionID.isEmpty {
                 Button { showsScanner = true } label: {
                     Text(strings.scanQR)
-                        .font(.system(size: unit * 0.3, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.3, .black))
                         .foregroundStyle(Palette.onAccent)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.16)
@@ -120,23 +120,23 @@ struct LapsView: View {
                 .buttonStyle(.plain)
 
                 Text(verbatim: strings.scanHint)
-                    .font(.system(size: unit * 0.2, weight: .semibold, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.2, .semibold))
                     .foregroundStyle(.white.opacity(0.45))
                     .multilineTextAlignment(.center)
                     .frame(width: unit * 3.8)
             } else {
                 VStack(spacing: unit * 0.06) {
                     Text(verbatim: strings.connectedTo(sessionID))
-                        .font(.system(size: unit * 0.24, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.24, .black))
                         .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
                     if let date = uploader.lastUploadDate {
                         Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
-                            .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
+                            .font(Typeface.digits(unit * 0.19, .semibold))
                             .foregroundStyle(.white.opacity(0.4))
                     }
                     if let error = uploader.lastError {
                         Text(verbatim: error)
-                            .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
+                            .font(Typeface.digits(unit * 0.19, .semibold))
                             .foregroundStyle(Color(red: 1, green: 0.4, blue: 0.35))
                             .lineLimit(2)
                     }
@@ -147,7 +147,7 @@ struct LapsView: View {
                     uploader.send(payload(), sessionID: sessionID)
                 } label: {
                     Text(strings.sendNow)
-                        .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.26, .black))
                         .foregroundStyle(Palette.onAccent)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.14)
@@ -157,7 +157,7 @@ struct LapsView: View {
 
                 Button { sessionID = "" } label: {
                     Text(strings.disconnect)
-                        .font(.system(size: unit * 0.22, weight: .heavy, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.22, .heavy))
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .buttonStyle(.plain)
@@ -166,7 +166,7 @@ struct LapsView: View {
             if let file = LapExport.csvFile(laps) {
                 ShareLink(item: file) {
                     Text(strings.shareCSV)
-                        .font(.system(size: unit * 0.24, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(unit * 0.24, .black))
                         .foregroundStyle(.white)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.12)
@@ -188,7 +188,7 @@ struct LapsView: View {
 
                 Button { showsScanner = false } label: {
                     Text(strings.close)
-                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .font(Typeface.digits(15, .black))
                         .foregroundStyle(Palette.onAccent)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 10)

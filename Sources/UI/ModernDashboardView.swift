@@ -34,10 +34,10 @@ struct ModernDashboardView: View {
             label("SPEED")
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(verbatim: "\(dash.speedKPH)")
-                    .font(.system(size: unit * 1.7, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 1.7, .black))
                     .foregroundStyle(.white)
                 Text("KM/H")
-                    .font(.system(size: unit * 0.33, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.33, .heavy))
                     .foregroundStyle(.white.opacity(0.4))
             }
             HStack(spacing: unit * 0.25) {
@@ -54,7 +54,7 @@ struct ModernDashboardView: View {
             }
             label("LAP \(dash.currentLapNum)")
             Text(verbatim: dash.currentLapTimeText)
-                .font(.system(size: unit * 0.62, weight: .bold, design: .monospaced))
+                .font(Typeface.digits(unit * 0.62, .bold))
                 .foregroundStyle(dash.currentLapInvalid ? Color.red.opacity(0.8) : .white.opacity(0.8))
         }
     }
@@ -62,7 +62,7 @@ struct ModernDashboardView: View {
     private var gearBlock: some View {
         VStack(spacing: unit * 0.1) {
             Text(verbatim: dash.gearLabel)
-                .font(.system(size: unit * 4.0, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 4.0, .black))
                 .foregroundStyle(dash.shiftFlash ? Color(red: 0.36, green: 0.44, blue: 1.0) : .white)
                 .shadow(color: dash.shiftFlash ? Color.blue.opacity(0.8) : .clear, radius: unit * 0.4)
                 .animation(.easeOut(duration: 0.08), value: dash.shiftFlash)
@@ -83,7 +83,9 @@ struct ModernDashboardView: View {
 
     private func badge(text: String, active: Bool, ready: Bool, color: Color) -> some View {
         Text(text)
-            .font(.system(size: unit * 0.32, weight: .black, design: .monospaced))
+            .font(Typeface.digits(unit * 0.32, .black))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(active ? .black : (ready ? color : Color.white.opacity(0.18)))
             .padding(.horizontal, unit * 0.28)
             .padding(.vertical, unit * 0.14)
@@ -99,7 +101,7 @@ struct ModernDashboardView: View {
 
     private func label(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: unit * 0.22, weight: .heavy, design: .monospaced))
+            .font(Typeface.digits(unit * 0.22, .heavy))
             .foregroundStyle(.white.opacity(0.35))
             .tracking(2)
     }

@@ -18,12 +18,12 @@ struct SetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: unit * 0.26) {
             Text(strings.setupTitle)
-                .font(.system(size: unit * 0.5, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.5, .black))
                 .foregroundStyle(.white)
                 .tracking(4)
 
             Text(verbatim: strings.setupIntro)
-                .font(.system(size: unit * 0.3, weight: .semibold, design: .monospaced))
+                .font(Typeface.digits(unit * 0.3, .semibold))
                 .foregroundStyle(.white.opacity(0.6))
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -33,13 +33,13 @@ struct SetupView: View {
             }
 
             Text(verbatim: strings.broadcastNote)
-                .font(.system(size: unit * 0.24, weight: .semibold, design: .monospaced))
+                .font(Typeface.digits(unit * 0.24, .semibold))
                 .foregroundStyle(.white.opacity(0.35))
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(action: onDone) {
                 Text(strings.close)
-                    .font(.system(size: unit * 0.36, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.36, .black))
                     .foregroundStyle(Palette.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, unit * 0.2)
@@ -66,7 +66,7 @@ struct SetupView: View {
                     .keyboardType(.numberPad)
                     .focused($portFocused)
                     .textFieldStyle(.plain)
-                .font(.system(size: unit * 0.6, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.6, .black))
                 .foregroundStyle(.white)
                 .padding(.horizontal, unit * 0.25)
                 .padding(.vertical, unit * 0.12)
@@ -86,7 +86,7 @@ struct SetupView: View {
                 if portFocused {
                     Button { portFocused = false } label: {
                         Text(verbatim: "OK")
-                            .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
+                            .font(Typeface.digits(unit * 0.26, .black))
                             .foregroundStyle(Palette.onAccent)
                             .padding(.horizontal, unit * 0.24)
                             .padding(.vertical, unit * 0.14)
@@ -98,7 +98,7 @@ struct SetupView: View {
 
             label(strings.phoneAddress)
             Text(verbatim: localIP)
-                .font(.system(size: unit * 0.5, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.5, .black))
                 .foregroundStyle(accent)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,7 +114,7 @@ struct SetupView: View {
     private func stepButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(verbatim: symbol)
-                .font(.system(size: unit * 0.4, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.4, .black))
                 .foregroundStyle(.white.opacity(0.85))
                 .frame(width: unit * 0.6, height: unit * 0.6)
                 .background(Circle().fill(Color.white.opacity(0.1)))
@@ -152,12 +152,12 @@ struct SetupView: View {
             Text(verbatim: value)
                 .foregroundStyle(accent)
         }
-        .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
+        .font(Typeface.digits(unit * 0.28, .heavy))
     }
 
     private func label(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: unit * 0.24, weight: .heavy, design: .monospaced))
+            .font(Typeface.digits(unit * 0.24, .heavy))
             .foregroundStyle(.white.opacity(0.4))
             .tracking(2)
     }

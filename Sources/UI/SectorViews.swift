@@ -35,11 +35,11 @@ struct SectorStrip: View {
         return VStack(spacing: 0) {
             if !compact {
                 Text(verbatim: "S\(index + 1)")
-                    .font(.system(size: unit * 0.2, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.2, .heavy))
                     .foregroundStyle(.white.opacity(0.4))
             }
             Text(verbatim: DashboardModel.sectorText(time))
-                .font(.system(size: unit * 0.3, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.3, .black))
                 .foregroundStyle(colour.tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -69,11 +69,11 @@ struct SectorFlashView: View {
     var body: some View {
         VStack(spacing: unit * 0.04) {
             Text(verbatim: "SECTOR \(flash.index + 1)")
-                .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.28, .heavy))
                 .foregroundStyle(.white.opacity(0.6))
                 .tracking(3)
             Text(verbatim: DashboardModel.sectorText(flash.timeMS))
-                .font(.system(size: unit * 0.8, weight: .black, design: .monospaced))
+                .font(Typeface.digits(unit * 0.8, .black))
                 .foregroundStyle(flash.colour.tint)
         }
         .padding(.horizontal, unit * 0.45)

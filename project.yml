@@ -17,17 +17,32 @@ targets:
     platform: iOS
     sources:
       - Sources
+      - path: Resources/Fonts
+        buildPhase: resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Apex Dash
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIStatusBarHidden: true
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSCameraUsageDescription: "Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor."
+        NSLocalNetworkUsageDescription: "F1 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli."
+        UIAppFonts:
+          - Saira-Regular.ttf
+          - Saira-Medium.ttf
+          - Saira-SemiBold.ttf
+          - Saira-Bold.ttf
+          - Saira-ExtraBold.ttf
+          - Saira-Black.ttf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bekirersever.apexdash
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Apex Dash
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UIStatusBarHidden: YES
-        INFOPLIST_KEY_UIRequiresFullScreen: YES
-        INFOPLIST_KEY_NSCameraUsageDescription: "Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor."
-        INFOPLIST_KEY_NSLocalNetworkUsageDescription: "F1 26 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli."
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         TARGETED_DEVICE_FAMILY: "1,2"
   ApexDashTests:
     type: bundle.unit-test

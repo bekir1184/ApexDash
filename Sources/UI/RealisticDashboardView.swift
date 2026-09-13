@@ -171,7 +171,7 @@ struct RealisticDashboardView: View {
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .font(.system(size: unit * 0.46, weight: .heavy, design: .monospaced))
+        .font(Typeface.digits(unit * 0.46, .heavy))
         .padding(.horizontal, unit * 0.3)
         .padding(.vertical, unit * 0.08)
     }
@@ -207,12 +207,12 @@ struct RealisticDashboardView: View {
 
             VStack(spacing: -unit * 0.12) {
                 Text(verbatim: dash.gearLabel)
-                    .font(.system(size: unit * 2.9, weight: .black, design: .monospaced))
+                    .font(Typeface.digits(unit * 2.9, .black))
                     .foregroundStyle(dash.shiftFlash && !limiter
                                      ? Color(red: 0.98, green: 1.0, blue: 0.85) : ink)
                     .animation(.easeOut(duration: 0.08), value: dash.shiftFlash)
                 Text(verbatim: "\(Int(dash.ersFraction * 100))")
-                    .font(.system(size: unit * 0.6, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.6, .heavy))
                     .foregroundStyle(dim)
             }
             .frame(maxWidth: .infinity)
@@ -229,12 +229,12 @@ struct RealisticDashboardView: View {
     private func value(text: String, caption: String, tint: Color? = nil) -> some View {
         VStack(spacing: -unit * 0.06) {
             Text(verbatim: text)
-                .font(.system(size: unit * 1.35, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 1.35, .heavy))
                 .foregroundStyle(tint ?? ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
             Text(caption)
-                .font(.system(size: unit * 0.3, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.3, .heavy))
                 .foregroundStyle(dim)
         }
     }
@@ -247,10 +247,10 @@ struct RealisticDashboardView: View {
             Rectangle().fill(rule).frame(width: 1)
             VStack(spacing: -unit * 0.05) {
                 Text(verbatim: "P\(max(dash.carPosition, 1))")
-                    .font(.system(size: unit * 0.7, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.7, .heavy))
                     .foregroundStyle(ink)
                 Text(verbatim: "LAP \(dash.currentLapNum)")
-                    .font(.system(size: unit * 0.32, weight: .heavy, design: .monospaced))
+                    .font(Typeface.digits(unit * 0.32, .heavy))
                     .foregroundStyle(dim)
             }
             .frame(maxWidth: .infinity)
@@ -274,13 +274,13 @@ struct RealisticDashboardView: View {
         let brake = dash.brakeTemps.indices.contains(index) ? dash.brakeTemps[index] : 0
         return HStack(spacing: unit * 0.14) {
             Text(label)
-                .font(.system(size: unit * 0.28, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.28, .heavy))
                 .foregroundStyle(dim)
             Text(verbatim: "\(surface)")
-                .font(.system(size: unit * 0.46, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.46, .heavy))
                 .foregroundStyle(limiter ? ink : TempScale.tyre(surface))
             Text(verbatim: "\(brake)")
-                .font(.system(size: unit * 0.32, weight: .heavy, design: .monospaced))
+                .font(Typeface.digits(unit * 0.32, .heavy))
                 .foregroundStyle(dim)
         }
     }
