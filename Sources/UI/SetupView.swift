@@ -13,7 +13,7 @@ struct SetupView: View {
     @State private var portText: String = ""
     @FocusState private var portFocused: Bool
 
-    private let accent = Color(red: 0.95, green: 0.85, blue: 0.15)
+    private let accent = Palette.accent
 
     var body: some View {
         VStack(alignment: .leading, spacing: unit * 0.26) {
@@ -50,7 +50,7 @@ struct SetupView: View {
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
+        .background(Palette.ground)
         .contentShape(Rectangle())
         .onTapGesture { portFocused = false }
         .onAppear { portText = "\(port)" }

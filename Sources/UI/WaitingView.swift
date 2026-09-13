@@ -30,7 +30,7 @@ struct WaitingView: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, unit * 0.3)
                     .padding(.vertical, unit * 0.12)
-                    .background(Capsule().fill(Color(red: 0.97, green: 0.72, blue: 0.12)))
+                    .background(Capsule().fill(Palette.accent))
             }
 
             Text(title)
@@ -82,7 +82,7 @@ struct WaitingView: View {
                         .foregroundStyle(.black)
                         .padding(.horizontal, unit * 0.3)
                         .padding(.vertical, unit * 0.12)
-                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                        .background(Capsule().fill(Palette.accent))
                 }
                 .buttonStyle(.plain)
 

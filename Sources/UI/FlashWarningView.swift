@@ -14,7 +14,7 @@ struct FlashWarningView: View {
         VStack(spacing: unit * 0.3) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: unit * 0.9, weight: .black))
-                .foregroundStyle(Color(red: 0.97, green: 0.78, blue: 0.15))
+                .foregroundStyle(Palette.alert)
 
             Text(strings.flashWarningTitle)
                 .font(.system(size: unit * 0.42, weight: .black, design: .rounded))
@@ -35,7 +35,7 @@ struct FlashWarningView: View {
         }
         .padding(unit * 0.8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.96).ignoresSafeArea())
+        .background(Palette.ground.ignoresSafeArea())
         .contentShape(Rectangle())
         .onTapGesture(perform: onDismiss)
         .task {

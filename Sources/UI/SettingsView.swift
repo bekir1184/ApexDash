@@ -9,7 +9,7 @@ struct SettingsView: View {
     let onOpenConnection: () -> Void
     let onClose: () -> Void
 
-    private let accent = Color(red: 0.95, green: 0.85, blue: 0.15)
+    private let accent = Palette.accent
 
     var body: some View {
         VStack(alignment: .leading, spacing: unit * 0.3) {
@@ -49,7 +49,7 @@ struct SettingsView: View {
                                 .foregroundStyle(on ? .black : .white.opacity(0.7))
                                 .padding(.horizontal, unit * 0.36)
                                 .padding(.vertical, unit * 0.12)
-                                .background(Capsule().fill(on ? Color.white : Color.clear))
+                                .background(Capsule().fill(on ? Palette.accent : Color.clear))
                         }
                         .buttonStyle(PressScaleStyle())
                     }
@@ -69,7 +69,7 @@ struct SettingsView: View {
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.05, green: 0.06, blue: 0.08))
+        .background(Palette.ground)
     }
 
     private func row<Trailing: View>(title: String, subtitle: String?,

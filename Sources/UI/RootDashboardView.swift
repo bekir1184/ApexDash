@@ -361,17 +361,19 @@ struct RootDashboardView: View {
     @ViewBuilder
     private func startLightsOverlay(unit: CGFloat) -> some View {
         Group {
-            if dash.startLights > 0 {
+            if !fullscreen {
+                EmptyView()
+            } else if dash.startLights > 0 {
                 StartLightsView(litColumns: dash.startLights, unit: unit)
                     .padding(unit * 0.4)
-                    .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                    .background(Palette.deep.opacity(0.92), in: RoundedRectangle(cornerRadius: unit * 0.3))
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             } else if dash.lightsOutDate != nil {
                 Text(verbatim: "GO")
                     .font(.system(size: unit * 2.4, weight: .black, design: .rounded))
-                    .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
+                    .foregroundStyle(Palette.live)
                     .padding(unit * 0.5)
-                    .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: unit * 0.3))
+                    .background(Palette.deep.opacity(0.92), in: RoundedRectangle(cornerRadius: unit * 0.3))
                     .transition(.scale.combined(with: .opacity))
             }
         }

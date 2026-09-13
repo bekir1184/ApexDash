@@ -115,7 +115,7 @@ struct LapsView: View {
                         .foregroundStyle(.black)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.16)
-                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                        .background(Capsule().fill(Palette.accent))
                 }
                 .buttonStyle(.plain)
 
@@ -151,7 +151,7 @@ struct LapsView: View {
                         .foregroundStyle(.black)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.14)
-                        .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                        .background(Capsule().fill(Palette.accent))
                 }
                 .buttonStyle(.plain)
 

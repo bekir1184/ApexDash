@@ -21,6 +21,7 @@
 		52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BA05288D4012C11EF8CD89 /* Theme.swift */; };
 		5C991BBF2DF6507800CDC352 /* ApexDashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */; };
 		5F8D43409E9EA7CBDBAE795E /* ShiftTorch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A82A52F16E2574492B934ACF /* ShiftTorch.swift */; };
+		5FBFB5F5149F188B9CBC9C22 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = F641A1E78C2B0916F202F012 /* Palette.swift */; };
 		6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9EC280D6D6980935FB039D /* TyreTempsView.swift */; };
 		6111625078E8AB3293AD3D04 /* FlashWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */; };
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
@@ -87,6 +88,7 @@
 		D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryClient.swift; sourceTree = "<group>"; };
 		D757B2C0EF365F3B821A7677 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectorViews.swift; sourceTree = "<group>"; };
+		F641A1E78C2B0916F202F012 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -146,6 +148,7 @@
 				D757B2C0EF365F3B821A7677 /* LapsView.swift */,
 				421795F1F46A0D96A98E27F7 /* Localization.swift */,
 				58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */,
+				F641A1E78C2B0916F202F012 /* Palette.swift */,
 				75DF9E52820C0DD046259B7F /* PedalBarsView.swift */,
 				0AD717D5DFA547B616504051 /* QRScannerView.swift */,
 				48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */,
@@ -278,6 +281,7 @@
 				7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */,
 				890022026B39A0AE479BCEE2 /* ModernDashboardView.swift in Sources */,
 				CFA90CB50BD5A6C02AB8C0F6 /* Packets.swift in Sources */,
+				5FBFB5F5149F188B9CBC9C22 /* Palette.swift in Sources */,
 				9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */,
 				50359040D33CE1CE6642FB55 /* QRScannerView.swift in Sources */,
 				98AC3A92A58ECF8886BB8B8E /* RealisticDashboardView.swift in Sources */,

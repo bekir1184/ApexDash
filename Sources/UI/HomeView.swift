@@ -35,7 +35,7 @@ struct HomeView: View {
             let size = geo.size
             let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
             ZStack {
-                Color(red: 0.05, green: 0.06, blue: 0.08).ignoresSafeArea()
+                Palette.ground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     header
@@ -90,13 +90,13 @@ struct HomeView: View {
             HStack(spacing: unit * 0.16) {
                 Image(systemName: "flag.checkered")
                     .font(.system(size: unit * 0.5, weight: .black))
-                    .foregroundStyle(Color(red: 0.25, green: 0.85, blue: 0.79))
+                    .foregroundStyle(Palette.accent)
                 Text(verbatim: "APEX")
                     .font(.system(size: unit * 0.52, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
                 + Text(verbatim: "DASH")
                     .font(.system(size: unit * 0.52, weight: .black, design: .rounded))
-                    .foregroundStyle(Color(red: 0.25, green: 0.85, blue: 0.79))
+                    .foregroundStyle(Palette.accent)
             }
             .tracking(unit * 0.06)
 
@@ -181,7 +181,7 @@ struct HomeView: View {
             HStack(spacing: unit * 0.12) {
                 ForEach(themes) { theme in
                     Circle()
-                        .fill(theme == selectedTheme ? Color.white : Color.white.opacity(0.25))
+                        .fill(theme == selectedTheme ? Palette.accent : Color.white.opacity(0.25))
                         .frame(width: unit * 0.1, height: unit * 0.1)
                 }
             }
@@ -205,7 +205,7 @@ struct HomeView: View {
                     .tracking(unit * 0.05)
                     .padding(.horizontal, unit * 1.1)
                     .padding(.vertical, unit * 0.2)
-                    .background(Capsule().fill(Color.white))
+                    .background(Capsule().fill(Palette.accent))
             }
             .buttonStyle(PressScaleStyle())
         }
@@ -289,7 +289,7 @@ struct DashboardCard: View {
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(Color.white.opacity(highlighted ? 0.35 : 0.12), lineWidth: 1.5)
+                .stroke(highlighted ? Palette.accent.opacity(0.8) : Color.white.opacity(0.12), lineWidth: 1.5)
         )
         .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
     }
@@ -351,14 +351,14 @@ struct ConnectionBadge: View {
         Button(action: action) {
             HStack(spacing: unit * 0.12) {
                 if status == .receiving {
-                    Circle().fill(Color(red: 0.24, green: 0.92, blue: 0.35))
+                    Circle().fill(Palette.live)
                         .frame(width: unit * 0.16, height: unit * 0.16)
-                        .shadow(color: Color(red: 0.24, green: 0.92, blue: 0.35).opacity(0.8), radius: unit * 0.1)
+                        .shadow(color: Palette.live.opacity(0.8), radius: unit * 0.1)
                     Text(verbatim: "\(strings.connected) · \(hz) Hz")
                         .contentTransition(.numericText())
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(Color(red: 0.97, green: 0.78, blue: 0.15))
+                        .foregroundStyle(Palette.accent)
                     Text(strings.notConnected)
                 }
             }
@@ -366,7 +366,7 @@ struct ConnectionBadge: View {
             .foregroundStyle(.white.opacity(0.85))
             .padding(.horizontal, unit * 0.3)
             .padding(.vertical, unit * 0.12)
-            .background(Capsule().fill(.black.opacity(0.5)))
+            .background(Capsule().fill(Palette.deep.opacity(0.9)))
             .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
         }
         .buttonStyle(PressScaleStyle())
@@ -402,12 +402,12 @@ struct ConnectionCard: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, unit * 0.6)
                     .padding(.vertical, unit * 0.18)
-                    .background(Capsule().fill(Color(red: 0.95, green: 0.85, blue: 0.15)))
+                    .background(Capsule().fill(Palette.accent))
             }
             .buttonStyle(PressScaleStyle())
         }
         .padding(unit * 0.6)
-        .background(.black.opacity(0.94), in: RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous))
+        .background(Palette.deep, in: RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: unit * 0.4, style: .continuous)
                     .stroke(Color.white.opacity(0.12), lineWidth: 1))
         .overlay(alignment: .topTrailing) {
