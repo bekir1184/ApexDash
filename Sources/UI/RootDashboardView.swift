@@ -54,41 +54,46 @@ struct RootDashboardView: View {
         GeometryReader { geo in
             // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
-            ZStack {
-                // Menu: sahne tam ekran degilken altta durur.
-                if stage > 0 || inMenu {
-                    HomeView(client: client, strings: strings, unit: unit,
-                             selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
-                             onSelect: { present(geo) },
-                             onLaps: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsLaps = true } },
-                             onSettings: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSettings = true } },
-                             onOpenSetup: { withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true } },
-                             hidesCentreCard: stageMounted,
-                             frozenDash: frozenDash)
-                        .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
-                        .opacity(min(1, stage * 2))
-                }
-
-                if stageMounted {
-                    // Tam ekranda tema zemini guvenli alanin disina da tasar.
-                    DashboardBackground(theme: theme, unit: unit)
-                        .ignoresSafeArea()
-                        .opacity(1 - stage)
-
-                    stageView(geo: geo, unit: unit)
-                }
+            observed(screen(geo: geo, unit: unit))
+        }
+        // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
+        .ignoresSafeArea(edges: .vertical)
+        // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
+        .overlay {
+            if fullscreen && theme != .realistic && theme != .broadcast {
+                ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
+        }
+        .persistentSystemOverlays(.hidden)
+        .statusBarHidden()
+    }
+
+    // MARK: - Ekran
+
+    /// Katmanlar ve ust bindirmeler.
+    private func screen(geo: GeometryProxy, unit: CGFloat) -> some View {
+        layers(geo: geo, unit: unit)
             .overlay { connectionOverlay(unit: unit) }
             .overlay { startLightsOverlay(unit: unit) }
-            .overlay(alignment: .top) {
-                if let flash = dash.sectorFlash, client.status == .receiving, fullscreen {
-                    SectorFlashView(flash: flash, unit: unit)
-                        .padding(.top, unit * 0.12)
-                        .transition(.scale(scale: 0.9).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(duration: 0.35, bounce: 0.2), value: dash.sectorFlash)
+            .overlay(alignment: .top) { sectorOverlay(unit: unit) }
             .overlay { sheets(unit: unit) }
+    }
+
+    @ViewBuilder
+    private func sectorOverlay(unit: CGFloat) -> some View {
+        Group {
+            if let flash = dash.sectorFlash, client.status == .receiving, fullscreen {
+                SectorFlashView(flash: flash, unit: unit)
+                    .padding(.top, unit * 0.12)
+                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.35, bounce: 0.2), value: dash.sectorFlash)
+    }
+
+    /// Yasam dongusu ve veri gozlemcileri.
+    private func observed<V: View>(_ view: V) -> some View {
+        view
             .onAppear {
                 page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
@@ -115,17 +120,37 @@ struct RootDashboardView: View {
                 guard !sessionID.isEmpty else { return }
                 uploader.send(uploadPayload, sessionID: sessionID)
             }
-        }
-        // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
-        .ignoresSafeArea(edges: .vertical)
-        // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
-        .overlay {
-            if fullscreen && theme != .realistic && theme != .broadcast {
-                ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
+    }
+
+    // MARK: - Katmanlar
+
+    /// Menu ve sahne; sahne tam ekran degilken menu altta durur.
+    @ViewBuilder
+    private func layers(geo: GeometryProxy, unit: CGFloat) -> some View {
+        ZStack {
+            if stage > 0 || inMenu { homeLayer(geo: geo, unit: unit) }
+            if stageMounted {
+                // Tam ekranda tema zemini guvenli alanin disina da tasar.
+                DashboardBackground(theme: theme, unit: unit)
+                    .ignoresSafeArea()
+                    .opacity(1 - stage)
+                stageView(geo: geo, unit: unit)
             }
         }
-        .persistentSystemOverlays(.hidden)
-        .statusBarHidden()
+    }
+
+    private func homeLayer(geo: GeometryProxy, unit: CGFloat) -> some View {
+        let spring = Animation.spring(duration: 0.35, bounce: 0.1)
+        return HomeView(client: client, strings: strings, unit: unit,
+                        selectedTheme: Binding(get: { theme }, set: { themeID = $0.rawValue }),
+                        onSelect: { present(geo) },
+                        onLaps: { withAnimation(spring) { showsLaps = true } },
+                        onSettings: { withAnimation(spring) { showsSettings = true } },
+                        onOpenSetup: { withAnimation(spring) { showsSetup = true } },
+                        hidesCentreCard: stageMounted,
+                        frozenDash: frozenDash)
+            .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
+            .opacity(min(1, stage * 2))
     }
 
     // MARK: - Sahne
