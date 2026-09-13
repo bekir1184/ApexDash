@@ -31,7 +31,7 @@ struct PedalBarsView: View {
 
     private func text(_ label: String) -> some View {
         Text(label)
-            .font(Typeface.digits(13, .heavy))
+            .font(.system(size: 13, weight: .heavy, design: .monospaced))
             .foregroundStyle(.white.opacity(0.45))
     }
 }

@@ -58,10 +58,10 @@ struct GameDashboardView: View {
                 cell(x: 0, y: 0, w: 0.26, h: 0.30, in: geo) {
                     VStack(spacing: 0) {
                         Text(verbatim: "\(dash.speedKPH)")
-                            .font(Typeface.digits(h * 0.16, .bold))
+                            .font(.system(size: h * 0.16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white)
                         Text("KPH")
-                            .font(Typeface.digits(h * 0.065, .semibold))
+                            .font(.system(size: h * 0.065, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.7))
                     }
                 }
@@ -70,10 +70,10 @@ struct GameDashboardView: View {
                 cell(x: 0.26, y: 0, w: 0.48, h: 0.30, in: geo) {
                     VStack(spacing: h * 0.01) {
                         Text(verbatim: dash.currentLapTimeText)
-                            .font(Typeface.digits(h * 0.135, .bold))
+                            .font(.system(size: h * 0.135, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white)
                         Text(verbatim: dash.deltaToFrontText)
-                            .font(Typeface.digits(h * 0.115, .bold))
+                            .font(.system(size: h * 0.115, weight: .bold, design: .monospaced))
                             .foregroundStyle(deltaRed)
                     }
                 }
@@ -82,10 +82,10 @@ struct GameDashboardView: View {
                 cell(x: 0.74, y: 0, w: 0.26, h: 0.30, in: geo) {
                     VStack(spacing: 0) {
                         Text(verbatim: String(format: "%.1f", dash.fuelRemainingLaps))
-                            .font(Typeface.digits(h * 0.13, .bold))
+                            .font(.system(size: h * 0.13, weight: .bold, design: .monospaced))
                             .foregroundStyle(dash.fuelRemainingLaps < 0 ? deltaRed : .white)
                         Text("FUEL")
-                            .font(Typeface.digits(h * 0.065, .semibold))
+                            .font(.system(size: h * 0.065, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.7))
                     }
                 }
@@ -93,17 +93,17 @@ struct GameDashboardView: View {
                 // Orta satir: tur, vites, pozisyon
                 cell(x: 0, y: 0.30, w: 0.26, h: 0.32, in: geo) {
                     Text(verbatim: "L\(dash.currentLapNum)")
-                        .font(Typeface.digits(h * 0.15, .bold))
+                        .font(.system(size: h * 0.15, weight: .bold, design: .monospaced))
                         .foregroundStyle(cyan)
                 }
                 cell(x: 0.26, y: 0.27, w: 0.48, h: 0.33, in: geo) {
                     Text(verbatim: dash.gearLabel)
-                        .font(Typeface.digits(h * 0.38, .bold))
+                        .font(.system(size: h * 0.38, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
                 cell(x: 0.74, y: 0.30, w: 0.26, h: 0.32, in: geo) {
                     Text(verbatim: "P\(max(dash.carPosition, 1))")
-                        .font(Typeface.digits(h * 0.15, .bold))
+                        .font(.system(size: h * 0.15, weight: .bold, design: .monospaced))
                         .foregroundStyle(cyan)
                 }
 
@@ -137,7 +137,7 @@ struct GameDashboardView: View {
     private func tyreLabel(index: Int, height: CGFloat) -> some View {
         let temp = dash.tyreSurfaceTemps.indices.contains(index) ? dash.tyreSurfaceTemps[index] : 0
         return Text(verbatim: "\(temp)°C")
-            .font(Typeface.digits(height * 0.085, .bold))
+            .font(.system(size: height * 0.085, weight: .bold, design: .monospaced))
             .foregroundStyle(temp == 0 ? Color.white.opacity(0.3) : TempScale.tyre(temp))
     }
 
@@ -165,7 +165,7 @@ struct GameDashboardView: View {
                 }
             }
             Text(verbatim: "⚡\(Int(dash.ersFraction * 100))%")
-                .font(Typeface.digits(height * 0.62, .heavy))
+                .font(.system(size: height * 0.62, weight: .heavy, design: .monospaced))
                 .foregroundStyle(deltaRed)
                 .shadow(color: .black.opacity(0.7), radius: 2)
         }

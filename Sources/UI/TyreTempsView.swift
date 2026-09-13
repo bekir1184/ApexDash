@@ -44,19 +44,19 @@ struct TyreTempsView: View {
         return VStack(spacing: 1) {
             if !compact {
                 Text(corner.label)
-                    .font(Typeface.digits(unit * 0.2, .heavy))
+                    .font(.system(size: unit * 0.2, weight: .heavy, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
             Text(verbatim: "\(surface)°")
-                .font(Typeface.digits(unit * 0.42, .black))
+                .font(.system(size: unit * 0.42, weight: .black, design: .monospaced))
                 .foregroundStyle(TempScale.tyre(surface))
             if !compact {
                 Text(verbatim: "\(inner)° \(innerLabel)")
-                    .font(Typeface.digits(unit * 0.19, .semibold))
+                    .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
                     .foregroundStyle(TempScale.tyre(inner).opacity(0.6))
             }
             Text(verbatim: "\(brake)°")
-                .font(Typeface.digits(unit * 0.26, .bold))
+                .font(.system(size: unit * 0.26, weight: .bold, design: .monospaced))
                 .foregroundStyle(TempScale.brake(brake))
         }
         .frame(width: unit * 1.35)

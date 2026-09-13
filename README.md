@@ -123,10 +123,11 @@ it on those, not on who typed it.
 
 MIT for the code. See [LICENSE](LICENSE).
 
-The interface is set in [Saira](https://github.com/Omnibus-Type/Saira) by
+The menus are set in [Saira](https://github.com/Omnibus-Type/Saira) by
 Omnibus-Type, under the SIL Open Font License 1.1; the licence travels with the
-font files in `Resources/Fonts`. Formula 1's own typeface is proprietary and is
-not used here.
+font files in `Resources/Fonts`. The dashboards keep the system monospaced
+face, because their layouts are measured against it. Formula 1's own typeface
+is proprietary and is not used here.
 
 Not affiliated with, endorsed by, or connected to Formula One, EA, or
 Codemasters. F1 and Formula 1 are trademarks of Formula One Licensing BV, used

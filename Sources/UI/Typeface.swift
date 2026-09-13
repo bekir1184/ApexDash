@@ -1,8 +1,13 @@
 import SwiftUI
 
-/// Uygulamanin yazi tipi. Saira (SIL Open Font License 1.1) kullaniliyor:
-/// genis ve geometrik, rakamlari bir gostergede bir bakista okunacak kadar
-/// net. Formula 1'in kendi yazi tipi tescilli oldugu icin kullanilamaz.
+/// Uygulama kabugunun yazi tipi: menu, ayarlar, baglanti, turlar ve uyarilar.
+/// Saira (SIL Open Font License 1.1) kullaniliyor; Formula 1'in kendi yazi
+/// tipi tescilli oldugu icin kullanilamaz.
+///
+/// Panolar bunu kullanmaz. Oradaki yerlesimler sistem yazi tipinin
+/// olculerine gore ayarlandi: Saira daha genis oldugu icin sayilar ve
+/// etiketler kutularindan tasiyordu. Pano yazilari gercek direksiyon
+/// ekranlarindaki gibi sabit genislikli kalir.
 enum Typeface {
     /// Agirliga karsilik gelen kesit adi; kayitli PostScript adlari.
     private static func name(for weight: Font.Weight) -> String {
