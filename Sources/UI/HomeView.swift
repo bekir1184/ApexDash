@@ -55,14 +55,14 @@ struct HomeView: View {
                 }
                 .padding(.vertical, unit * 0.3)
             }
-            .overlay {
+            .overlay(alignment: .topTrailing) {
                 if showsConnection {
-                    ConnectionCard(client: client, strings: strings, unit: unit,
+                    ConnectionCard(client: client, strings: strings, unit: unit * 0.62,
                                    onOpenSetup: { showsConnection = false; onOpenSetup() },
                                    onClose: { showsConnection = false })
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { showsConnection = false })
-                        .transition(.scale(scale: 0.92).combined(with: .opacity))
+                        .padding(.top, unit * 0.95)
+                        .padding(.trailing, unit * 0.5)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
             .animation(.spring(duration: 0.35, bounce: 0.15), value: showsConnection)
@@ -323,7 +323,7 @@ struct ConnectionBadge: View {
             HStack(spacing: unit * 0.12) {
                 if status == .receiving {
                     Circle().fill(Color(red: 0.24, green: 0.92, blue: 0.35))
-                        .frame(width: unit * 0.26, height: unit * 0.26)
+                        .frame(width: unit * 0.16, height: unit * 0.16)
                         .shadow(color: Color(red: 0.24, green: 0.92, blue: 0.35).opacity(0.8), radius: unit * 0.1)
                     Text(verbatim: "\(strings.connected) · \(hz) Hz")
                         .contentTransition(.numericText())
@@ -333,10 +333,10 @@ struct ConnectionBadge: View {
                     Text(strings.notConnected)
                 }
             }
-            .font(.system(size: unit * 0.42, weight: .black, design: .rounded))
-            .foregroundStyle(.white.opacity(0.9))
-            .padding(.horizontal, unit * 0.45)
-            .padding(.vertical, unit * 0.16)
+            .font(.system(size: unit * 0.22, weight: .heavy, design: .rounded))
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, unit * 0.3)
+            .padding(.vertical, unit * 0.12)
             .background(Capsule().fill(.black.opacity(0.5)))
             .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
         }

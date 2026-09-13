@@ -324,28 +324,26 @@ struct RootDashboardView: View {
     @ViewBuilder
     private func connectionOverlay(unit: CGFloat) -> some View {
         if fullscreen && !showsSetup && !showsLaps && !showsSettings {
-            ZStack(alignment: .topTrailing) {
+            VStack(alignment: .trailing, spacing: unit * 0.15) {
+                if client.status != .receiving {
+                    ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
+                                    strings: strings, unit: unit) {
+                        withAnimation(.spring(duration: 0.35, bounce: 0.15)) { showsConnection.toggle() }
+                    }
+                }
                 if showsConnection {
-                    ConnectionCard(client: client, strings: strings, unit: unit,
+                    ConnectionCard(client: client, strings: strings, unit: unit * 0.62,
                                    onOpenSetup: {
                                        showsConnection = false
                                        withAnimation(.spring(duration: 0.35, bounce: 0.1)) { showsSetup = true }
                                    },
                                    onClose: { withAnimation(.spring(duration: 0.3)) { showsConnection = false } })
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.black.opacity(0.6).ignoresSafeArea()
-                            .onTapGesture { withAnimation(.spring(duration: 0.3)) { showsConnection = false } })
-                        .transition(.scale(scale: 0.92).combined(with: .opacity))
-                }
-                if client.status != .receiving && !showsConnection {
-                    ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
-                                    strings: strings, unit: unit) {
-                        withAnimation(.spring(duration: 0.35, bounce: 0.15)) { showsConnection.toggle() }
-                    }
-                    .padding(.top, unit * 0.3)
-                    .padding(.trailing, unit * 0.5)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .padding(.top, unit * 0.3)
+            .padding(.trailing, unit * 0.5)
             .transition(.opacity)
         }
     }
