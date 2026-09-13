@@ -40,7 +40,7 @@ struct SetupView: View {
             Button(action: onDone) {
                 Text(strings.close)
                     .font(.system(size: unit * 0.36, weight: .black, design: .monospaced))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Palette.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, unit * 0.2)
                     .background(Capsule().fill(accent))
@@ -87,7 +87,7 @@ struct SetupView: View {
                     Button { portFocused = false } label: {
                         Text(verbatim: "OK")
                             .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Palette.onAccent)
                             .padding(.horizontal, unit * 0.24)
                             .padding(.vertical, unit * 0.14)
                             .background(Capsule().fill(accent))

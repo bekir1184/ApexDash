@@ -46,7 +46,7 @@ struct SettingsView: View {
                         Button { languageID = option.rawValue } label: {
                             Text(verbatim: option.label)
                                 .font(.system(size: unit * 0.26, weight: .black, design: .rounded))
-                                .foregroundStyle(on ? .black : .white.opacity(0.7))
+                                .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
                                 .padding(.horizontal, unit * 0.36)
                                 .padding(.vertical, unit * 0.12)
                                 .background(Capsule().fill(on ? Palette.accent : Color.clear))

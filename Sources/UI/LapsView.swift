@@ -48,7 +48,7 @@ struct LapsView: View {
             Button(action: onClose) {
                 Text(strings.close)
                     .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, unit * 0.3)
                     .padding(.vertical, unit * 0.12)
                     .background(Capsule().fill(.white))
@@ -112,7 +112,7 @@ struct LapsView: View {
                 Button { showsScanner = true } label: {
                     Text(strings.scanQR)
                         .font(.system(size: unit * 0.3, weight: .black, design: .monospaced))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Palette.onAccent)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.16)
                         .background(Capsule().fill(Palette.accent))
@@ -148,7 +148,7 @@ struct LapsView: View {
                 } label: {
                     Text(strings.sendNow)
                         .font(.system(size: unit * 0.26, weight: .black, design: .monospaced))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Palette.onAccent)
                         .frame(width: unit * 3.6)
                         .padding(.vertical, unit * 0.14)
                         .background(Capsule().fill(Palette.accent))
@@ -189,7 +189,7 @@ struct LapsView: View {
                 Button { showsScanner = false } label: {
                     Text(strings.close)
                         .font(.system(size: 15, weight: .black, design: .monospaced))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Palette.onAccent)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 10)
                         .background(Capsule().fill(.white))

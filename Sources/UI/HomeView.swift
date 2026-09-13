@@ -201,7 +201,7 @@ struct HomeView: View {
             Button(action: onSelect) {
                 Text(strings.selectButton)
                     .font(.system(size: unit * 0.32, weight: .black, design: .rounded))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Palette.onAccent)
                     .tracking(unit * 0.05)
                     .padding(.horizontal, unit * 1.1)
                     .padding(.vertical, unit * 0.2)
@@ -399,7 +399,7 @@ struct ConnectionCard: View {
             Button(action: onOpenSetup) {
                 Text(strings.setupButton)
                     .font(.system(size: unit * 0.3, weight: .black, design: .rounded))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, unit * 0.6)
                     .padding(.vertical, unit * 0.18)
                     .background(Capsule().fill(Palette.accent))
