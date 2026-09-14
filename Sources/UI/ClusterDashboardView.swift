@@ -8,8 +8,13 @@ struct ClusterDashboardView: View {
 
     var body: some View {
         GeometryReader { geo in
-            Canvas(rendersAsynchronously: false) { context, size in
-                ClusterHUD(dash: dash, size: size).draw(in: &context)
+            // Vites uyarisi disinda zamanlayici durur; pano zaten telemetriyle
+            // yeniden cizilir.
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !dash.shiftFlash)) { timeline in
+                let phase = timeline.date.timeIntervalSinceReferenceDate
+                Canvas(rendersAsynchronously: false) { context, size in
+                    ClusterHUD(dash: dash, size: size, time: phase).draw(in: &context)
+                }
             }
         }
     }
@@ -18,6 +23,15 @@ struct ClusterDashboardView: View {
 struct ClusterHUD {
     let dash: DashboardModel
     let size: CGSize
+    /// Vites uyarisi animasyonunun zaman tabani.
+    var time: TimeInterval = 0
+
+    /// 0 ile 1 arasinda gidip gelen uyari nabzi.
+    private var pulse: Double {
+        guard dash.shiftFlash else { return 0 }
+        return 0.5 + 0.5 * sin(time * 18)
+    }
+    let shiftRed = Color(red: 1.0, green: 0.16, blue: 0.13)
 
     let ink = Color.white
     let faint = Color.white.opacity(0.45)
@@ -85,33 +99,99 @@ struct ClusterHUD {
         drawTacho(in: &ctx, centre: left, radius: smallR)
         drawSpeed(in: &ctx, centre: mid, radius: bigR)
         drawGForce(in: &ctx, centre: right, radius: smallR)
+        for (c, rr) in [(left, smallR), (mid, bigR), (right, smallR)] {
+            glassSheen(&ctx, centre: c, radius: rr)
+        }
+        drawPanelGlass(in: &ctx, area: area)
         drawTopRow(in: &ctx, area: area)
         drawBadges(in: &ctx, centre: mid, radius: bigR)
     }
 
     // MARK: Kadran govdesi
 
-    /// Koyu cerceve ve ustunden gecen parlaklik: gercek kadranlardaki cam.
+    /// Kadran govdesi: islenmis metal halka, icine cukur oturmus yuz ve
+    /// ustunden gecen cam yansimasi. Isik sol ustten gelir.
     private func bezel(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
-        let outer = circle(centre, r * 1.12)
-        ctx.fill(outer, with: .linearGradient(
-            Gradient(colors: [Color(white: 0.16), Color(white: 0.05)]),
-            startPoint: CGPoint(x: centre.x, y: centre.y - r),
-            endPoint: CGPoint(x: centre.x, y: centre.y + r)))
-        ctx.fill(circle(centre, r * 1.02), with: .color(glass))
+        // Govdenin panele dusen golgesi.
+        var shadowed = ctx
+        shadowed.addFilter(.shadow(color: .black.opacity(0.75), radius: r * 0.14,
+                                   x: 0, y: r * 0.05))
+        shadowed.fill(circle(centre, r * 1.13), with: .color(Color(white: 0.13)))
 
-        // Sag ustten inen soluk isik yansimasi.
-        var sheen = Path()
-        sheen.addArc(center: centre, radius: r * 1.0, startAngle: .degrees(-95),
-                     endAngle: .degrees(28), clockwise: false)
-        sheen.addLine(to: centre)
-        sheen.closeSubpath()
+        // Torna izli metal halka: acili gradyan iki parlak nokta birakir.
+        let metal = Gradient(stops: [
+            .init(color: Color(white: 0.52), location: 0.00),
+            .init(color: Color(white: 0.16), location: 0.16),
+            .init(color: Color(white: 0.34), location: 0.34),
+            .init(color: Color(white: 0.10), location: 0.52),
+            .init(color: Color(white: 0.46), location: 0.70),
+            .init(color: Color(white: 0.14), location: 0.86),
+            .init(color: Color(white: 0.52), location: 1.00)
+        ])
+        ctx.fill(circle(centre, r * 1.13),
+                 with: .conicGradient(metal, center: centre, angle: .degrees(210)))
+        // Halkanin ic pahi: disi aydinlik, ici karanlik.
+        ctx.stroke(circle(centre, r * 1.04), with: .linearGradient(
+            Gradient(colors: [Color(white: 0.58), Color(white: 0.08)]),
+            startPoint: CGPoint(x: centre.x - r, y: centre.y - r),
+            endPoint: CGPoint(x: centre.x + r, y: centre.y + r)),
+                   lineWidth: r * 0.035)
+
+        // Kadran yuzu: ortasi bir tik acik, kenari koyu.
+        ctx.fill(circle(centre, r * 1.02), with: .radialGradient(
+            Gradient(colors: [Color(white: 0.085), Color(white: 0.028)]),
+            center: CGPoint(x: centre.x - r * 0.25, y: centre.y - r * 0.3),
+            startRadius: 0, endRadius: r * 1.3))
+
+        // Yuzun kenarindaki ic golge: kadran cukurda dursun.
+        ctx.stroke(circle(centre, r * 0.995), with: .color(.black.opacity(0.55)),
+                   lineWidth: r * 0.06)
+    }
+
+    /// Kadranin uzerindeki disbukey cam. Uc katman: sol ustte egik oval
+    /// parlama, cam kenarindaki keskin isik ve alt sagda zayif bir yansima.
+    private func glassSheen(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         var clipped = ctx
-        clipped.clip(to: circle(centre, r * 1.0))
-        clipped.fill(sheen, with: .linearGradient(
-            Gradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.02)]),
-            startPoint: CGPoint(x: centre.x + r, y: centre.y - r),
-            endPoint: CGPoint(x: centre.x, y: centre.y + r)))
+        clipped.clip(to: circle(centre, r * 1.02))
+
+        // Egik oval: camin kubbesinden gelen ana parlama.
+        let ovalRect = CGRect(x: centre.x - r * 0.98, y: centre.y - r * 1.02,
+                              width: r * 1.62, height: r * 0.92)
+        let tilt = CGAffineTransform(translationX: centre.x, y: centre.y)
+            .rotated(by: -0.36)
+            .translatedBy(x: -centre.x, y: -centre.y)
+        let oval = Path(ellipseIn: ovalRect).applying(tilt)
+        clipped.fill(oval, with: .linearGradient(
+            Gradient(stops: [
+                .init(color: Color.white.opacity(0.20), location: 0.0),
+                .init(color: Color.white.opacity(0.09), location: 0.45),
+                .init(color: Color.white.opacity(0.0), location: 1.0)
+            ]),
+            startPoint: CGPoint(x: centre.x - r * 0.7, y: centre.y - r * 0.95),
+            endPoint: CGPoint(x: centre.x + r * 0.35, y: centre.y + r * 0.1)))
+
+        // Camin sol ust kenarindaki ince keskin isik.
+        var edge = Path()
+        edge.addArc(center: centre, radius: r * 0.985, startAngle: .degrees(186),
+                    endAngle: .degrees(292), clockwise: false)
+        clipped.stroke(edge, with: .linearGradient(
+            Gradient(colors: [Color.white.opacity(0.0), Color.white.opacity(0.45),
+                              Color.white.opacity(0.0)]),
+            startPoint: CGPoint(x: centre.x - r, y: centre.y),
+            endPoint: CGPoint(x: centre.x + r * 0.3, y: centre.y - r)),
+                       lineWidth: r * 0.022)
+
+        // Alt sagda, kadran yuzunden donen zayif yansima.
+        let bounceRect = CGRect(x: centre.x + r * 0.05, y: centre.y + r * 0.42,
+                                width: r * 0.86, height: r * 0.34)
+        let bounce = Path(ellipseIn: bounceRect).applying(
+            CGAffineTransform(translationX: centre.x, y: centre.y)
+                .rotated(by: -0.30)
+                .translatedBy(x: -centre.x, y: -centre.y))
+        clipped.fill(bounce, with: .linearGradient(
+            Gradient(colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)]),
+            startPoint: CGPoint(x: centre.x + r * 0.2, y: centre.y + r * 0.45),
+            endPoint: CGPoint(x: centre.x + r * 0.8, y: centre.y + r * 0.85)))
     }
 
     private func circle(_ c: CGPoint, _ r: CGFloat) -> Path {
@@ -144,19 +224,49 @@ struct ClusterHUD {
         }
     }
 
-    /// Turuncu ibre: merkezden disa dogru incelen bir seritler.
+    /// Ibre: gobekten uca dogru incelir, arkasinda kisa bir karsi agirlik
+    /// ve altinda kadran yuzune dusen golge vardir.
     private func needle(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat,
                         angle degrees: Double) {
         let a = degrees * .pi / 180
-        let tip = CGPoint(x: centre.x + r * 0.97 * CGFloat(cos(a)),
-                          y: centre.y + r * 0.97 * CGFloat(sin(a)))
-        let back = CGPoint(x: centre.x - r * 0.10 * CGFloat(cos(a)),
-                           y: centre.y - r * 0.10 * CGFloat(sin(a)))
+        let dx = CGFloat(cos(a)), dy = CGFloat(sin(a))
+        func point(_ along: CGFloat, _ across: CGFloat) -> CGPoint {
+            CGPoint(x: centre.x + dx * along - dy * across,
+                    y: centre.y + dy * along + dx * across)
+        }
         var body = Path()
-        body.move(to: back)
-        body.addLine(to: tip)
-        ctx.stroke(body, with: .color(accent),
-                   style: StrokeStyle(lineWidth: r * 0.032, lineCap: .round))
+        body.move(to: point(r * 0.97, 0))
+        body.addLine(to: point(r * 0.12, r * 0.026))
+        body.addLine(to: point(-r * 0.17, r * 0.019))
+        body.addLine(to: point(-r * 0.21, 0))
+        body.addLine(to: point(-r * 0.17, -r * 0.019))
+        body.addLine(to: point(r * 0.12, -r * 0.026))
+        body.closeSubpath()
+
+        var shadowed = ctx
+        shadowed.addFilter(.shadow(color: .black.opacity(0.65), radius: r * 0.045,
+                                   x: r * 0.015, y: r * 0.03))
+        // Vites zamani geldiginde ibre turuncudan kirmiziya doner ve isir.
+        let tint = dash.shiftFlash
+            ? accent.mix(with: shiftRed, by: 0.45 + 0.55 * pulse) : accent
+        if dash.shiftFlash {
+            var glow = ctx
+            glow.addFilter(.blur(radius: r * 0.05))
+            glow.opacity = 0.5 + 0.5 * pulse
+            glow.fill(body, with: .color(shiftRed))
+        }
+        shadowed.fill(body, with: .linearGradient(
+            Gradient(colors: [tint, tint.opacity(0.82)]),
+            startPoint: CGPoint(x: centre.x, y: centre.y - r),
+            endPoint: CGPoint(x: centre.x, y: centre.y + r)))
+
+        // Krom gobek.
+        ctx.fill(circle(centre, r * 0.085), with: .radialGradient(
+            Gradient(colors: [Color(white: 0.75), Color(white: 0.22)]),
+            center: CGPoint(x: centre.x - r * 0.03, y: centre.y - r * 0.03),
+            startRadius: 0, endRadius: r * 0.1))
+        ctx.stroke(circle(centre, r * 0.085), with: .color(.black.opacity(0.6)),
+                   lineWidth: max(1, r * 0.008))
     }
 
     // MARK: Sol kadran - devir
@@ -171,8 +281,23 @@ struct ClusterHUD {
               values: { "\($0)" }, colour: warm)
 
         let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
+
+        // Vites uyarisi: olcegin son diliminde nabiz gibi atan kirmizi yay.
+        if dash.shiftFlash {
+            var band = Path()
+            band.addArc(center: centre, radius: r * 0.88,
+                        startAngle: .degrees(start + sweep * 0.82),
+                        endAngle: .degrees(start + sweep), clockwise: false)
+            var glow = ctx
+            glow.addFilter(.blur(radius: r * 0.06))
+            glow.stroke(band, with: .color(shiftRed.opacity(0.35 + 0.65 * pulse)),
+                        style: StrokeStyle(lineWidth: r * 0.12, lineCap: .round))
+            ctx.stroke(band, with: .color(shiftRed.opacity(0.5 + 0.5 * pulse)),
+                       style: StrokeStyle(lineWidth: r * 0.06, lineCap: .round))
+        }
+
         needle(&ctx, centre: centre, radius: r, angle: start + sweep * fraction)
-        ctx.fill(circle(centre, r * 0.44), with: .color(.black))
+        gearWell(&ctx, centre: centre, radius: r)
 
         text(&ctx, dash.gearLabel, size: r * 0.52, colour: ink, weight: .bold,
              at: CGPoint(x: centre.x, y: centre.y + r * 0.16))
@@ -181,6 +306,27 @@ struct ClusterHUD {
         // Kadranin altinda tur sayaci, referanstaki kilometre gostergesi gibi.
         counter(&ctx, "\(dash.currentLapNum)", label: "LAP",
                 centre: CGPoint(x: centre.x, y: centre.y + r * 1.24), radius: r)
+    }
+
+    /// Vitesin durdugu yuva. Normalde siyah bir cukur; yalnizca vites zamani
+    /// geldiginde kizarip cevresine isik sizdirir.
+    private func gearWell(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
+        let well = circle(centre, r * 0.44)
+        let heat = dash.shiftFlash ? pulse : 0
+
+        if heat > 0 {
+            var glow = ctx
+            glow.addFilter(.blur(radius: r * 0.12))
+            glow.fill(circle(centre, r * 0.46), with: .color(shiftRed.opacity(heat * 0.8)))
+        }
+
+        ctx.fill(well, with: .radialGradient(
+            Gradient(colors: [shiftRed.opacity(heat * 0.85),
+                              Color.black.opacity(0.96)]),
+            center: centre, startRadius: 0, endRadius: r * 0.46))
+        ctx.stroke(well, with: .color(heat > 0 ? shiftRed.opacity(0.35 + heat * 0.65)
+                                               : Color.white.opacity(0.06)),
+                   lineWidth: r * 0.018)
     }
 
     private func counter(_ ctx: inout GraphicsContext, _ value: String, label: String,
@@ -292,6 +438,26 @@ struct ClusterHUD {
 
     // MARK: Ust satir ve rozetler
 
+    /// Panelin camindan gecen egik yansima ve kenarlara dogru karartma.
+    private func drawPanelGlass(in ctx: inout GraphicsContext, area: CGRect) {
+        var band = Path()
+        let w = area.width, h = area.height
+        band.move(to: CGPoint(x: area.minX - w * 0.1, y: area.minY + h * 0.30))
+        band.addLine(to: CGPoint(x: area.minX + w * 0.42, y: area.minY - h * 0.1))
+        band.addLine(to: CGPoint(x: area.minX + w * 0.60, y: area.minY - h * 0.1))
+        band.addLine(to: CGPoint(x: area.minX - w * 0.1, y: area.minY + h * 0.72))
+        band.closeSubpath()
+        ctx.fill(band, with: .linearGradient(
+            Gradient(colors: [Color.white.opacity(0.035), Color.white.opacity(0.0)]),
+            startPoint: CGPoint(x: area.minX, y: area.minY),
+            endPoint: CGPoint(x: area.midX, y: area.maxY)))
+
+        ctx.fill(Path(area), with: .radialGradient(
+            Gradient(colors: [Color.black.opacity(0), Color.black.opacity(0.45)]),
+            center: CGPoint(x: area.midX, y: area.midY),
+            startRadius: area.height * 0.35, endRadius: area.width * 0.62))
+    }
+
     private func drawTopRow(in ctx: inout GraphicsContext, area: CGRect) {
         let y = area.minY + area.height * 0.12
         text(&ctx, "\(dash.engineTemp)°C", size: area.height * 0.048, colour: faint,
@@ -330,5 +496,20 @@ struct ClusterHUD {
                 .font(.system(size: fontSize, weight: weight))
                 .foregroundColor(colour))
         ctx.draw(resolved, at: point, anchor: .bottom)
+    }
+}
+
+extension Color {
+    /// Iki rengi oranla karistirir; uyari nabzinda turuncudan kirmiziya gecis icin.
+    func mix(with other: Color, by amount: Double) -> Color {
+        let t = min(max(amount, 0), 1)
+        let a = UIColor(self), b = UIColor(other)
+        var ar: CGFloat = 0, ag: CGFloat = 0, ab: CGFloat = 0, aa: CGFloat = 0
+        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
+        a.getRed(&ar, green: &ag, blue: &ab, alpha: &aa)
+        b.getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        return Color(red: Double(ar + (br - ar) * t),
+                     green: Double(ag + (bg - ag) * t),
+                     blue: Double(ab + (bb - ab) * t))
     }
 }

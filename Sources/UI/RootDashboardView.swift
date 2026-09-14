@@ -69,7 +69,7 @@ struct RootDashboardView: View {
         .ignoresSafeArea(edges: .vertical)
         // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
         .overlay {
-            if fullscreen && theme != .realistic && theme != .broadcast {
+            if fullscreen && theme != .realistic && theme != .broadcast && theme != .cluster {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
