@@ -38,7 +38,7 @@ struct RetroHUD {
         let pad = size.height * 0.05
         let gap = size.width * 0.012
         // Bolme genislikleri: son bolme biraz daha genis.
-        let weights: [CGFloat] = [0.92, 1.16, 1.12, 1.3]
+        let weights: [CGFloat] = [0.82, 1.3, 1.45]
         let usable = size.width - 2 * pad - gap * CGFloat(weights.count - 1)
         let total = weights.reduce(0, +)
 
@@ -52,14 +52,27 @@ struct RetroHUD {
 
         drawVitals(in: &ctx, rect: panel(&ctx, frames[0], "VEHICLE VITALS"))
         drawTacho(in: &ctx, rect: panel(&ctx, frames[1], "TACHOMETER"))
-        drawSpeed(in: &ctx, rect: panel(&ctx, frames[2], "SPEEDMETER"))
-        drawStatus(in: &ctx, rect: panel(&ctx, frames[3], "LAP & STATUS"))
+        drawSpeedAndLap(in: &ctx, rect: panel(&ctx, frames[2], "SPEED & LAP"))
     }
 
     /// Cerceve ve ustundeki baslik; geriye icerik alanini dondurur.
     private func panel(_ ctx: inout GraphicsContext, _ rect: CGRect, _ title: String) -> CGRect {
         let radius = rect.height * 0.06
         let box = Path(roundedRect: rect, cornerRadius: radius)
+
+        // Kareli zemin, cerceveye kirpilir.
+        var inside = ctx
+        inside.clip(to: box)
+        var grid = Path()
+        let step = rect.height * 0.072
+        var gx = rect.minX
+        while gx < rect.maxX { grid.move(to: CGPoint(x: gx, y: rect.minY))
+                               grid.addLine(to: CGPoint(x: gx, y: rect.maxY)); gx += step }
+        var gy = rect.minY
+        while gy < rect.maxY { grid.move(to: CGPoint(x: rect.minX, y: gy))
+                               grid.addLine(to: CGPoint(x: rect.maxX, y: gy)); gy += step }
+        inside.stroke(grid, with: .color(frame.opacity(0.32)), lineWidth: max(0.5, rect.height * 0.003))
+
         ctx.stroke(box, with: .color(frame), lineWidth: max(1, rect.height * 0.008))
 
         let titleHeight = rect.height * 0.15
@@ -148,10 +161,10 @@ struct RetroHUD {
     // MARK: Bolme 2 - devir saati
 
     private func drawTacho(in ctx: inout GraphicsContext, rect: CGRect) {
-        let radius = min(rect.width * 0.46, rect.height * 0.40)
+        let radius = min(rect.width * 0.44, rect.height * 0.42)
         // Yarim daire dikeyde ortalansin: merkez, yayin alt kenari olur.
-        let centre = CGPoint(x: rect.midX, y: rect.midY + radius * 0.52)
-        let inner = radius * 0.68
+        let centre = CGPoint(x: rect.midX, y: rect.midY + radius * 0.55)
+        let inner = radius * 0.58
         let steps = 22
         let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
         let lit = Int((fraction * Double(steps)).rounded())
@@ -173,7 +186,7 @@ struct RetroHUD {
         for i in 0...5 {
             let t = Double(i) / 5
             let a = Double.pi + t * Double.pi
-            let r = radius * 1.2
+            let r = radius * 1.26
             let p = CGPoint(x: centre.x + r * CGFloat(cos(a)),
                             y: centre.y + r * CGFloat(sin(a)) + rect.height * 0.03)
             text(&ctx, "\(Int((Double(maxK) * t).rounded()))",
@@ -183,63 +196,75 @@ struct RetroHUD {
         segments(&ctx, dash.gearLabel,
                  rect: CGRect(x: centre.x - inner * 0.36, y: centre.y - inner * 0.94,
                               width: inner * 0.72, height: inner * 0.9))
-        text(&ctx, "x1000 RPM", size: rect.height * 0.075, colour: mid,
-             at: CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.02))
+        // Yayin disina tirnaklar, referanstaki gibi.
+        var ticks = Path()
+        for i in 0...20 {
+            let a = Double.pi + Double(i) * Double.pi / 20
+            let long = i % 5 == 0
+            let r0 = radius * 1.02, r1 = radius * (long ? 1.13 : 1.08)
+            ticks.move(to: CGPoint(x: centre.x + r0 * CGFloat(cos(a)),
+                                   y: centre.y + r0 * CGFloat(sin(a))))
+            ticks.addLine(to: CGPoint(x: centre.x + r1 * CGFloat(cos(a)),
+                                      y: centre.y + r1 * CGFloat(sin(a))))
+        }
+        ctx.stroke(ticks, with: .color(mid), lineWidth: max(1, rect.height * 0.006))
+
+        text(&ctx, "x1000 RPM", size: rect.height * 0.062, colour: mid,
+             at: CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.01))
     }
 
-    // MARK: Bolme 3 - hiz
+    // MARK: Bolme 3 - hiz ve tur
 
-    private func drawSpeed(in ctx: inout GraphicsContext, rect: CGRect) {
-        let box = CGRect(x: rect.minX, y: rect.minY,
-                         width: rect.width, height: rect.height * 0.82)
-        segments(&ctx, String(format: "%3d", min(dash.speedKPH, 999)), rect: box)
-        text(&ctx, "KM/H", size: rect.height * 0.1, colour: mid,
-             at: CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.06))
-    }
+    private func drawSpeedAndLap(in ctx: inout GraphicsContext, rect: CGRect) {
+        // Ust yari: hiz, bolmenin kahramani.
+        let speedBox = CGRect(x: rect.minX, y: rect.minY,
+                              width: rect.width * 0.62, height: rect.height * 0.52)
+        segments(&ctx, String(format: "%3d", min(dash.speedKPH, 999)), rect: speedBox)
+        text(&ctx, "KM/H", size: rect.height * 0.075, colour: mid,
+             at: CGPoint(x: speedBox.midX, y: speedBox.maxY + rect.height * 0.06))
 
-    // MARK: Bolme 4 - tur ve durum
-
-    private func drawStatus(in ctx: inout GraphicsContext, rect: CGRect) {
-        // Ust satir: tur suresi, yedi parcali.
-        let timeBox = CGRect(x: rect.minX, y: rect.minY,
-                             width: rect.width, height: rect.height * 0.32)
-        segments(&ctx, lapClock, rect: timeBox)
-
-        // Orta satir: en iyi tura gore fark.
-        let deltaY = rect.minY + rect.height * 0.58
-        text(&ctx, "DELTA", size: rect.height * 0.075, colour: mid,
-             anchor: .leading, at: CGPoint(x: rect.minX, y: deltaY))
+        // Sagda tur suresi ve fark.
+        let side = CGRect(x: rect.minX + rect.width * 0.66, y: rect.minY,
+                          width: rect.width * 0.34, height: rect.height * 0.52)
+        segments(&ctx, lapClock,
+                 rect: CGRect(x: side.minX, y: side.minY + side.height * 0.06,
+                              width: side.width, height: side.height * 0.34))
+        text(&ctx, "DELTA", size: rect.height * 0.055, colour: mid,
+             at: CGPoint(x: side.midX, y: side.minY + side.height * 0.62))
         let delta = dash.deltaToBestText
-        text(&ctx, delta, size: fitted(delta, size: rect.height * 0.13, width: rect.width * 0.6),
-             colour: bright, anchor: .trailing,
-             at: CGPoint(x: rect.maxX, y: deltaY + rect.height * 0.02))
+        text(&ctx, delta, size: fitted(delta, size: rect.height * 0.105, width: side.width),
+             colour: bright, at: CGPoint(x: side.midX, y: side.minY + side.height * 0.8))
 
         var line = Path()
-        line.move(to: CGPoint(x: rect.minX, y: deltaY + rect.height * 0.1))
-        line.addLine(to: CGPoint(x: rect.maxX, y: deltaY + rect.height * 0.1))
+        line.move(to: CGPoint(x: rect.minX, y: rect.minY + rect.height * 0.64))
+        line.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.64))
         ctx.stroke(line, with: .color(frame), lineWidth: max(1, rect.height * 0.005))
 
-        // Alt satir: sira, tur, yakit; referanstaki trip ve odo gibi.
-        let footY = rect.maxY - rect.height * 0.16
-        let third = rect.width / 3
-        cell(&ctx, "POS", "P\(dash.carPosition)", x: rect.minX + third * 0.5, y: footY, rect: rect)
-        cell(&ctx, "LAP", "\(dash.currentLapNum)", x: rect.minX + third * 1.5, y: footY, rect: rect)
+        // Alt satir: sira, tur, yakit ve gerekirse pit uyarisi.
+        let footY = rect.maxY - rect.height * 0.06
+        let quarter = rect.width / 4
+        cell(&ctx, "POS", "P\(dash.carPosition)", x: rect.minX + quarter * 0.5, y: footY, rect: rect)
+        cell(&ctx, "LAP", "\(dash.currentLapNum)", x: rect.minX + quarter * 1.5, y: footY, rect: rect)
         cell(&ctx, "FUEL", String(format: "%.1f", dash.fuelRemainingLaps),
-             x: rect.minX + third * 2.5, y: footY, rect: rect)
-
-        if dash.pitLimiterOn {
-            text(&ctx, "PIT LIMITER", size: rect.height * 0.08, colour: bright,
-                 at: CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.44))
-        }
+             x: rect.minX + quarter * 2.5, y: footY, rect: rect)
+        cell(&ctx, dash.pitLimiterOn ? "PIT" : "BEST",
+             dash.pitLimiterOn ? "ON" : shortLap(dash.bestLapMS),
+             x: rect.minX + quarter * 3.5, y: footY, rect: rect)
     }
 
     private func cell(_ ctx: inout GraphicsContext, _ name: String, _ value: String,
                       x: CGFloat, y: CGFloat, rect: CGRect) {
-        let width = rect.width / 3 * 0.9
+        let width = rect.width / 4 * 0.92
         text(&ctx, name, size: fitted(name, size: rect.height * 0.07, width: width),
              colour: mid, at: CGPoint(x: x, y: y - rect.height * 0.09))
         text(&ctx, value, size: fitted(value, size: rect.height * 0.12, width: width),
              colour: bright, at: CGPoint(x: x, y: y + rect.height * 0.04))
+    }
+
+    /// Dar hucreler icin kisa tur suresi: 1:28.6 gibi.
+    private func shortLap(_ ms: Int) -> String {
+        guard ms > 0 else { return "--.-" }
+        return String(format: "%d:%02d.%d", ms / 60_000, (ms % 60_000) / 1000, (ms % 1000) / 100)
     }
 
     /// Tur suresi: dakika, saniye ve salise, iki nokta ile.
