@@ -2,7 +2,7 @@ import Foundation
 
 /// Tur kayitlarini disari cikarma: CSV dosyasi ve siteye gotururen QR.
 enum LapExport {
-    static let siteURL = "https://apexdash-app.vercel.app"
+    static let siteURL = "https://www.apexdash.pro"
     /// Rehberde ve ekranlarda gosterilen yalin adres.
     static var siteHost: String {
         siteURL.replacingOccurrences(of: "https://", with: "")

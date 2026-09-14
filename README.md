@@ -36,7 +36,7 @@ Shown on every theme:
 
 ## Lap analysis in your browser
 
-Finished laps upload themselves to <https://apexdash.pro>. Open the
+Finished laps upload themselves to <https://www.apexdash.pro>. Open the
 page, scan its QR code from the LAPS screen, and every lap you complete lands
 there on its own.
 
