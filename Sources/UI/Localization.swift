@@ -168,6 +168,7 @@ struct Strings {
         case .realistic: return "REALISTIC"
         case .broadcast: return pick("YAYIN", "BROADCAST")
         case .game: return pick("OYUN", "GAME")
+        case .retro: return "RETRO"
         }
     }
 }

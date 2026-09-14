@@ -312,7 +312,7 @@ struct DashboardBackground: View {
         // Ekranin disinda kalan yer direksiyon govdesi; sari uyari sadece
         // LCD'nin kendisinde yanar, gercek araclardaki gibi.
         case .realistic: RealisticPalette.bezel
-        case .modern, .game, .broadcast: theme.background
+        case .modern, .game, .broadcast, .retro: theme.background
         }
     }
 }
@@ -340,6 +340,7 @@ struct DashboardContent: View {
         case .realistic: RealisticDashboardView(dash: dash, unit: unit)
         case .broadcast: BroadcastDashboardView(dash: dash, unit: unit)
         case .game: GameDashboardView(dash: dash, unit: unit)
+        case .retro: RetroDashboardView(dash: dash, unit: unit)
         }
     }
 }

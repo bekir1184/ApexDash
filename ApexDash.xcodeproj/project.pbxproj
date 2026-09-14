@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		020D8572EE2FC5AFC8D6FF70 /* RetroDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D575DC5DFB84FFE520745B0D /* RetroDashboardView.swift */; };
 		160A7205436138981F98A758 /* ByteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B03317C3CEAF76EC70FC71 /* ByteReader.swift */; };
 		206DB912B0FF95887B7768BD /* Saira-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */; };
 		20E2603CC2EC508073BC6D77 /* DotMatrixEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402716F54863E44811C2959 /* DotMatrixEffect.swift */; };
@@ -106,6 +107,7 @@
 		C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApexDashApp.swift; sourceTree = "<group>"; };
 		CF1E40F9B00F4F714A20E863 /* BroadcastDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastDashboardView.swift; sourceTree = "<group>"; };
 		D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryClient.swift; sourceTree = "<group>"; };
+		D575DC5DFB84FFE520745B0D /* RetroDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetroDashboardView.swift; sourceTree = "<group>"; };
 		D757B2C0EF365F3B821A7677 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectorViews.swift; sourceTree = "<group>"; };
 		ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Bold.ttf"; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 				75DF9E52820C0DD046259B7F /* PedalBarsView.swift */,
 				0AD717D5DFA547B616504051 /* QRScannerView.swift */,
 				48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */,
+				D575DC5DFB84FFE520745B0D /* RetroDashboardView.swift */,
 				35FDB733B3C447A2D1327CB2 /* RevLightsView.swift */,
 				B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */,
 				E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */,
@@ -352,6 +355,7 @@
 				9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */,
 				50359040D33CE1CE6642FB55 /* QRScannerView.swift in Sources */,
 				98AC3A92A58ECF8886BB8B8E /* RealisticDashboardView.swift in Sources */,
+				020D8572EE2FC5AFC8D6FF70 /* RetroDashboardView.swift in Sources */,
 				353EDC6E900977F9EA028E4C /* RevLightsView.swift in Sources */,
 				AA03D81F5DBC4B793928FD94 /* RootDashboardView.swift in Sources */,
 				C2D5B8A69632DBFA7717A41F /* SectorViews.swift in Sources */,
