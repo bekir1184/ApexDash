@@ -7,7 +7,7 @@ enum DashTheme: String, CaseIterable, Identifiable {
     case realistic
     case broadcast
     case game
-    case retro
+    case cluster
 
     var id: String { rawValue }
 
@@ -16,8 +16,8 @@ enum DashTheme: String, CaseIterable, Identifiable {
     var background: Color {
         switch self {
         case .game: return Color(red: 0.11, green: 0.14, blue: 0.18)
-        // Fosfor gostergenin ardindaki neredeyse siyah panel.
-        case .retro: return Color(red: 0.035, green: 0.02, blue: 0.02)
+        // Gosterge panelinin siyah cami.
+        case .cluster: return Color(red: 0.015, green: 0.015, blue: 0.017)
         case .broadcast: return Color(red: 0.02, green: 0.05, blue: 0.09)
         case .modern, .dotMatrix, .realistic: return .black
         }

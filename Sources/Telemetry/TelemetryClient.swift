@@ -156,6 +156,7 @@ final class TelemetryClient: ObservableObject {
         case .motion:
             guard let m = CarMotion(data: data, carIndex: idx, format: format) else { return }
             recorder.motion = m
+            dash.apply(m)
         case .session:
             guard let info = SessionInfo(data: data) else { return }
             if info != sessionInfo { sessionInfo = info }

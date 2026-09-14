@@ -54,6 +54,11 @@ struct DashboardModel {
     var drsActive: Bool = false
     var drsAllowed: Bool = false
 
+    // Motion (paket 0)
+    /// Yanal ve boyuna G kuvveti; saga ve ileri pozitif.
+    var gLateral: Float = 0
+    var gLongitudinal: Float = 0
+
     // LapData (paket 2)
     var currentLapTimeMS: Int = 0
     var lastLapTimeMS: Int = 0
@@ -248,6 +253,11 @@ struct DashboardModel {
         ersHarvestLimitPerLap = s.ersHarvestLimitPerLap
         ersDeployedThisLap = s.ersDeployedThisLap
         drsAllowed = s.drsAllowed
+    }
+
+    mutating func apply(_ m: CarMotion) {
+        gLateral = m.gLateral
+        gLongitudinal = m.gLongitudinal
     }
 
     mutating func apply(_ t: CarTelemetry2) {
