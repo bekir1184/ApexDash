@@ -188,11 +188,13 @@ struct RootDashboardView: View {
                                 DashboardBackground(theme: item, unit: unit)
                                 DashboardContent(theme: item, dash: live, unit: unit, strings: strings)
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .padding(.vertical, unit * 0.16)
-                                    // Gercekci temada govde cercevesi Dynamic Island
-                                    // bandinin uzerine tasar; digerleri guvenli alanda kalir.
-                                    .padding(.leading, item == .realistic ? min(lead, unit * 0.34) : lead)
-                                    .padding(.trailing, item == .realistic ? min(trail, unit * 0.34) : trail)
+                                    // Kendi govde cercevesi olan temalar ekranin
+                                    // tamamini kullanir; digerleri guvenli alanda kalir.
+                                    .padding(.vertical, item == .cluster ? 0 : unit * 0.16)
+                                    .padding(.leading, item == .realistic ? min(lead, unit * 0.34)
+                                                     : (item == .cluster ? 0 : lead))
+                                    .padding(.trailing, item == .realistic ? min(trail, unit * 0.34)
+                                                      : (item == .cluster ? 0 : trail))
                             }
                             .frame(width: fullW, height: geo.size.height)
                             .id(item)

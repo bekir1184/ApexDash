@@ -27,20 +27,65 @@ struct ClusterHUD {
     let glass = Color(red: 0.05, green: 0.05, blue: 0.055)
 
     func draw(in ctx: inout GraphicsContext) {
-        let h = size.height
-        // Uc kadran yan yana sigsin: cercevelerle birlikte genislige gore olcek.
-        let bigR = min(h * 0.38, size.width * 0.155)
-        let smallR = bigR * 0.78
-        let centreY = h * 0.50
+        let inner = housing(in: &ctx)
+        var ctx = clipped(ctx, to: inner)
+        draw(in: &ctx, area: inner)
+    }
 
-        let mid = CGPoint(x: size.width / 2, y: centreY)
-        let left = CGPoint(x: size.width * 0.175, y: centreY + bigR * 0.06)
-        let right = CGPoint(x: size.width * 0.825, y: centreY + bigR * 0.06)
+    /// Panelin metal govdesi: disi firincalanmis gri, ici siyah cam.
+    /// Geriye cizimin yapilacagi ic alani dondurur.
+    private func housing(in ctx: inout GraphicsContext) -> CGRect {
+        let full = CGRect(origin: .zero, size: size)
+        let thickness = size.height * 0.035
+        let radius = size.height * 0.16
+
+        let shell = Path(roundedRect: full, cornerRadius: radius)
+        ctx.fill(shell, with: .linearGradient(
+            Gradient(stops: [
+                .init(color: Color(white: 0.42), location: 0),
+                .init(color: Color(white: 0.20), location: 0.18),
+                .init(color: Color(white: 0.10), location: 0.5),
+                .init(color: Color(white: 0.24), location: 0.88),
+                .init(color: Color(white: 0.46), location: 1)
+            ]),
+            startPoint: CGPoint(x: size.width / 2, y: 0),
+            endPoint: CGPoint(x: size.width / 2, y: size.height)))
+
+        // Metalin ustundeki ince parlak kenar.
+        ctx.stroke(Path(roundedRect: full.insetBy(dx: thickness * 0.18, dy: thickness * 0.18),
+                        cornerRadius: radius * 0.94),
+                   with: .color(.white.opacity(0.22)), lineWidth: max(1, thickness * 0.1))
+
+        let inner = full.insetBy(dx: thickness, dy: thickness)
+        let glassShape = Path(roundedRect: inner, cornerRadius: radius - thickness * 0.6)
+        ctx.fill(glassShape, with: .color(.black))
+        // Camin kenarindaki koyu golge, govdeye oturmus gibi dursun.
+        ctx.stroke(glassShape, with: .color(.black.opacity(0.9)),
+                   lineWidth: max(1, thickness * 0.35))
+        return inner
+    }
+
+    private func clipped(_ ctx: GraphicsContext, to rect: CGRect) -> GraphicsContext {
+        var copy = ctx
+        copy.clip(to: Path(roundedRect: rect, cornerRadius: size.height * 0.12))
+        return copy
+    }
+
+    private func draw(in ctx: inout GraphicsContext, area: CGRect) {
+        let h = area.height
+        // Uc kadran yan yana sigsin: cercevelerle birlikte genislige gore olcek.
+        let bigR = min(h * 0.38, area.width * 0.155)
+        let smallR = bigR * 0.78
+        let centreY = area.minY + h * 0.50
+
+        let mid = CGPoint(x: area.midX, y: centreY)
+        let left = CGPoint(x: area.minX + area.width * 0.175, y: centreY + bigR * 0.06)
+        let right = CGPoint(x: area.minX + area.width * 0.825, y: centreY + bigR * 0.06)
 
         drawTacho(in: &ctx, centre: left, radius: smallR)
         drawSpeed(in: &ctx, centre: mid, radius: bigR)
         drawGForce(in: &ctx, centre: right, radius: smallR)
-        drawTopRow(in: &ctx)
+        drawTopRow(in: &ctx, area: area)
         drawBadges(in: &ctx, centre: mid, radius: bigR)
     }
 
@@ -247,12 +292,12 @@ struct ClusterHUD {
 
     // MARK: Ust satir ve rozetler
 
-    private func drawTopRow(in ctx: inout GraphicsContext) {
-        let y = size.height * 0.11
-        text(&ctx, "\(dash.engineTemp)°C", size: size.height * 0.045, colour: faint,
-             at: CGPoint(x: size.width * 0.37, y: y))
-        text(&ctx, dash.currentLapTimeText, size: size.height * 0.045, colour: faint,
-             at: CGPoint(x: size.width * 0.63, y: y))
+    private func drawTopRow(in ctx: inout GraphicsContext, area: CGRect) {
+        let y = area.minY + area.height * 0.12
+        text(&ctx, "\(dash.engineTemp)°C", size: area.height * 0.048, colour: faint,
+             at: CGPoint(x: area.minX + area.width * 0.37, y: y))
+        text(&ctx, dash.currentLapTimeText, size: area.height * 0.048, colour: faint,
+             at: CGPoint(x: area.minX + area.width * 0.63, y: y))
     }
 
     private func drawBadges(in ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
