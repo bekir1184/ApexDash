@@ -12,7 +12,6 @@ struct LapsView: View {
     let payload: () -> SessionUploader.Payload
     let onClose: () -> Void
 
-    @State private var showsScanner = false
 
     private var bestLapMS: Int { laps.map(\.timeMS).min() ?? 0 }
 
@@ -108,18 +107,10 @@ struct LapsView: View {
 
     private var sidebar: some View {
         VStack(spacing: unit * 0.24) {
+            // Eslestirme ayarlardaki TELEMETRI SITESI sayfasinda; burada
+            // yalnizca durum ve disari aktarma kalir.
             if sessionID.isEmpty {
-                Button { showsScanner = true } label: {
-                    Text(strings.scanQR)
-                        .font(Typeface.digits(unit * 0.3, .black))
-                        .foregroundStyle(Palette.onAccent)
-                        .frame(width: unit * 3.6)
-                        .padding(.vertical, unit * 0.16)
-                        .background(Capsule().fill(Palette.accent))
-                }
-                .buttonStyle(.plain)
-
-                Text(verbatim: strings.scanHint)
+                Text(verbatim: strings.pairInSettings)
                     .font(Typeface.digits(unit * 0.2, .semibold))
                     .foregroundStyle(.white.opacity(0.45))
                     .multilineTextAlignment(.center)
@@ -128,7 +119,7 @@ struct LapsView: View {
                 VStack(spacing: unit * 0.06) {
                     Text(verbatim: strings.connectedTo(sessionID))
                         .font(Typeface.digits(unit * 0.24, .black))
-                        .foregroundStyle(Color(red: 0.24, green: 0.92, blue: 0.35))
+                        .foregroundStyle(Palette.live)
                     if let date = uploader.lastUploadDate {
                         Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
                             .font(Typeface.digits(unit * 0.19, .semibold))
@@ -154,13 +145,6 @@ struct LapsView: View {
                         .background(Capsule().fill(Palette.accent))
                 }
                 .buttonStyle(.plain)
-
-                Button { sessionID = "" } label: {
-                    Text(strings.disconnect)
-                        .font(Typeface.digits(unit * 0.22, .heavy))
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-                .buttonStyle(.plain)
             }
 
             if let file = LapExport.csvFile(laps) {
@@ -173,29 +157,6 @@ struct LapsView: View {
                         .background(Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1.5))
                 }
                 .buttonStyle(.plain)
-            }
-        }
-        .fullScreenCover(isPresented: $showsScanner) {
-            ZStack(alignment: .topTrailing) {
-                QRScannerView { scanned in
-                    if let id = SessionUploader.sessionID(from: scanned) {
-                        sessionID = id
-                        uploader.send(payload(), sessionID: id)
-                    }
-                    showsScanner = false
-                }
-                .ignoresSafeArea()
-
-                Button { showsScanner = false } label: {
-                    Text(strings.close)
-                        .font(Typeface.digits(15, .black))
-                        .foregroundStyle(Palette.onAccent)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 10)
-                        .background(Capsule().fill(.white))
-                }
-                .buttonStyle(.plain)
-                .padding(24)
             }
         }
     }

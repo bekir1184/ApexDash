@@ -5,8 +5,13 @@ import SwiftUI
 struct WebGuideView: View {
     let strings: Strings
     let unit: CGFloat
-    let sessionID: String
+    @Binding var sessionID: String
+    @ObservedObject var uploader: SessionUploader
+    let payload: () -> SessionUploader.Payload
     let onClose: () -> Void
+
+    @State private var showsScanner = false
+    @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: unit * 0.3) {
@@ -30,7 +35,7 @@ struct WebGuideView: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .fixedSize(horizontal: false, vertical: true)
 
-            // Adres, bir bakista okunacak kadar buyuk.
+            // Adres: bir bakista okunur, yanindan kopyalanir ya da paylasilir.
             HStack(spacing: unit * 0.25) {
                 Image(systemName: "safari")
                     .font(Typeface.font(unit * 0.5, .bold))
@@ -40,6 +45,33 @@ struct WebGuideView: View {
                     .foregroundStyle(.white)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
+                Spacer(minLength: unit * 0.3)
+                Button {
+                    UIPasteboard.general.string = LapExport.siteURL
+                    withAnimation(.spring(duration: 0.25)) { copied = true }
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(2))
+                        withAnimation(.spring(duration: 0.25)) { copied = false }
+                    }
+                } label: {
+                    Label(copied ? strings.copied : strings.copyLink,
+                          systemImage: copied ? "checkmark" : "doc.on.doc")
+                        .font(Typeface.font(unit * 0.24, .heavy))
+                        .foregroundStyle(copied ? Palette.live : .white.opacity(0.75))
+                        .padding(.horizontal, unit * 0.26)
+                        .padding(.vertical, unit * 0.12)
+                        .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
+                }
+                .buttonStyle(PressScaleStyle())
+
+                ShareLink(item: URL(string: LapExport.siteURL)!) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(Typeface.font(unit * 0.3, .heavy))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .padding(unit * 0.16)
+                        .background(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
+                }
+                .buttonStyle(PressScaleStyle())
             }
             .padding(.horizontal, unit * 0.4)
             .padding(.vertical, unit * 0.22)
@@ -55,16 +87,78 @@ struct WebGuideView: View {
                 step(3, strings.webGuideStep3)
             }
 
-            HStack(spacing: unit * 0.2) {
-                Image(systemName: sessionID.isEmpty ? "link.badge.plus" : "checkmark.circle.fill")
-                    .foregroundStyle(sessionID.isEmpty ? .white.opacity(0.4) : Palette.live)
-                Text(verbatim: sessionID.isEmpty ? strings.webGuideNotPaired
-                                                 : strings.connectedTo(sessionID))
-                    .foregroundStyle(sessionID.isEmpty ? .white.opacity(0.4) : Palette.live)
+            // Eslestirme: QR buradan okutulur.
+            HStack(spacing: unit * 0.3) {
+                if sessionID.isEmpty {
+                    Button { showsScanner = true } label: {
+                        Label(strings.scanQR, systemImage: "qrcode.viewfinder")
+                            .font(Typeface.font(unit * 0.3, .black))
+                            .foregroundStyle(Palette.onAccent)
+                            .padding(.horizontal, unit * 0.5)
+                            .padding(.vertical, unit * 0.18)
+                            .background(Capsule().fill(Palette.accent))
+                    }
+                    .buttonStyle(PressScaleStyle())
+
+                    Text(verbatim: strings.webGuideNotPaired)
+                        .font(Typeface.font(unit * 0.26, .heavy))
+                        .foregroundStyle(.white.opacity(0.4))
+                } else {
+                    HStack(spacing: unit * 0.16) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text(verbatim: strings.connectedTo(sessionID))
+                    }
+                    .font(Typeface.font(unit * 0.28, .heavy))
+                    .foregroundStyle(Palette.live)
+
+                    Button { uploader.send(payload(), sessionID: sessionID) } label: {
+                        Text(strings.sendNow)
+                            .font(Typeface.font(unit * 0.26, .black))
+                            .foregroundStyle(Palette.onAccent)
+                            .padding(.horizontal, unit * 0.4)
+                            .padding(.vertical, unit * 0.14)
+                            .background(Capsule().fill(Palette.accent))
+                    }
+                    .buttonStyle(PressScaleStyle())
+
+                    Button { sessionID = "" } label: {
+                        Text(strings.disconnect)
+                            .font(Typeface.font(unit * 0.24, .heavy))
+                            .foregroundStyle(.white.opacity(0.55))
+                    }
+                    .buttonStyle(PressScaleStyle())
+                }
+                Spacer(minLength: 0)
+                if let date = uploader.lastUploadDate, !sessionID.isEmpty {
+                    Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
+                        .font(Typeface.font(unit * 0.22, .medium))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
             }
-            .font(Typeface.font(unit * 0.26, .heavy))
 
             Spacer(minLength: 0)
+        }
+        .fullScreenCover(isPresented: $showsScanner) {
+            ZStack(alignment: .topTrailing) {
+                QRScannerView { scanned in
+                    if let id = SessionUploader.sessionID(from: scanned) {
+                        sessionID = id
+                        uploader.send(payload(), sessionID: id)
+                    }
+                    showsScanner = false
+                }
+                .ignoresSafeArea()
+
+                Button { showsScanner = false } label: {
+                    Image(systemName: "xmark")
+                        .font(Typeface.font(18, .black))
+                        .foregroundStyle(.black)
+                        .padding(14)
+                        .background(Circle().fill(.white))
+                }
+                .buttonStyle(PressScaleStyle())
+                .padding(24)
+            }
         }
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)

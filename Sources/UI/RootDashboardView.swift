@@ -326,7 +326,8 @@ struct RootDashboardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             if showsWebGuide {
-                WebGuideView(strings: strings, unit: unit, sessionID: sessionID) {
+                WebGuideView(strings: strings, unit: unit, sessionID: $sessionID,
+                             uploader: uploader, payload: { uploadPayload }) {
                     withAnimation(spring) { showsWebGuide = false }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
