@@ -43,7 +43,7 @@ struct RetroHUD {
         let pad = size.height * 0.05
         let gap = size.width * 0.012
         // Bolme genislikleri: son bolme biraz daha genis.
-        let weights: [CGFloat] = [0.82, 1.3, 1.45]
+        let weights: [CGFloat] = [0.72, 1.5, 1.38]
         let usable = size.width - 2 * pad - gap * CGFloat(weights.count - 1)
         let total = weights.reduce(0, +)
 
@@ -166,17 +166,20 @@ struct RetroHUD {
     // MARK: Bolme 2 - devir saati
 
     private func drawTacho(in ctx: inout GraphicsContext, rect: CGRect) {
-        let radius = min(rect.width * 0.44, rect.height * 0.42)
-        // Yarim daire dikeyde ortalansin: merkez, yayin alt kenari olur.
-        let centre = CGPoint(x: rect.midX, y: rect.midY + radius * 0.55)
-        let inner = radius * 0.58
-        let steps = 22
+        // Yay kutunun genisligini doldurur ve ustte durur; altinda olcek yazisi.
+        let radius = min(rect.width * 0.47, rect.height * 0.68)
+        // Yay ve olcek rakamlari bolmede dikeyde ortalanir.
+        let centre = CGPoint(x: rect.midX, y: rect.minY + (rect.height + radius * 1.24) / 2)
+        let inner = radius * 0.62
+        let steps = 26
         let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
         let lit = Int((fraction * Double(steps)).rounded())
 
+        // Once tum band cizilir, sonra ustune ince ayiraclar konur: referansta
+        // parcalar arasi bosluk degil, cizgi var.
         for i in 0..<steps {
-            let a0 = Double.pi + Double(i) * Double.pi / Double(steps) + 0.012
-            let a1 = Double.pi + Double(i + 1) * Double.pi / Double(steps) - 0.012
+            let a0 = Double.pi + Double(i) * Double.pi / Double(steps)
+            let a1 = Double.pi + Double(i + 1) * Double.pi / Double(steps)
             var seg = Path()
             seg.addArc(center: centre, radius: inner, startAngle: .radians(a0),
                        endAngle: .radians(a1), clockwise: false)
@@ -185,37 +188,50 @@ struct RetroHUD {
             seg.closeSubpath()
             ctx.fill(seg, with: .color(i < lit ? bright : dim))
         }
-
-        // Olcek sayilari: devir bininci basamakta.
-        let maxK = max(dash.maxRPM / 1000, 1)
-        for i in 0...5 {
-            let t = Double(i) / 5
-            let a = Double.pi + t * Double.pi
-            let r = radius * 1.26
-            let p = CGPoint(x: centre.x + r * CGFloat(cos(a)),
-                            y: centre.y + r * CGFloat(sin(a)) + rect.height * 0.03)
-            text(&ctx, "\(Int((Double(maxK) * t).rounded()))",
-                 size: rect.height * 0.08, colour: mid, at: p)
+        var dividers = Path()
+        for i in 0...steps {
+            let a = Double.pi + Double(i) * Double.pi / Double(steps)
+            dividers.move(to: CGPoint(x: centre.x + inner * CGFloat(cos(a)),
+                                      y: centre.y + inner * CGFloat(sin(a))))
+            dividers.addLine(to: CGPoint(x: centre.x + radius * CGFloat(cos(a)),
+                                         y: centre.y + radius * CGFloat(sin(a))))
         }
+        ctx.stroke(dividers, with: .color(Color(red: 0.07, green: 0.04, blue: 0.04)),
+                   lineWidth: max(1, radius * 0.018))
 
-        segments(&ctx, dash.gearLabel,
-                 rect: CGRect(x: centre.x - inner * 0.36, y: centre.y - inner * 0.94,
-                              width: inner * 0.72, height: inner * 0.9))
-        // Yayin disina tirnaklar, referanstaki gibi.
+        // Bandin disinda tirnaklar.
         var ticks = Path()
-        for i in 0...20 {
-            let a = Double.pi + Double(i) * Double.pi / 20
-            let long = i % 5 == 0
-            let r0 = radius * 1.02, r1 = radius * (long ? 1.13 : 1.08)
-            ticks.move(to: CGPoint(x: centre.x + r0 * CGFloat(cos(a)),
-                                   y: centre.y + r0 * CGFloat(sin(a))))
+        for i in 0...steps {
+            guard i % 2 == 0 else { continue }
+            let a = Double.pi + Double(i) * Double.pi / Double(steps)
+            let r1 = radius * 1.09
+            ticks.move(to: CGPoint(x: centre.x + radius * 1.02 * CGFloat(cos(a)),
+                                   y: centre.y + radius * 1.02 * CGFloat(sin(a))))
             ticks.addLine(to: CGPoint(x: centre.x + r1 * CGFloat(cos(a)),
                                       y: centre.y + r1 * CGFloat(sin(a))))
         }
-        ctx.stroke(ticks, with: .color(mid), lineWidth: max(1, rect.height * 0.006))
+        ctx.stroke(ticks, with: .color(mid.opacity(0.8)), lineWidth: max(1, radius * 0.016))
 
-        text(&ctx, "x1000 RPM", size: rect.height * 0.062, colour: mid,
-             at: CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.01))
+        // Olcek rakamlari: bininci basamak, yayin disinda ve tam sayi.
+        let maxK = max(dash.maxRPM / 1000, 1)
+        let intervals = [5, 4, 6, 3].first { maxK % $0 == 0 } ?? 5
+        for i in 0...intervals {
+            let t = Double(i) / Double(intervals)
+            let a = Double.pi + t * Double.pi
+            let r = radius * 1.17
+            // Uctaki rakamlar bolmenin disina tasmasin.
+            let x = min(max(centre.x + r * CGFloat(cos(a)), rect.minX + radius * 0.14),
+                        rect.maxX - radius * 0.14)
+            let p = CGPoint(x: x, y: centre.y + r * CGFloat(sin(a)) + radius * 0.06)
+            text(&ctx, "\(maxK * i / intervals)", size: radius * 0.17, colour: mid, at: p)
+        }
+
+        // Yayin icinde: kucuk olcek yazisi ve altinda buyuk vites.
+        text(&ctx, "x1000 RPM", size: radius * 0.105, colour: mid,
+             at: CGPoint(x: centre.x, y: centre.y - inner * 0.82))
+        segments(&ctx, dash.gearLabel,
+                 rect: CGRect(x: centre.x - inner * 0.5, y: centre.y - inner * 0.72,
+                              width: inner, height: inner * 0.72))
     }
 
     // MARK: Bolme 3 - hiz ve tur
