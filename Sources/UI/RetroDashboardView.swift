@@ -12,8 +12,8 @@ struct RetroDashboardView: View {
                 let hud = RetroHUD(dash: dash, size: size)
                 // Once bulanik bir kopya cizilir: tuplerin cevresindeki isima.
                 var glow = context
-                glow.addFilter(.blur(radius: size.height * 0.011))
-                glow.opacity = 0.85
+                glow.addFilter(.blur(radius: size.height * 0.009))
+                glow.opacity = 0.55
                 hud.draw(in: &glow)
                 hud.draw(in: &context)
                 hud.drawScanlines(in: &context)
@@ -28,11 +28,16 @@ struct RetroHUD {
     let dash: DashboardModel
     let size: CGSize
 
-    // Fosfor kirmizisi: parlak, sonuk ve cerceve tonlari.
-    let bright = Color(red: 1.0, green: 0.27, blue: 0.16)
-    let mid = Color(red: 0.85, green: 0.18, blue: 0.10)
-    let dim = Color(red: 1.0, green: 0.27, blue: 0.16).opacity(0.13)
-    let frame = Color(red: 0.55, green: 0.12, blue: 0.07)
+    // Referanstaki gibi: mercan kirmizisi parcalar, beyaz yazi ve cizgiler.
+    let bright = Color(red: 0.878, green: 0.416, blue: 0.376)
+    /// Yanmayan parcalar: ayni kirmizinin cok koyu tonu.
+    let dim = Color(red: 0.361, green: 0.145, blue: 0.129)
+    /// Etiketler ve rakam olcekleri beyaz.
+    let mid = Color(red: 0.96, green: 0.95, blue: 0.94)
+    /// Cerceve ve ayirici cizgiler.
+    let frame = Color.white.opacity(0.55)
+    /// Zemindeki kareli doku.
+    let grid = Color.white.opacity(0.10)
 
     func draw(in ctx: inout GraphicsContext) {
         let pad = size.height * 0.05
@@ -63,15 +68,15 @@ struct RetroHUD {
         // Kareli zemin, cerceveye kirpilir.
         var inside = ctx
         inside.clip(to: box)
-        var grid = Path()
+        var lines = Path()
         let step = rect.height * 0.072
         var gx = rect.minX
-        while gx < rect.maxX { grid.move(to: CGPoint(x: gx, y: rect.minY))
-                               grid.addLine(to: CGPoint(x: gx, y: rect.maxY)); gx += step }
+        while gx < rect.maxX { lines.move(to: CGPoint(x: gx, y: rect.minY))
+                               lines.addLine(to: CGPoint(x: gx, y: rect.maxY)); gx += step }
         var gy = rect.minY
-        while gy < rect.maxY { grid.move(to: CGPoint(x: rect.minX, y: gy))
-                               grid.addLine(to: CGPoint(x: rect.maxX, y: gy)); gy += step }
-        inside.stroke(grid, with: .color(frame.opacity(0.32)), lineWidth: max(0.5, rect.height * 0.003))
+        while gy < rect.maxY { lines.move(to: CGPoint(x: rect.minX, y: gy))
+                               lines.addLine(to: CGPoint(x: rect.maxX, y: gy)); gy += step }
+        inside.stroke(lines, with: .color(grid), lineWidth: max(0.5, rect.height * 0.0025))
 
         ctx.stroke(box, with: .color(frame), lineWidth: max(1, rect.height * 0.008))
 
@@ -79,7 +84,7 @@ struct RetroHUD {
         let track = rect.height * 0.01
         let titleSize = fitted(title, size: rect.height * 0.075,
                                width: rect.width * 0.82, tracking: track)
-        text(&ctx, title, size: titleSize, colour: bright, tracking: track,
+        text(&ctx, title, size: titleSize, colour: mid, tracking: track,
              at: CGPoint(x: rect.midX, y: rect.minY + titleHeight * 0.72))
         var line = Path()
         line.move(to: CGPoint(x: rect.minX, y: rect.minY + titleHeight))
@@ -121,7 +126,7 @@ struct RetroHUD {
         line.move(to: CGPoint(x: rect.minX, y: footY - rect.height * 0.13))
         line.addLine(to: CGPoint(x: rect.maxX, y: footY - rect.height * 0.13))
         ctx.stroke(line, with: .color(frame), lineWidth: max(1, rect.height * 0.005))
-        text(&ctx, "ERS", size: rect.height * 0.09, colour: bright,
+        text(&ctx, "ERS", size: rect.height * 0.09, colour: mid,
              anchor: .leading, at: CGPoint(x: rect.minX, y: footY))
         let percent = Int((dash.ersFraction * 100).rounded())
         segments(&ctx, String(format: "%3d", percent),
@@ -406,7 +411,7 @@ struct RetroHUD {
                        at point: CGPoint, rect: CGRect) {
         let width = rect.maxX - point.x
         text(&ctx, string, size: fitted(string, size: rect.height * 0.075, width: width),
-             colour: bright, anchor: .leading, at: point)
+             colour: mid, anchor: .leading, at: point)
     }
 
     private func level(_ value: Int, from low: Int, to high: Int) -> Double {
