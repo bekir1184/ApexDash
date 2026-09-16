@@ -18,6 +18,10 @@ struct QRScannerView: UIViewControllerRepresentable {
         private let session = AVCaptureSession()
         private var preview: AVCaptureVideoPreviewLayer?
         private var handled = false
+        /// Uygulama yalnizca yatay calisir; kamera goruntusu arayuzun yonune
+        /// dondurulmezse yan akar ve telefon hareketi ters yone gider.
+        private var rotation: AVCaptureDevice.RotationCoordinator?
+        private var rotationObservation: NSKeyValueObservation?
 
         override func viewDidLoad() {
             super.viewDidLoad()
@@ -44,7 +48,20 @@ struct QRScannerView: UIViewControllerRepresentable {
             view.layer.addSublayer(preview)
             self.preview = preview
 
+            let coordinator = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: preview)
+            rotation = coordinator
+            applyRotation(coordinator.videoRotationAngleForHorizonLevelPreview)
+            rotationObservation = coordinator.observe(\.videoRotationAngleForHorizonLevelPreview, options: [.new]) { [weak self] _, change in
+                guard let angle = change.newValue else { return }
+                DispatchQueue.main.async { self?.applyRotation(angle) }
+            }
+
             Task.detached { [session] in session.startRunning() }
+        }
+
+        private func applyRotation(_ angle: CGFloat) {
+            guard let connection = preview?.connection, connection.isVideoRotationAngleSupported(angle) else { return }
+            connection.videoRotationAngle = angle
         }
 
         override func viewDidLayoutSubviews() {
