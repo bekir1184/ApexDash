@@ -292,7 +292,7 @@ struct DashboardCard: View {
     var halo = false
 
     var body: some View {
-        let feather = halo ? cornerRadius * 0.45 : 0
+        let feather = halo ? cornerRadius * 0.22 : 0
         screen
             // Secili kartin kenari zemine yumusakca karisir.
             .mask {
@@ -303,8 +303,8 @@ struct DashboardCard: View {
             .background {
                 if halo {
                     screen
-                        .scaleEffect(1.07)
-                        .blur(radius: cornerRadius * 1.1)
+                        .scaleEffect(1.04)
+                        .blur(radius: cornerRadius * 0.7)
                         .saturation(1.4)
                         .opacity(0.8)
                         .transition(.opacity)
