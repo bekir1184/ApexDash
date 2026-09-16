@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apex Dash · Telemetri</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -36,6 +38,8 @@
   .top { display: flex; align-items: center; gap: 22px; padding: 12px 20px; border-bottom: 1px solid var(--line);
          background: rgba(18,18,25,.92); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 5; }
   .top h1 { margin: 0; font-size: 17px; letter-spacing: .32em; font-weight: 900; }
+  .top h1 { display: flex; align-items: center; gap: 10px; }
+  .top h1 .logo { width: 26px; height: 26px; border-radius: 6px; }
   .top h1 span { color: var(--accent); }
   .top .meta { display: flex; gap: 22px; margin-left: auto; align-items: center; }
   .top .meta div { display: flex; flex-direction: column; line-height: 1.15; }
@@ -110,7 +114,7 @@
 <body>
 
 <div class="top">
-  <h1>APEX<span>DASH</span></h1>
+  <h1><img class="logo" src="/logo.svg" alt="">APEX<span>DASH</span></h1>
   <span class="label">Telemetri Analizi</span>
   <div class="meta">
     <div><b>Pist</b><u id="trackName">—</u></div>
