@@ -24,6 +24,8 @@ struct RootDashboardView: View {
     @State private var showsOnboarding = !UserDefaults.standard.bool(forKey: "didCompleteOnboarding")
         || UserDefaults.standard.bool(forKey: "forceOnboarding")
     @State private var showsSetup = false
+    /// Her acilista kisa acilis ekrani; tanitim varsa onun kendi acilisi yeter.
+    @State private var showsSplash = true
     @State private var showsSettings = false
     /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
     @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
@@ -361,6 +363,10 @@ struct RootDashboardView: View {
                     showsOnboarding = false
                 }
                 .zIndex(20)
+            }
+            if showsSplash && !showsOnboarding {
+                SplashView(unit: unit) { showsSplash = false }
+                    .zIndex(30)
             }
         }
     }

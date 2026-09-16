@@ -45,6 +45,7 @@
 		B1BAFB2A6B5918BE133216E0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB5CB276ACF999183003EBB /* SettingsView.swift */; };
 		B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 56622242113FF35F0E80210C /* SAIRA-OFL.txt */; };
 		B574C53CFBBB238FA278C6A3 /* LapExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528970F575D7C7DE3D11948A /* LapExport.swift */; };
+		B60C4AE029E4D7B5A3E4483A /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EF28A59EB57FD0629F5AD0 /* SplashView.swift */; };
 		C2D5B8A69632DBFA7717A41F /* SectorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */; };
 		CFA90CB50BD5A6C02AB8C0F6 /* Packets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649A94D840EE45BF903A68F /* Packets.swift */; };
 		DC368D282C3F6DF61ABE55AD /* GameDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */; };
@@ -85,6 +86,7 @@
 		421795F1F46A0D96A98E27F7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		423199CC0F31539536E11CDB /* ClusterDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterDashboardView.swift; sourceTree = "<group>"; };
 		425E7F8ABFB292E799328D6B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		43EF28A59EB57FD0629F5AD0 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealisticDashboardView.swift; sourceTree = "<group>"; };
 		528970F575D7C7DE3D11948A /* LapExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapExport.swift; sourceTree = "<group>"; };
 		56622242113FF35F0E80210C /* SAIRA-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SAIRA-OFL.txt"; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 				8BB5CB276ACF999183003EBB /* SettingsView.swift */,
 				62142A6E18D317F91D53AF82 /* SetupView.swift */,
 				2FDFE873E35C11A0A241F921 /* ShiftFlashOverlay.swift */,
+				43EF28A59EB57FD0629F5AD0 /* SplashView.swift */,
 				83CA98442171449A28BA231B /* StartLightsView.swift */,
 				23BA05288D4012C11EF8CD89 /* Theme.swift */,
 				B18A785D9AA723C02BE0B5E2 /* Typeface.swift */,
@@ -368,6 +371,7 @@
 				2778EBD11D8DB0A0A27E6FF8 /* SetupView.swift in Sources */,
 				31587BF704B74C177D7C3FCC /* ShiftFlashOverlay.swift in Sources */,
 				5F8D43409E9EA7CBDBAE795E /* ShiftTorch.swift in Sources */,
+				B60C4AE029E4D7B5A3E4483A /* SplashView.swift in Sources */,
 				DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */,
 				848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */,
 				52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */,

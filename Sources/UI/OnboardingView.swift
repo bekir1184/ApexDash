@@ -366,15 +366,7 @@ private struct IgnitionScene: View {
     @State private var shown = false
 
     var body: some View {
-        VStack(spacing: unit * 0.42) {
-            ShiftBars(lit: 5, barWidth: unit * 0.3, barHeight: unit * 1.0, spacing: unit * 0.17)
-            HStack(spacing: 0) {
-                Text(verbatim: "APEX").foregroundStyle(.white)
-                Text(verbatim: "DASH").foregroundStyle(Palette.accent)
-            }
-            .font(Typeface.font(unit * 0.95, .black))
-            .tracking(unit * 0.07)
-        }
+        SplashLogo(unit: unit)
         .scaleEffect(shown ? 1 : 0.94)
         .opacity(shown ? 1 : 0)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

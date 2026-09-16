@@ -30,7 +30,8 @@ targets:
           - tr
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UIStatusBarHidden: true
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations:
