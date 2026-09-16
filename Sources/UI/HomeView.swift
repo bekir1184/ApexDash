@@ -285,18 +285,9 @@ struct DashboardCard: View {
         .frame(width: width, height: fullSize.height * scale)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .overlay {
-            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            if highlighted {
-                // Secili kart: kalin kirmizi cerceve, disina ve icine isima.
-                shape.stroke(Palette.accent, lineWidth: cornerRadius * 0.16)
-                    .shadow(color: Palette.accent.opacity(0.85), radius: cornerRadius * 0.5)
-                    .shadow(color: Palette.accent.opacity(0.5), radius: cornerRadius * 1.2)
-            } else {
-                shape.stroke(Color.white.opacity(0.12), lineWidth: 1.5)
-            }
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
         }
-        .shadow(color: highlighted ? Palette.accent.opacity(0.35) : .clear,
-                radius: cornerRadius * 1.6)
         .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
     }
 }
