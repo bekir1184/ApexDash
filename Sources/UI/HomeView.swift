@@ -49,7 +49,7 @@ struct HomeView: View {
                     Spacer(minLength: 0)
                     carousel(size: size, cardW: cardW, cardH: cardH)
                         .frame(height: cardH * 1.12)
-                    titleAndDots
+                    themeTitle
                         .padding(.top, unit * 0.18)
                     Spacer(minLength: 0)
                     footer
@@ -200,23 +200,13 @@ struct HomeView: View {
         return candidates.min { abs($0 - current) < abs($1 - current) } ?? current
     }
 
-    private var titleAndDots: some View {
-        VStack(spacing: unit * 0.14) {
-            Text(strings.themeTitle(selectedTheme))
-                .font(Typeface.font(unit * 0.34, .black))
-                .foregroundStyle(.white)
-                .tracking(unit * 0.05)
-                .contentTransition(.numericText())
-                .animation(.spring(duration: 0.3), value: selectedTheme)
-            HStack(spacing: unit * 0.12) {
-                ForEach(themes) { theme in
-                    Circle()
-                        .fill(theme == selectedTheme ? Palette.accent : Color.white.opacity(0.25))
-                        .frame(width: unit * 0.1, height: unit * 0.1)
-                }
-            }
+    private var themeTitle: some View {
+        Text(strings.themeTitle(selectedTheme))
+            .font(Typeface.font(unit * 0.34, .black))
+            .foregroundStyle(.white)
+            .tracking(unit * 0.05)
+            .contentTransition(.numericText())
             .animation(.spring(duration: 0.3), value: selectedTheme)
-        }
     }
 
     // MARK: Alt cubuk
