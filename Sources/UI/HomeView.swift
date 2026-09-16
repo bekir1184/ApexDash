@@ -25,6 +25,9 @@ struct HomeView: View {
     /// Uzerine gelinen kartin isinma animasyonu: hangi kart, ne zaman basladi.
     @State private var warmUpIndex: Int?
     @State private var warmUpStart: Date = .distantPast
+    /// Isinma oynarken tam kare hizinda cizilir; diger zamanlarda 10 Hz yeter.
+    @State private var warming = false
+    @State private var warmUpEnd: Task<Void, Never>?
     @State private var showsConnection = false
 
     private let themes = DashTheme.allCases
@@ -44,19 +47,8 @@ struct HomeView: View {
                     header
                         .padding(.horizontal, unit * 0.5)
                     Spacer(minLength: 0)
-                    TimelineView(.animation) { context in
-                        let live = client.status == .receiving
-                        let elapsed = context.date.timeIntervalSince(warmUpStart)
-                        carousel(size: size, cardW: cardW, cardH: cardH) { index in
-                            if let frozenDash { return frozenDash }
-                            if live { return client.dash }
-                            // Baglanti yokken panolar soguk durur; yalnizca uzerine
-                            // yeni gelinen kart bir kez canlanir.
-                            guard index == warmUpIndex, elapsed < DashboardModel.warmUpDuration else { return .cold }
-                            return .warmUp(at: elapsed)
-                        }
-                    }
-                    .frame(height: cardH * 1.12)
+                    carousel(size: size, cardW: cardW, cardH: cardH)
+                        .frame(height: cardH * 1.12)
                     titleAndDots
                         .padding(.top, unit * 0.18)
                     Spacer(minLength: 0)
@@ -86,7 +78,16 @@ struct HomeView: View {
                 if old.map({ themes[$0 % themes.count] }) != theme {
                     warmUpIndex = new
                     // Ilk kart acilis ekraninin arkasinda kalmasin: o bitince oynar.
-                    warmUpStart = Date().addingTimeInterval(old == nil ? 2.3 : 0)
+                    // Diger kartlarda kaydirma durulana kadar kisa bir bekleme.
+                    let delay = old == nil ? 2.3 : 0.45
+                    warmUpStart = Date().addingTimeInterval(delay)
+                    warming = true
+                    warmUpEnd?.cancel()
+                    warmUpEnd = Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(delay + DashboardModel.warmUpDuration + 0.1))
+                        guard !Task.isCancelled else { return }
+                        warming = false
+                    }
                 } else if warmUpIndex == old {
                     warmUpIndex = new
                 }
@@ -128,17 +129,30 @@ struct HomeView: View {
 
     // MARK: Karusel
 
-    private func carousel(size: CGSize, cardW: CGFloat, cardH: CGFloat,
-                          dash: @escaping (Int) -> DashboardModel) -> some View {
+    /// Kartin o anki verisi. Baglanti yokken panolar soguk durur; yalnizca
+    /// uzerine yeni gelinen kart bir kez canlanir.
+    private func dash(for index: Int, at date: Date) -> DashboardModel {
+        if let frozenDash { return frozenDash }
+        if client.status == .receiving { return client.dash }
+        let elapsed = date.timeIntervalSince(warmUpStart)
+        guard index == warmUpIndex, elapsed < DashboardModel.warmUpDuration else { return .cold }
+        return .warmUp(at: elapsed)
+    }
+
+    private func carousel(size: CGSize, cardW: CGFloat, cardH: CGFloat) -> some View {
         let sidePad = (size.width - cardW) / 2
         return ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
                 ForEach(0..<itemCount, id: \.self) { index in
                     let theme = themes[index % themes.count]
                     let isCentre = index == position
-                    DashboardCard(theme: theme, dash: dash(index), strings: strings,
-                                  fullSize: size, width: cardW, cornerRadius: unit * 0.35,
-                                  highlighted: isCentre, halo: isCentre)
+                    // Her kart kendi saatiyle cizilir: yalnizca isinan kart tam
+                    // kare hizinda, digerleri 10 Hz ile (canli veri icin).
+                    TimelineView(.animation(minimumInterval: warming && index == warmUpIndex ? nil : 0.1)) { context in
+                        DashboardCard(theme: theme, dash: dash(for: index, at: context.date), strings: strings,
+                                      fullSize: size, width: cardW, cornerRadius: unit * 0.35,
+                                      highlighted: isCentre, halo: isCentre)
+                    }
                         .opacity(isCentre && hidesCentreCard ? 0 : 1)
                         .background {
                             if isCentre {
