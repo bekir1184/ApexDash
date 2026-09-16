@@ -678,11 +678,13 @@ private struct TrackTrace: View {
         GeometryReader { geo in
             let height = min(geo.size.height * 0.96, geo.size.width / StreetCircuit.aspect)
             let size = CGSize(width: height * StreetCircuit.aspect, height: height)
-            let radius = unit * 0.35
             ZStack {
+                // Sehir zemine karisir: kart yok, kenarlar yumusakca kaybolur.
                 Canvas { context, canvasSize in
                     StreetCircuit.drawCity(in: &context, size: canvasSize)
                 }
+                .mask(RadialGradient(colors: [.white, .white.opacity(0.6), .clear], center: .center,
+                                     startRadius: size.width * 0.2, endRadius: size.height * 0.62))
 
                 // Pistin isimasi, sonra kendisi.
                 CircuitShape()
@@ -715,10 +717,6 @@ private struct TrackTrace: View {
                 .animation(.easeIn(duration: 0.5).delay(1.9), value: shown)
             }
             .frame(width: size.width, height: size.height)
-            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1))
-            .shadow(color: .black.opacity(0.6), radius: unit * 0.4, y: unit * 0.2)
             .animation(.easeInOut(duration: 1.8).delay(0.35), value: shown)
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -836,30 +834,21 @@ private enum StreetCircuit {
         let k = size.width / mapSize.width
         let sy = size.height / mapSize.height
 
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(white: 0.15)))
-
         for line in city.streets {
             var path = Path()
             for (n, p) in line.enumerated() {
                 let q = CGPoint(x: p.x * k, y: p.y * sy)
                 if n == 0 { path.move(to: q) } else { path.addLine(to: q) }
             }
-            context.stroke(path, with: .color(Color(white: 0.23)),
+            context.stroke(path, with: .color(Color.white.opacity(0.06)),
                            style: StrokeStyle(lineWidth: max(1.2, 5 * k), lineCap: .round, lineJoin: .round))
         }
         for block in city.blocks {
             let r = CGRect(x: block.rect.minX * k, y: block.rect.minY * sy,
                            width: block.rect.width * k, height: block.rect.height * sy)
-            context.fill(Path(roundedRect: r, cornerRadius: 1.5), with: .color(Color(white: block.shade)))
+            context.fill(Path(roundedRect: r, cornerRadius: 1.5), with: .color(Color.white.opacity(block.shade - 0.13)))
         }
 
-        var water = Path()
-        for (n, p) in sea.enumerated() {
-            let q = CGPoint(x: p.x * k, y: p.y * sy)
-            if n == 0 { water.move(to: q) } else { water.addLine(to: q) }
-        }
-        water.closeSubpath()
-        context.fill(water, with: .color(Color(white: 0.02)))
     }
 
     private static func inside(_ p: CGPoint, _ polygon: [CGPoint]) -> Bool {
