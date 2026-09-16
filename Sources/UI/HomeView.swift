@@ -138,7 +138,7 @@ struct HomeView: View {
                     let isCentre = index == position
                     DashboardCard(theme: theme, dash: dash(index), strings: strings,
                                   fullSize: size, width: cardW, cornerRadius: unit * 0.35,
-                                  highlighted: isCentre)
+                                  highlighted: isCentre, halo: isCentre)
                         .opacity(isCentre && hidesCentreCard ? 0 : 1)
                         .background {
                             if isCentre {
@@ -151,8 +151,6 @@ struct HomeView: View {
                             content
                                 .scaleEffect(1 - abs(phase.value) * 0.26)
                                 .opacity(1 - abs(phase.value) * 0.45)
-                                // Alan derinligi: yandaki kartlar bulaniklasir, secili net kalir.
-                                .blur(radius: abs(phase.value) * unit * 0.08)
                         }
                         .frame(width: cardW, height: cardH)
                         .onTapGesture {
@@ -290,11 +288,29 @@ struct DashboardCard: View {
     let width: CGFloat
     let cornerRadius: CGFloat
     var highlighted = false
+    /// Secili kart: ekranin kendi renkleri kenarindan disari hafifce tasar.
+    var halo = false
 
     var body: some View {
+        screen
+            .background {
+                if halo {
+                    screen
+                        .scaleEffect(1.07)
+                        .blur(radius: cornerRadius * 1.1)
+                        .saturation(1.4)
+                        .opacity(0.8)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.35), value: halo)
+            .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
+    }
+
+    private var screen: some View {
         let scale = width / fullSize.width
         let fullUnit = min(fullSize.width / 15.2, fullSize.height / 8.2)
-        ZStack {
+        return ZStack {
             DashboardBackground(theme: theme, unit: fullUnit)
             DashboardContent(theme: theme, dash: dash, unit: fullUnit, strings: strings)
                 .padding(.vertical, fullUnit * 0.16)
@@ -309,7 +325,6 @@ struct DashboardCard: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
         }
-        .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
     }
 }
 
