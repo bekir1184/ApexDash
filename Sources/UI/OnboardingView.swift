@@ -363,18 +363,9 @@ private struct IgnitionScene: View {
     let unit: CGFloat
     let onDone: () -> Void
 
-    @State private var shown = false
-
     var body: some View {
-        SplashLogo(unit: unit)
-        .scaleEffect(shown ? 1 : 0.94)
-        .opacity(shown ? 1 : 0)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task {
-            withAnimation(.easeOut(duration: 0.6)) { shown = true }
-            try? await Task.sleep(for: .milliseconds(1500))
-            onDone()
-        }
+        SplashLogo(unit: unit, onDone: onDone)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
