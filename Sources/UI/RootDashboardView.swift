@@ -28,6 +28,7 @@ struct RootDashboardView: View {
     @State private var showsSetup = false
     /// Her acilista kisa acilis ekrani; tanitim varsa onun kendi acilisi yeter.
     @State private var showsSplash = true
+    @State private var warnsAfterOnboarding = false
     @State private var showsSettings = false
     /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
     @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
@@ -346,9 +347,12 @@ struct RootDashboardView: View {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            if !didShowFlashWarning && !showsOnboarding {
+            if (!didShowFlashWarning || warnsAfterOnboarding) && !showsOnboarding {
                 FlashWarningView(strings: strings, unit: unit) {
-                    withAnimation(.easeOut(duration: 0.3)) { didShowFlashWarning = true }
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        didShowFlashWarning = true
+                        warnsAfterOnboarding = false
+                    }
                 }
                 .transition(.opacity)
                 .zIndex(10)
@@ -363,13 +367,15 @@ struct RootDashboardView: View {
             }
             if showsOnboarding {
                 // Son sahne isik uyarisini ve baglanti adresini de verir.
-                OnboardingView(strings: strings, unit: unit, localIP: client.localIP, port: udpPort) {
+                OnboardingView(strings: strings, unit: unit, localIP: client.localIP, port: udpPort,
+                               format: $udpFormat) {
                     didCompleteOnboarding = true
-                    didShowFlashWarning = true
                     didCompleteSetup = true
                     // Tanitim kendi acilisiyla basladi; bitince tekrar gosterilmez.
                     showsSplash = false
-                    showsOnboarding = false
+                    // Menuye gecmeden isik uyarisi: tanitimin son adimi.
+                    warnsAfterOnboarding = true
+                    withAnimation(.easeOut(duration: 0.35)) { showsOnboarding = false }
                 }
                 .zIndex(20)
             }

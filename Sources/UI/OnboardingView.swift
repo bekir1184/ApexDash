@@ -13,6 +13,7 @@ struct OnboardingView: View {
     let unit: CGFloat
     let localIP: String
     let port: Int
+    @Binding var format: Int
     let onFinish: () -> Void
 
     /// `-onboardingPage N` ile dogrudan bir sahneden baslar; ekran goruntusu icin.
@@ -67,7 +68,7 @@ struct OnboardingView: View {
         case 1:
             DashesScene(strings: strings, unit: unit)
         case 2:
-            ConnectScene(strings: strings, unit: unit, localIP: localIP, port: port)
+            ConnectScene(strings: strings, unit: unit, localIP: localIP, port: port, format: $format)
         case 3:
             AnalyseScene(strings: strings, unit: unit)
         default:
@@ -486,7 +487,9 @@ private struct ConnectScene: View {
     let unit: CGFloat
     let localIP: String
     let port: Int
+    @Binding var format: Int
     @State private var shown = false
+    @Namespace private var formatSpace
 
     var body: some View {
         SplitLayout(unit: unit) {
@@ -498,6 +501,8 @@ private struct ConnectScene: View {
                     row("IP", localIP, colour: .white, delay: 0.38)
                     Divider().overlay(Color.white.opacity(0.08))
                     row("PORT", "\(port)", colour: .white, delay: 0.46)
+                    Divider().overlay(Color.white.opacity(0.08))
+                    formatRow.reveal(shown, 0.54, distance: unit * 0.15)
                 }
                 .padding(.horizontal, unit * 0.3)
                 .background(RoundedRectangle(cornerRadius: unit * 0.22, style: .continuous).fill(Palette.deep.opacity(0.9)))
@@ -522,8 +527,43 @@ private struct ConnectScene: View {
                 .font(Typeface.digits(unit * 0.3, .black))
                 .foregroundStyle(colour)
         }
-        .padding(.vertical, unit * 0.11)
+        .padding(.vertical, unit * 0.08)
         .reveal(shown, delay, distance: unit * 0.15)
+    }
+
+    /// Oyundaki UDP Format ile ayni olmali; varsayilan 2026.
+    private var formatRow: some View {
+        HStack {
+            Text(verbatim: "UDP FORMAT")
+                .font(Typeface.font(unit * 0.22, .bold))
+                .tracking(unit * 0.05)
+                .foregroundStyle(.white.opacity(0.5))
+            Spacer()
+            HStack(spacing: 0) {
+                ForEach([2025, 2026], id: \.self) { year in
+                    Button {
+                        Haptics.selection()
+                        withAnimation(.spring(duration: 0.3, bounce: 0.2)) { format = year }
+                    } label: {
+                        Text(verbatim: "\(year)")
+                            .font(Typeface.digits(unit * 0.26, .black))
+                            .foregroundStyle(format == year ? Palette.onAccent : .white.opacity(0.45))
+                            .padding(.horizontal, unit * 0.2)
+                            .padding(.vertical, unit * 0.04)
+                            .background {
+                                if format == year {
+                                    Capsule().fill(Palette.accent)
+                                        .matchedGeometryEffect(id: "format", in: formatSpace)
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(unit * 0.03)
+            .background(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+        }
+        .padding(.vertical, unit * 0.06)
     }
 }
 
@@ -882,18 +922,6 @@ private struct LightsOutScene: View {
             StartLightsView(litColumns: lit, unit: unit * 0.95)
                 .reveal(shown, 0.15)
 
-            HStack(alignment: .top, spacing: unit * 0.16) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(Palette.alert)
-                Text(strings.obWarning)
-                    .foregroundStyle(.white.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .font(Typeface.font(unit * 0.22, .medium))
-            .frame(maxWidth: unit * 9)
-            .opacity(running ? 0 : 1)
-            .reveal(shown, 0.25)
-
             Button(action: start) {
                 Text(strings.obLightsOut)
                     .font(Typeface.font(unit * 0.32, .black))
@@ -967,8 +995,4 @@ extension Strings {
 
     var obReadyTitle: String { pick("HAZIR MISIN?", "READY?") }
     var obLightsOut: String { pick("IŞIKLAR SÖNSÜN", "LIGHTS OUT") }
-    var obWarning: String {
-        pick("Vites uyarısında ekran hızla yanıp söner; flaş ayarlardan açılabilir. Işığa duyarlı epilepsin varsa bu uyarıları kapalı tut.",
-             "The screen flashes at the shift point and the phone's flash can be enabled in settings. If you have photosensitive epilepsy, keep these off.")
-    }
 }
