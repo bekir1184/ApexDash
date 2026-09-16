@@ -45,14 +45,12 @@ struct LapsView: View {
                 .tracking(4)
             Spacer()
             Button(action: onClose) {
-                Text(strings.close)
-                    .font(Typeface.digits(unit * 0.26, .black))
-                    .foregroundStyle(Palette.onAccent)
-                    .padding(.horizontal, unit * 0.3)
-                    .padding(.vertical, unit * 0.12)
-                    .background(Capsule().fill(.white))
+                Image(systemName: "xmark")
+                    .font(Typeface.font(unit * 0.34, .black))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .padding(unit * 0.2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScaleStyle())
         }
     }
 
