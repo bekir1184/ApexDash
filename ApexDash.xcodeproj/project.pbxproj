@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		104A03FAAFB4043C1782F373 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B479463063808FB38FE317 /* OnboardingView.swift */; };
 		160A7205436138981F98A758 /* ByteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B03317C3CEAF76EC70FC71 /* ByteReader.swift */; };
 		206DB912B0FF95887B7768BD /* Saira-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */; };
 		20E2603CC2EC508073BC6D77 /* DotMatrixEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402716F54863E44811C2959 /* DotMatrixEffect.swift */; };
@@ -91,6 +92,7 @@
 		5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingView.swift; sourceTree = "<group>"; };
 		62142A6E18D317F91D53AF82 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketParsingTests.swift; sourceTree = "<group>"; };
+		72B479463063808FB38FE317 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		759926D4971C7CA2BF2B675B /* Saira-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Black.ttf"; sourceTree = "<group>"; };
 		75DF9E52820C0DD046259B7F /* PedalBarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedalBarsView.swift; sourceTree = "<group>"; };
 		838B03534F8726569779170A /* LapTiming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapTiming.swift; sourceTree = "<group>"; };
@@ -174,6 +176,7 @@
 				D757B2C0EF365F3B821A7677 /* LapsView.swift */,
 				421795F1F46A0D96A98E27F7 /* Localization.swift */,
 				58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */,
+				72B479463063808FB38FE317 /* OnboardingView.swift */,
 				F641A1E78C2B0916F202F012 /* Palette.swift */,
 				75DF9E52820C0DD046259B7F /* PedalBarsView.swift */,
 				0AD717D5DFA547B616504051 /* QRScannerView.swift */,
@@ -351,6 +354,7 @@
 				EE09C6D27EA2BFC1A8659052 /* LapsView.swift in Sources */,
 				7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */,
 				890022026B39A0AE479BCEE2 /* ModernDashboardView.swift in Sources */,
+				104A03FAAFB4043C1782F373 /* OnboardingView.swift in Sources */,
 				CFA90CB50BD5A6C02AB8C0F6 /* Packets.swift in Sources */,
 				5FBFB5F5149F188B9CBC9C22 /* Palette.swift in Sources */,
 				9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */,

@@ -19,6 +19,10 @@ struct RootDashboardView: View {
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
     @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
+    @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
+    /// Tanitim bir kez gosterilir; `-forceOnboarding YES` ile yeniden acilir.
+    @State private var showsOnboarding = !UserDefaults.standard.bool(forKey: "didCompleteOnboarding")
+        || UserDefaults.standard.bool(forKey: "forceOnboarding")
     @State private var showsSetup = false
     @State private var showsSettings = false
     /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
@@ -111,7 +115,7 @@ struct RootDashboardView: View {
                 page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
-                if !didCompleteSetup { showsSetup = true }
+                if !didCompleteSetup && !showsOnboarding { showsSetup = true }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
             // Vites uyarisi: ekranla birlikte telefonun flasi (ayarlardan acilir).
@@ -334,7 +338,7 @@ struct RootDashboardView: View {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            if !didShowFlashWarning {
+            if !didShowFlashWarning && !showsOnboarding {
                 FlashWarningView(strings: strings, unit: unit) {
                     withAnimation(.easeOut(duration: 0.3)) { didShowFlashWarning = true }
                 }
@@ -347,6 +351,16 @@ struct RootDashboardView: View {
                     withAnimation(spring) { showsSetup = false }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if showsOnboarding {
+                // Son sahne isik uyarisini ve baglanti adresini de verir.
+                OnboardingView(strings: strings, unit: unit, localIP: client.localIP, port: udpPort) {
+                    didCompleteOnboarding = true
+                    didShowFlashWarning = true
+                    didCompleteSetup = true
+                    showsOnboarding = false
+                }
+                .zIndex(20)
             }
         }
     }

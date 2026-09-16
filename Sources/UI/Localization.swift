@@ -49,7 +49,7 @@ enum LanguagePreference: String, CaseIterable, Identifiable {
 struct Strings {
     let language: AppLanguage
 
-    private func pick(_ turkish: String, _ english: String) -> String {
+    func pick(_ turkish: String, _ english: String) -> String {
         language == .turkish ? turkish : english
     }
 
