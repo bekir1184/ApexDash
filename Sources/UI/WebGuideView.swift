@@ -8,6 +8,8 @@ struct WebGuideView: View {
     @Binding var sessionID: String
     @ObservedObject var uploader: SessionUploader
     let payload: () -> SessionUploader.Payload
+    /// Telefonun yerel analiz adresi; QR'siz dogrudan acmak icin.
+    var localAddress: String? = nil
     let onClose: () -> Void
 
     @State private var showsScanner = false
@@ -134,6 +136,13 @@ struct WebGuideView: View {
                         .font(Typeface.font(unit * 0.22, .medium))
                         .foregroundStyle(.white.opacity(0.4))
                 }
+            }
+
+            if let localAddress {
+                Text(verbatim: strings.localAnalysisHint(localAddress.replacingOccurrences(of: "http://", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))))
+                    .font(Typeface.font(unit * 0.24, .semibold))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .textSelection(.enabled)
             }
 
             Spacer(minLength: 0)

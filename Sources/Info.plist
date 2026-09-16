@@ -28,7 +28,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>F1 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli.</string>
+	<string>F1 oyunundan gelen telemetri paketlerini dinlemek ve tur analizini ayni agdaki tarayiciya sunmak icin gerekli.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Saira-Regular.ttf</string>

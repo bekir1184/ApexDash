@@ -209,6 +209,14 @@
   .stats-grid strong { display: block; font-size: 20px; font-weight: 700; margin-top: 2px; }
   .stats-grid small { color: var(--dim); font-size: 12px; }
 
+  .handoff { max-width: 620px; margin: 8vh auto 0; width: 100%; padding: 36px 28px; text-align: center;
+             display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .handoff .tick { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px;
+                   font-weight: 900; color: #0c1a10; background: var(--green); box-shadow: 0 0 24px rgba(60,232,90,.5); }
+  .handoff h2 { margin: 0; font-size: 30px; font-weight: 900; text-transform: uppercase; }
+  .handoff p { margin: 0 0 10px; color: var(--dim); max-width: 460px; }
+  .handoff small { color: var(--faint); font-size: 12px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 13px; padding: 11px 26px; text-decoration: none; }
   .empty { color: var(--dim); padding: 40px 20px; text-align: center; }
   footer { color: var(--faint); font-size: 12px; padding-bottom: 32px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
   footer button { background: none; border: 0; padding: 0; color: var(--dim); text-decoration: underline; cursor: pointer; font-size: 12px; }
@@ -237,6 +245,17 @@
       </ol>
       <button class="btn" onclick="resetSession()" data-t="newCode"></button>
     </div>
+  </section>
+
+  <!-- Yonlendirme: telefon eslesti, analiz telefonda acilir -->
+  <section class="panel handoff hidden" id="handoffView">
+    <div class="tick">✓</div>
+    <span class="label" data-t="handoffLabel"></span>
+    <h2 data-t="handoffTitle"></h2>
+    <p data-t="handoffBody"></p>
+    <a class="btn primary" id="handoffLink" href="#" data-t="handoffOpen"></a>
+    <small id="handoffAddress"></small>
+    <small data-t="handoffNote"></small>
   </section>
 
   <!-- 1. Oturum -->
@@ -347,13 +366,19 @@ const TEXT = {
   pairLabel: L("Eşleştirme kodu", "Pairing code"),
   pair1: L("Telefonda Apex Dash'i aç, <b>Ayarlar → Telemetri sitesi</b>'ne gir.", "Open Apex Dash on your phone and go to <b>Settings → Telemetry site</b>."),
   pair2: L("<b>QR OKUT</b>'a bas ve bu QR kodunu okut.", "Tap <b>SCAN QR</b> and scan this code."),
-  pair3: L("Oyunda tur at. Her tur bittiğinde veriler burada belirir.", "Drive. Every completed lap appears here on its own."),
+  pair3: L("Telefon eşleşince analiz telefonundan açılır; bu cihaz ve telefon aynı Wi-Fi ağında olsun.", "Once paired, the analysis opens from your phone; keep this device and the phone on the same Wi-Fi."),
   newCode: L("Yeni kod", "New code"),
   laps: L("Turlar", "Laps"), sortLap: L("Sıra", "Order"), sortTime: L("Süre", "Time"),
   allLaps: L("Tüm turlar", "All laps"), compareWith: L("Karşılaştır", "Compare"),
   trackMap: L("Pist", "Track"), mSpeed: L("Hız", "Speed"), mPedal: L("Pedal", "Pedals"), mSector: L("Sektör", "Sectors"),
   telemetry: L("Telemetri", "Telemetry"), corners: L("Virajlar", "Corners"), energy: L("Enerji ve aero", "Energy & aero"),
   code: L("Kod", "Code"),
+  handoffLabel: L("Eşleşti", "Paired"),
+  handoffTitle: L("Analiz telefonunda açılıyor", "Opening the analysis on your phone"),
+  handoffBody: L("Turlar artık doğrudan telefondan gelir. Bu bilgisayar ve telefon aynı Wi-Fi ağında olmalı.", "Laps now come straight from your phone. This computer and the phone must be on the same Wi-Fi network."),
+  handoffOpen: L("Analizi aç", "Open analysis"),
+  handoffNote: L("Adres telefonun yerel ağ adresidir; tarayıcı \"güvenli değil\" diyebilir, bu normaldir.", "The address is your phone on the local network; the browser may call it \"not secure\", which is expected."),
+  localFoot: L("Veriler bu ağdaki telefondan canlı gelir.", "Data comes live from the phone on this network."),
   footNote: L("Veriler telefondaki Apex Dash uygulamasından gelir; sayfa kendiliğinden yenilenir.", "Data comes from the Apex Dash app on your phone; this page updates on its own.")
 };
 document.querySelectorAll("[data-t]").forEach(el => el.innerHTML = TEXT[el.dataset.t]);
@@ -397,14 +422,17 @@ function sessionId() {
   history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
   return id;
 }
-const session = sessionId();
-// Yerelde denerken canli API kullanilir.
-const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.protocol === "file:" ? "https://www.apexdash.pro" : "";
+/** Sayfa telefonun kendisinden mi sunuluyor (yerel ag). O zaman eslestirme
+ *  yok; veri ayni adresten gelir. */
+const LOCAL = location.port === "8777" || /^\d+\.\d+\.\d+\.\d+$/.test(location.hostname);
+const session = LOCAL ? "LOCAL" : sessionId();
+// Bilgisayarda dosyadan denerken canli API kullanilir.
+const API = !LOCAL && (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.protocol === "file:") ? "https://www.apexdash.pro" : "";
 function resetSession() { try { localStorage.removeItem("apexdash-session"); } catch (_) {} location.href = location.pathname; }
 
 // ---------------------------------------------------------------- durum
 const state = {
-  laps: [], track: null, updatedAt: null, error: false, loaded: false,
+  laps: [], track: null, updatedAt: null, version: null, error: false, loaded: false, handoff: null,
   traces: new Map(),        // tur -> sutun dizileri
   loading: new Map(),       // tur -> bekleyen istek
   missing: new Set(),       // izi sunucuda olmayan turlar
@@ -423,7 +451,17 @@ async function poll() {
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
     state.error = false;
-    const changed = (data.updatedAt || null) !== state.updatedAt;
+    // Telefon yerel adresini bildirdiyse analiz oradan acilir; bulut yoklamasi biter.
+    if (!LOCAL && typeof data.local === "string") {
+      state.handoff = data.local;
+      state.loaded = true;
+      stopPolling();
+      render(); renderStatus();
+      return;
+    }
+    const stamp = data.version ?? data.updatedAt ?? null;
+    const changed = stamp !== state.version;
+    state.version = stamp;
     state.updatedAt = data.updatedAt || null;
     state.laps = (data.laps || []).filter(l => l.time > 0);
     state.track = data.track || null;
@@ -436,6 +474,12 @@ async function poll() {
 function renderStatus() {
   const el = $("status"), text = el.querySelector("span");
   el.classList.remove("live", "error");
+  if (LOCAL) {
+    el.classList.add(state.error ? "error" : "live");
+    text.textContent = state.error ? L("Telefona ulaşılamıyor", "Phone unreachable") : L("Canlı · telefon", "Live · phone");
+    return;
+  }
+  if (state.handoff) { el.classList.add("live"); text.textContent = L("Telefon eşleşti", "Phone paired"); return; }
   if (state.error) { el.classList.add("error"); text.textContent = L("Bağlantı yok", "Offline"); return; }
   if (!state.updatedAt) { text.textContent = L("Telefon bekleniyor", "Waiting for phone"); return; }
   const age = Date.now() - new Date(state.updatedAt).getTime();
@@ -522,11 +566,17 @@ window.addEventListener("popstate", render);
 
 function render() {
   if (!state.loaded) return;
+  $("handoffView").classList.toggle("hidden", !state.handoff);
+  if (state.handoff) {
+    ["pairView", "overview", "lapView", "footer"].forEach(id => $(id).classList.add("hidden"));
+    renderHandoff();
+    return;
+  }
   const hasData = state.laps.length > 0;
   const lap = route();
   $("pairView").classList.toggle("hidden", hasData || !!state.updatedAt);
   $("footer").classList.toggle("hidden", !hasData && !state.updatedAt);
-  $("codeFoot").textContent = session;
+  if ($("codeFoot")) $("codeFoot").textContent = session;
   if (!hasData) {
     $("overview").classList.add("hidden"); $("lapView").classList.add("hidden");
     if (!state.updatedAt) renderPair();
@@ -537,6 +587,15 @@ function render() {
   $("overview").classList.toggle("hidden", !!showLap);
   $("lapView").classList.toggle("hidden", !showLap);
   if (showLap) renderLapView(lap); else renderOverview();
+}
+
+let handoffTimer = 0;
+function renderHandoff() {
+  const target = state.handoff;
+  $("handoffLink").href = target;
+  $("handoffAddress").textContent = target.replace(/\/$/, "");
+  // Tarayici izin verirse kendiliginden gecer; vermezse dugme var.
+  if (!handoffTimer) handoffTimer = setTimeout(() => { location.href = target; }, 1500);
 }
 
 function renderPair() {
@@ -1115,10 +1174,60 @@ window.addEventListener("resize", () => {
   resizeFrame = requestAnimationFrame(() => { if (route() != null) { drawMap(); drawCharts(); } });
 });
 document.fonts?.ready.then(() => { if (route() != null) { drawMap(); drawCharts(); } });
-render();
-renderStatus();
-poll();
-setInterval(poll, 3000);
+// ---------------------------------------------------------------- baslat
+// Yerel: sayfa telefondan sunulur, veri 2 saniyede bir telefona sorulur.
+// Canli site: yalnizca eslestirme. Telefon yerel adresini ntfy.sh uzerindeki
+// bu koda ozel konuya yayinlar; sayfa dinler ve tarayiciyi telefona gecirir.
+// Sunucu ya da depolama kullanilmaz.
+let pollTimer = 0;
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(async () => {
+    if (document.visibilityState === "visible") await poll();
+    schedulePoll();
+  }, 2000);
+}
+function stopPolling() { clearTimeout(pollTimer); pollTimer = -1; }
+
+const PRIVATE_ADDRESS = /^http:\/\/(10\.\d+|172\.(1[6-9]|2\d|3[01])|192\.168)\.\d+\.\d+:\d{2,5}\/$/;
+const pairTopic = `https://ntfy.sh/apexdash-${session}`;
+function acceptPairing(message) {
+  const address = String(message || "").trim();
+  if (state.handoff || !PRIVATE_ADDRESS.test(address)) return;
+  state.handoff = address;
+  render(); renderStatus();
+}
+function listenForPhone() {
+  // Sayfa acilmadan once gonderilmis bir eslesme de yakalanir.
+  const since = "since=15m";
+  try {
+    const events = new EventSource(`${pairTopic}/sse?${since}`);
+    events.onmessage = e => { try { const m = JSON.parse(e.data); if (m.event === "message") acceptPairing(m.message); } catch (_) {} };
+    events.onerror = () => { state.error = events.readyState === EventSource.CLOSED; renderStatus(); };
+  } catch (_) {}
+  // Yedek: SSE engellenirse ara sira yoklanir.
+  const check = async () => {
+    if (state.handoff) return;
+    try {
+      const text = await (await fetch(`${pairTopic}/json?poll=1&${since}`, { cache: "no-store" })).text();
+      text.split("\n").filter(Boolean).forEach(line => { try { acceptPairing(JSON.parse(line).message); } catch (_) {} });
+    } catch (_) {}
+    setTimeout(check, 8000);
+  };
+  setTimeout(check, 8000);
+}
+
+if (LOCAL) {
+  document.querySelectorAll('[data-t="newCode"]').forEach(el => el.remove());
+  $("codeFoot").parentElement.remove();
+  $("footer").querySelector('[data-t="footNote"]').textContent = TEXT.localFoot;
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") poll(); });
+  render(); renderStatus(); poll(); schedulePoll();
+} else {
+  state.loaded = true;
+  render(); renderStatus();
+  listenForPhone();
+}
 setInterval(renderStatus, 30000);
 </script>
 </body>

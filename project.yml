@@ -20,6 +20,15 @@ targets:
       - path: Resources/Fonts
         buildPhase: resources
       - path: Resources/Assets.xcassets
+      # Telefonun yerel agda sundugu analiz sayfasi.
+      - path: Web/index.html
+        buildPhase: resources
+      - path: Web/logo.svg
+        buildPhase: resources
+      - path: Web/qrcode.js
+        buildPhase: resources
+      - path: Web/apple-touch-icon.png
+        buildPhase: resources
     info:
       path: Sources/Info.plist
       properties:
@@ -38,7 +47,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         NSCameraUsageDescription: "Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor."
-        NSLocalNetworkUsageDescription: "F1 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli."
+        NSLocalNetworkUsageDescription: "F1 oyunundan gelen telemetri paketlerini dinlemek ve tur analizini ayni agdaki tarayiciya sunmak icin gerekli."
         UIAppFonts:
           - Saira-Regular.ttf
           - Saira-Medium.ttf

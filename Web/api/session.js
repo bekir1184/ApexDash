@@ -48,6 +48,16 @@ export default async function handler(request, response) {
         return response.status(200).json({ ok: true });
       }
 
+      // Eslestirme: telefon yalnizca yerel ag adresini bildirir. Tek yazma.
+      if (typeof body.local === "string") {
+        const local = localAddress(body.local);
+        if (!local) return response.status(400).json({ error: "bad local address" });
+        await store(`sessions/${id}.json`, JSON.stringify({
+          id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), local
+        }));
+        return response.status(200).json({ ok: true });
+      }
+
       const existing = await read(`sessions/${id}.json`);
       await store(`sessions/${id}.json`, JSON.stringify({
         id,
@@ -146,6 +156,17 @@ async function read(path) {
     headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
   });
   return content.ok ? content.json() : null;
+}
+
+/// Yalnizca ozel ag adresleri kabul edilir; site baska yere yonlendirilemesin.
+function localAddress(value) {
+  const match = /^http:\/\/(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):(\d{2,5})\/$/.exec(value.trim());
+  if (!match) return null;
+  const [a, b] = [Number(match[1]), Number(match[2])];
+  const octets = match.slice(1, 5).map(Number);
+  if (octets.some(n => n > 255)) return null;
+  const privateRange = a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  return privateRange ? value.trim() : null;
 }
 
 /// Kimlik yalnizca harf ve rakam; blob yolunu disaridan yonlendiremesinler.

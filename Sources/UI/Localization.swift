@@ -126,9 +126,13 @@ struct Strings {
         pick("Aşağıdaki QR OKUT'a bas ve telefonu sitedeki QR koduna tut.",
              "Tap SCAN QR below and point the phone at the QR code on the site.")
     }
+    func localAnalysisHint(_ address: String) -> String {
+        pick("QR olmadan: aynı Wi-Fi'daki tarayıcıda \(address) adresini aç.",
+             "Without the QR: open \(address) in a browser on the same Wi-Fi.")
+    }
     var webGuideStep3: String {
-        pick("Hazır. Her tur bitişinde o turun izi sayfaya düşer; sayfayı açık bırakman yeter.",
-             "Done. Each finished lap lands on the page by itself; just leave it open.")
+        pick("Site seni telefondaki analize geçirir. Turlar doğrudan telefondan gelir; ikisi aynı Wi-Fi'da olsun.",
+             "The site hands you over to the analysis on your phone. Laps come straight from the phone; keep both on the same Wi-Fi.")
     }
     var webGuideNotPaired: String { pick("Henüz eşleşmedi", "Not paired yet") }
     var copyLink: String { pick("KOPYALA", "COPY") }

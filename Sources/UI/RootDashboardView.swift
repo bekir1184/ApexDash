@@ -53,6 +53,8 @@ struct RootDashboardView: View {
     @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .realistic
 
     @StateObject private var uploader = SessionUploader()
+    @StateObject private var server = LocalAnalysisServer()
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
     private var uploadPayload: SessionUploader.Payload {
@@ -122,6 +124,10 @@ struct RootDashboardView: View {
                     didResetLanguage = true
                 }
                 page = theme
+                // Analiz sayfasi telefondan sunulur; site yalnizca adresi ogrenir.
+                server.snapshot = { uploadPayload }
+                server.start()
+                uploader.localAddress = { server.address(ip: client.localIP) }
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
                 client.selectedFormat = PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126
@@ -145,10 +151,8 @@ struct RootDashboardView: View {
             .onChange(of: themeID) { _, _ in
                 if page != theme { page = theme }
             }
-            // Yeni tur tamamlandiginda site kendiliginden guncellenir.
-            .onChange(of: client.lapTraces.count) { _, _ in
-                guard !sessionID.isEmpty else { return }
-                uploader.send(uploadPayload, sessionID: sessionID)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { server.start() }
             }
     }
 
@@ -386,7 +390,8 @@ struct RootDashboardView: View {
             }
             if showsWebGuide {
                 WebGuideView(strings: strings, unit: unit, sessionID: $sessionID,
-                             uploader: uploader, payload: { uploadPayload }) {
+                             uploader: uploader, payload: { uploadPayload },
+                             localAddress: server.address(ip: client.localIP)) {
                     withAnimation(spring) { showsWebGuide = false }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))

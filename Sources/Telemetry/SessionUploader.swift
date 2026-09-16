@@ -1,19 +1,25 @@
 import Foundation
 
-/// Turlari laptoptaki sayfaya tasiyan yukleyici. Sayfa bir oturum kimligi
-/// uretip QR olarak gosterir; telefon o kimlikle gonderir, sayfa yoklar.
+/// Sitedeki eslestirme. Analiz artik telefonda calisir (`LocalAnalysisServer`);
+/// canli site yalnizca ilk baglanti icindir: sayfa bir kod ve QR gosterir,
+/// telefon o koda kendi yerel adresini bir kez bildirir, sayfa tarayiciyi
+/// telefona yonlendirir. Turlar ve izler buluta hic gitmez; adres ya da kod
+/// degismedikce tekrar yazilmaz.
 @MainActor
 final class SessionUploader: ObservableObject {
     @Published private(set) var lastUploadDate: Date?
     @Published private(set) var lastError: String?
     @Published private(set) var isSending = false
 
-    private var inFlight: Task<Void, Never>?
-    private var heartbeat: Task<Void, Never>?
-    /// Bu oturumda basariyla gonderilmis tur izleri (oturum kimligi + tur no).
-    private var sentTraces: Set<String> = []
+    /// Telefonun yerel analiz adresi, ornegin `http://192.168.1.20:8777/`.
+    var localAddress: () -> String? = { nil }
 
-    /// Bir gonderimde tasinan her sey.
+    private var inFlight: Task<Void, Never>?
+    private var watcher: Task<Void, Never>?
+    /// Son basariyla bildirilen kod + adres; ayniysa yeniden yazilmaz.
+    private var lastPaired: String?
+
+    /// Bir gonderimde tasinan her sey; yerel sunucu da ayni yapiyi kullanir.
     struct Payload {
         var laps: [CompletedLap]
         var traces: [LapTrace]
@@ -34,38 +40,8 @@ final class SessionUploader: ObservableObject {
         return (4...12).contains(clean.count) ? String(clean) : nil
     }
 
-    /// Tur bitisleri arasinda da duzenli gonderim: sayfa "bagli" gorunur ve
-    /// basarisiz bir gonderim kendiliginden telafi edilir.
-    func startHeartbeat(interval: TimeInterval = 20, payload: @escaping () -> Payload,
-                        sessionID: @escaping () -> String) {
-        heartbeat?.cancel()
-        heartbeat = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
-                guard let self else { return }
-                let id = sessionID()
-                guard !id.isEmpty else { continue }
-                await self.upload(payload(), sessionID: id)
-            }
-        }
-    }
-
-    func stopHeartbeat() {
-        heartbeat?.cancel()
-        heartbeat = nil
-    }
-
-    func send(_ payload: Payload, sessionID: String) {
-        // Tur olmasa da gonderilir: sayfa eslesmeyi hemen gorur.
-        guard !sessionID.isEmpty else { return }
-        inFlight?.cancel()
-        inFlight = Task { [weak self] in
-            await self?.upload(payload, sessionID: sessionID)
-        }
-    }
-
-    /// Once tur listesi (kucuk), sonra henuz gitmemis tur izleri teker teker.
-    private func upload(_ payload: Payload, sessionID: String) async {
+    /// Tur listesi: yerel sunucunun `/api/session` cevabi.
+    static func index(_ payload: Payload, id: String) -> [String: Any] {
         let laps = payload.laps.suffix(200).map { lap -> [String: Any] in
             let trace = payload.traces.first { $0.number == lap.number }
             var entry: [String: Any] = [
@@ -73,37 +49,69 @@ final class SessionUploader: ObservableObject {
                 "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS],
                 "trace": trace != nil
             ]
-            // Sitedeki tur listesi en yuksek hizi izi indirmeden gosterir.
             if let top = trace?.samples.map(\.speedKPH).max() { entry["vmax"] = top }
             return entry
         }
         let session = payload.session
-        var index: [String: Any] = [
-            "id": sessionID,
+        return [
+            "id": id,
             "best": payload.laps.map(\.timeMS).min() ?? 0,
             "laps": laps,
             "track": ["id": session.trackID, "length": session.trackLength,
                       "weather": session.weather, "trackTemp": session.trackTemperature,
                       "airTemp": session.airTemperature, "sessionType": session.sessionType]
         ]
-        guard await post(index, sessionID: sessionID) else { return }
+    }
 
-        for trace in payload.traces where !sentTraces.contains("\(sessionID)/\(trace.number)") {
-            index = ["id": sessionID, "trace": trace.payload()]
-            guard await post(index, sessionID: sessionID) else { return }
-            sentTraces.insert("\(sessionID)/\(trace.number)")
+    /// Wi-Fi adresi degisirse (baska aga gecis) eslesme kendiliginden yenilenir.
+    /// Ag istegi yalnizca kod ya da adres degistiginde yapilir.
+    func startHeartbeat(interval: TimeInterval = 20, payload: @escaping () -> Payload,
+                        sessionID: @escaping () -> String) {
+        watcher?.cancel()
+        watcher = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                guard let self else { return }
+                let id = sessionID()
+                guard !id.isEmpty else { continue }
+                await self.pair(sessionID: id, force: false)
+            }
         }
     }
 
-    private func post(_ payload: [String: Any], sessionID: String) async -> Bool {
-        guard let url = URL(string: "\(LapExport.siteURL)/api/session"),
-              let body = try? JSONSerialization.data(withJSONObject: payload)
-        else { return false }
+    func stopHeartbeat() {
+        watcher?.cancel()
+        watcher = nil
+    }
+
+    /// Eslesmeyi bildirir. Kullanici eliyle istediginde (QR, "simdi gonder")
+    /// ayni adres olsa da yeniden yazilir.
+    func send(_ payload: Payload, sessionID: String) {
+        guard !sessionID.isEmpty else { return }
+        inFlight?.cancel()
+        inFlight = Task { [weak self] in
+            await self?.pair(sessionID: sessionID, force: true)
+        }
+    }
+
+    private func pair(sessionID: String, force: Bool) async {
+        guard let local = localAddress() else {
+            lastError = "Wi-Fi"
+            return
+        }
+        let key = "\(sessionID)|\(local)"
+        guard force || key != lastPaired else { return }
+        if await publish(local, sessionID: sessionID) { lastPaired = key }
+    }
+
+    /// Adres, sayfanin dinledigi ntfy.sh konusuna yazilir (hesapsiz, ucretsiz
+    /// bildirim aktarici). Konu adi oturum koduna ozeldir.
+    private func publish(_ address: String, sessionID: String) async -> Bool {
+        guard let url = URL(string: "https://ntfy.sh/apexdash-\(sessionID)") else { return false }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body
+        request.httpBody = Data(address.utf8)
         request.timeoutInterval = 20
 
         isSending = true
