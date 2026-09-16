@@ -736,7 +736,8 @@ private struct TrackTrace: View {
 
                 TimelineView(.animation) { context in
                     let t = context.date.timeIntervalSinceReferenceDate
-                    let f = (t / 9).truncatingRemainder(dividingBy: 1)
+                    // Pist noktalari yaris yonunun tersine dizili; arac geriye dogru okur.
+                    let f = 1 - (t / 9).truncatingRemainder(dividingBy: 1)
                     let p = StreetCircuit.point(at: f)
                     Circle()
                         .fill(Palette.accent)
