@@ -35,7 +35,7 @@ struct FlashWarningView: View {
         }
         .padding(unit * 0.8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(StripedBackground())
+        .background(Color.black.ignoresSafeArea())
         .contentShape(Rectangle())
         .onTapGesture(perform: onDismiss)
         .task {
