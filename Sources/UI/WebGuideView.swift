@@ -10,6 +10,7 @@ struct WebGuideView: View {
     let payload: () -> SessionUploader.Payload
     /// Telefonun yerel analiz adresi; QR'siz dogrudan acmak icin.
     var localAddress: String? = nil
+    @ObservedObject var server: LocalAnalysisServer
     let onClose: () -> Void
 
     @State private var showsScanner = false
@@ -91,7 +92,16 @@ struct WebGuideView: View {
 
             // Eslestirme: QR buradan okutulur.
             HStack(spacing: unit * 0.3) {
-                if sessionID.isEmpty {
+                if !server.viewers.isEmpty {
+                    // QR'dan bagimsiz: telefona gercekten bir tarayici baglanmis.
+                    HStack(spacing: unit * 0.16) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text(verbatim: strings.browserConnected(server.viewers.joined(separator: ", ")))
+                    }
+                    .font(Typeface.font(unit * 0.28, .heavy))
+                    .foregroundStyle(Palette.live)
+                    .transition(.opacity)
+                } else if sessionID.isEmpty {
                     Button { showsScanner = true } label: {
                         Label(strings.scanQR, systemImage: "qrcode.viewfinder")
                             .font(Typeface.font(unit * 0.3, .black))

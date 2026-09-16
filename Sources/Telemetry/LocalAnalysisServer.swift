@@ -14,6 +14,12 @@ final class LocalAnalysisServer: ObservableObject {
     static let port: UInt16 = 8777
 
     @Published private(set) var isRunning = false
+    /// Son birkac saniyede veri isteyen tarayicilarin adresleri; uygulamada
+    /// "bagli" durumunu gosterir. Sayfa 2 saniyede bir yokladigi icin kisa
+    /// bir sessizlik baglantinin koptugu anlamina gelir.
+    @Published private(set) var viewers: [String] = []
+    private var lastSeen: [String: Date] = [:]
+    private var pruning: Task<Void, Never>?
 
     /// Sunulan veri; kok gorunum baglar.
     var snapshot: () -> SessionUploader.Payload = { .init(laps: [], traces: [], session: SessionInfo()) }
@@ -51,6 +57,13 @@ final class LocalAnalysisServer: ObservableObject {
             }
             listener.start(queue: .main)
             self.listener = listener
+            pruning?.cancel()
+            pruning = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(2))
+                    self?.pruneViewers()
+                }
+            }
         } catch {
             isRunning = false
         }
@@ -106,6 +119,7 @@ final class LocalAnalysisServer: ObservableObject {
         case "/apple-touch-icon.png":
             file("apple-touch-icon", "png", type: "image/png", on: connection)
         case "/api/session":
+            noteViewer(connection)
             if let lap = query.first(where: { $0.name == "lap" })?.value.flatMap(Int.init) {
                 trace(lap, on: connection)
             } else {
@@ -114,6 +128,21 @@ final class LocalAnalysisServer: ObservableObject {
         default:
             send(status: "404 Not Found", type: "text/plain", body: Data("not found".utf8), on: connection)
         }
+    }
+
+    private func noteViewer(_ connection: NWConnection) {
+        guard case let .hostPort(host, _) = connection.endpoint else { return }
+        var address = "\(host)"
+        if let percent = address.firstIndex(of: "%") { address = String(address[..<percent]) }
+        lastSeen[address] = Date()
+        pruneViewers()
+    }
+
+    private func pruneViewers() {
+        let now = Date()
+        lastSeen = lastSeen.filter { now.timeIntervalSince($0.value) < 8 }
+        let current = lastSeen.keys.sorted()
+        if current != viewers { viewers = current }
     }
 
     private func index(on connection: NWConnection) {

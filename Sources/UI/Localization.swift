@@ -80,7 +80,7 @@ struct Strings {
              "Open www.apexdash.pro and scan the QR shown there.")
     }
     func connectedTo(_ code: String) -> String {
-        pick("SITEYE BAGLI · \(code)", "CONNECTED · \(code)")
+        pick("EŞLEŞTİ · \(code) · TARAYICI BEKLENİYOR", "PAIRED · \(code) · WAITING FOR BROWSER")
     }
     var disconnect: String { pick("BAGLANTIYI KES", "DISCONNECT") }
     var sendNow: String { pick("SIMDI GONDER", "SEND NOW") }
@@ -133,6 +133,9 @@ struct Strings {
     var webGuideStep3: String {
         pick("Site seni telefondaki analize geçirir. Turlar doğrudan telefondan gelir; ikisi aynı Wi-Fi'da olsun.",
              "The site hands you over to the analysis on your phone. Laps come straight from the phone; keep both on the same Wi-Fi.")
+    }
+    func browserConnected(_ address: String) -> String {
+        pick("Tarayıcı bağlı · \(address)", "Browser connected · \(address)")
     }
     var webGuideNotPaired: String { pick("Henüz eşleşmedi", "Not paired yet") }
     var copyLink: String { pick("KOPYALA", "COPY") }

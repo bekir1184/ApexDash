@@ -391,7 +391,7 @@ struct RootDashboardView: View {
             if showsWebGuide {
                 WebGuideView(strings: strings, unit: unit, sessionID: $sessionID,
                              uploader: uploader, payload: { uploadPayload },
-                             localAddress: server.address(ip: client.localIP)) {
+                             localAddress: server.address(ip: client.localIP), server: server) {
                     withAnimation(spring) { showsWebGuide = false }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
