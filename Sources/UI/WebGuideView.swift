@@ -33,6 +33,9 @@ struct WebGuideView: View {
                 .buttonStyle(PressScaleStyle())
             }
 
+            // Baslik sabit; icerik kucuk ekranlarda kaydirilir.
+            ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: unit * 0.3) {
             Text(verbatim: strings.webGuideIntro)
                 .font(Typeface.font(unit * 0.28, .medium))
                 .foregroundStyle(.white.opacity(0.6))
@@ -154,8 +157,10 @@ struct WebGuideView: View {
                     .foregroundStyle(.white.opacity(0.45))
                     .textSelection(.enabled)
             }
-
-            Spacer(minLength: 0)
+            }
+            .padding(.bottom, unit * 0.3)
+            }
+            .scrollBounceBehavior(.basedOnSize)
         }
         .fullScreenCover(isPresented: $showsScanner) {
             ZStack(alignment: .topTrailing) {
