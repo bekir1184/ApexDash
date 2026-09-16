@@ -56,7 +56,8 @@ final class SessionUploader: ObservableObject {
     }
 
     func send(_ payload: Payload, sessionID: String) {
-        guard !sessionID.isEmpty, !payload.laps.isEmpty else { return }
+        // Tur olmasa da gonderilir: sayfa eslesmeyi hemen gorur.
+        guard !sessionID.isEmpty else { return }
         inFlight?.cancel()
         inFlight = Task { [weak self] in
             await self?.upload(payload, sessionID: sessionID)
@@ -65,7 +66,6 @@ final class SessionUploader: ObservableObject {
 
     /// Once tur listesi (kucuk), sonra henuz gitmemis tur izleri teker teker.
     private func upload(_ payload: Payload, sessionID: String) async {
-        guard !payload.laps.isEmpty else { return }
         let laps = payload.laps.suffix(200).map { lap -> [String: Any] in
             let trace = payload.traces.first { $0.number == lap.number }
             var entry: [String: Any] = [

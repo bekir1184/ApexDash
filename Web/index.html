@@ -578,9 +578,13 @@ function renderOverview() {
   ].filter(Boolean).join("  ·  ") : "";
 
   if (!sum) {
+    // Telefon eslesti ama henuz tur yok.
+    $("sessionType").innerHTML = `<span class="green">● ${L("Telefon bağlandı", "Phone connected")}</span>`;
+    if (!t || t.id < 0) $("trackTitle").textContent = L("İlk tur bekleniyor", "Waiting for the first lap");
     $("hero").innerHTML = "";
+    $("sortSeg").classList.add("hidden");
     $("lapCount").textContent = "";
-    $("lapList").innerHTML = `<div class="empty">${L("İlk turun bitmesi bekleniyor.", "Waiting for the first lap to finish.")}</div>`;
+    $("lapList").innerHTML = `<div class="empty">${L("Oyunda UDP telemetrisi açık olsun ve bir tur tamamla; tur bittiğinde süreler ve telemetri burada belirir.", "Make sure UDP telemetry is on in the game and complete a lap; times and telemetry appear here when it ends.")}</div>`;
     return;
   }
 
@@ -598,6 +602,7 @@ function renderOverview() {
   ].join("");
   $("hero").querySelectorAll("button[data-lap]").forEach(b => b.onclick = () => go(Number(b.dataset.lap)));
 
+  $("sortSeg").classList.remove("hidden");
   renderLapList(sum);
 }
 

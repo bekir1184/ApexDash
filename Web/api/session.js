@@ -53,9 +53,10 @@ export default async function handler(request, response) {
         id,
         createdAt: existing?.createdAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        laps: Array.isArray(body.laps) ? body.laps.slice(-200) : [],
-        best: body.best ?? null,
-        track: body.track ?? null
+        // Bos liste yalnizca eslesme bildirimi: kayitli turlar silinmez.
+        laps: Array.isArray(body.laps) && body.laps.length ? body.laps.slice(-200) : (existing?.laps ?? []),
+        best: body.best || existing?.best || null,
+        track: (body.track && body.track.id >= 0 ? body.track : existing?.track) ?? body.track ?? null
       }));
       return response.status(200).json({ ok: true });
     }
