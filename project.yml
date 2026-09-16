@@ -37,7 +37,7 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        NSCameraUsageDescription: "Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor."
+        NSCameraUsageDescription: "Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor."
         NSLocalNetworkUsageDescription: "F1 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli."
         UIAppFonts:
           - Saira-Regular.ttf

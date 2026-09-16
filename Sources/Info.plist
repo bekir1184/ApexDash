@@ -26,7 +26,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Laptoptaki sayfada duran QR kodu okuyup turlari oraya gondermek icin kamera gerekiyor.</string>
+	<string>Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>F1 oyunundan gelen telemetri paketlerini yerel agdan dinlemek icin gerekli.</string>
 	<key>UIAppFonts</key>

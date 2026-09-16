@@ -959,8 +959,8 @@ extension Strings {
     var obAnalyseEyebrow: String { pick("ANALİZ", "ANALYSIS") }
     var obAnalyseTitle: String { pick("HER TURU İNCELE", "STUDY EVERY LAP") }
     var obAnalyseBody: String {
-        pick("Laptopta apexdash.pro'yu aç ve QR'ı okut: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma.",
-             "Open apexdash.pro on a laptop and scan the QR: track map, speed and pedal traces, corner-by-corner comparison.")
+        pick("Turlarını apexdash.pro'da gör; QR'ı okutman yeter: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma.",
+             "See your laps on apexdash.pro; just scan the QR: track map, speed and pedal traces, corner-by-corner comparison.")
     }
     var obBest: String { pick("EN İYİ", "BEST") }
     var obLap: String { pick("TUR", "LAP") }

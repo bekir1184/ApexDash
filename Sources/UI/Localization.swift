@@ -70,8 +70,8 @@ struct Strings {
     }
     var scanQR: String { pick("QR OKUT", "SCAN QR") }
     var scanHint: String {
-        pick("Laptopta www.apexdash.pro adresini ac ve oradaki QR'i okut.",
-             "Open www.apexdash.pro on your laptop and scan the QR there.")
+        pick("www.apexdash.pro sitesini aç ve oradaki QR'ı okut.",
+             "Open www.apexdash.pro and scan the QR shown there.")
     }
     func connectedTo(_ code: String) -> String {
         pick("SITEYE BAGLI · \(code)", "CONNECTED · \(code)")
@@ -106,19 +106,19 @@ struct Strings {
     var languageTitle: String { pick("DİL", "LANGUAGE") }
     var webGuideTitle: String { pick("TELEMETRİ SİTESİ", "TELEMETRY SITE") }
     var webGuideSubtitle: String {
-        pick("Turlarını laptopta aç ve incele", "Open and study your laps on a laptop")
+        pick("Turlarını sitede gör ve incele", "See and study your laps on the site")
     }
     var webGuideIntro: String {
-        pick("Her turun tam telemetrisi laptobundaki sayfaya kendiliğinden gider: pist haritası, hız, gaz, fren, direksiyon, ERS ve viraj viraj karşılaştırma.",
-             "Every lap uploads itself to the page on your laptop: track map, speed, throttle, brake, steering, ERS, and a corner by corner comparison.")
+        pick("Her turun tam telemetrisi sitede kendiliğinden belirir: pist haritası, hız, gaz, fren, direksiyon, ERS ve viraj viraj karşılaştırma.",
+             "Every lap shows up on the site by itself: track map, speed, throttle, brake, steering, ERS, and a corner by corner comparison.")
     }
     var webGuideStep1: String {
-        pick("Laptopta tarayıcıyı aç ve bu adrese git. Sayfa bir kod ve QR gösterir.",
-             "Open a browser on your laptop and go to this address. The page shows a code and a QR.")
+        pick("Bilgisayarında ya da tabletinde bu siteyi aç. Sayfa bir kod ve QR gösterir.",
+             "Open this site on a computer or tablet. The page shows a code and a QR.")
     }
     var webGuideStep2: String {
-        pick("Aşağıdaki QR OKUT'a bas ve telefonu laptoptaki QR koduna tut.",
-             "Tap SCAN QR below and point the phone at the QR code on the laptop.")
+        pick("Aşağıdaki QR OKUT'a bas ve telefonu sitedeki QR koduna tut.",
+             "Tap SCAN QR below and point the phone at the QR code on the site.")
     }
     var webGuideStep3: String {
         pick("Hazır. Her tur bitişinde o turun izi sayfaya düşer; sayfayı açık bırakman yeter.",
