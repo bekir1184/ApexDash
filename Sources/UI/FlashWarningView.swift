@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// Ilk acilista bir kez gorunen kisa uyari: vites ikazi ekrani ve istege
-/// bagli olarak telefonun flasini hizla yakip sondurur. Isiga duyarli
-/// epilepsisi olanlar icin onemli oldugundan, ayar acilmadan once soylenir.
+/// Ilk acilista bir kez gorunen uyari: vites ikazi ekrani ve istege bagli
+/// olarak telefonun flasini hizla yakip sondurur. Isiga duyarli epilepsisi
+/// olanlar icin onemli oldugundan kendiliginden kapanmaz; okuyup dugmeye
+/// basmak gerekir.
 struct FlashWarningView: View {
     let strings: Strings
     let unit: CGFloat
     let onDismiss: () -> Void
-
-    @State private var remaining = 3
 
     var body: some View {
         VStack(spacing: unit * 0.3) {
@@ -28,22 +27,20 @@ struct FlashWarningView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: unit * 14)
 
-            Text(verbatim: "\(remaining)")
-                .font(Typeface.digits(unit * 0.26, .heavy))
-                .foregroundStyle(.white.opacity(0.35))
-                .contentTransition(.numericText(countsDown: true))
+            Button(action: onDismiss) {
+                Text(strings.flashWarningAccept)
+                    .font(Typeface.font(unit * 0.28, .black))
+                    .tracking(unit * 0.04)
+                    .foregroundStyle(Palette.onAccent)
+                    .padding(.horizontal, unit * 0.7)
+                    .padding(.vertical, unit * 0.2)
+                    .background(Capsule().fill(Palette.accent))
+            }
+            .buttonStyle(PressScaleStyle())
+            .padding(.top, unit * 0.15)
         }
         .padding(unit * 0.8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.ignoresSafeArea())
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onDismiss)
-        .task {
-            for _ in 0..<3 {
-                try? await Task.sleep(for: .seconds(1))
-                withAnimation(.spring(duration: 0.25)) { remaining -= 1 }
-            }
-            onDismiss()
-        }
     }
 }

@@ -152,6 +152,7 @@ struct Strings {
     var startButton: String { pick("BASLA", "START") }
     var setupButton: String { pick("BAĞLANTI", "CONNECTION") }
     var selectButton: String { pick("SEÇ", "SELECT") }
+    var flashWarningAccept: String { pick("OKUDUM, ANLADIM", "I UNDERSTAND") }
     var flashWarningTitle: String { pick("IŞIK UYARISI", "FLASHING LIGHTS") }
     var flashWarningBody: String {
         pick("Vites zamanı geldiğinde ekran hızla yanıp söner ve ayarlardan açılırsa telefonun flaşı da kullanılır. Işığa duyarlı epilepsiniz varsa bu uyarıları kapalı tutun.",
