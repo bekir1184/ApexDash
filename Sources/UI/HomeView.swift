@@ -44,7 +44,7 @@ struct HomeView: View {
                     header
                         .padding(.horizontal, unit * 0.5)
                     Spacer(minLength: 0)
-                    TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                    TimelineView(.animation) { context in
                         let live = client.status == .receiving
                         let elapsed = context.date.timeIntervalSince(warmUpStart)
                         carousel(size: size, cardW: cardW, cardH: cardH) { index in
@@ -469,49 +469,81 @@ extension DashboardModel {
         return m
     }
 
-    static let warmUpDuration: TimeInterval = 3.2
+    static let warmUpDuration: TimeInterval = 9.0
 
-    /// Karta ilk gelindiginde oynayan kisa tur: gaz, vites vites hizlanma,
-    /// vites isiklari, frenleme ve yeniden soguk duruma inis.
+    /// Karta gelindiginde oynayan sakin bir tur parcasi, gercek bir aracin
+    /// hizinda: motor rolantiye gelir, birinci vitesle kalkis, vites vites
+    /// hizlanma, gaz kesme, frenleyip vites dusurerek durma ve kontak kapanis.
+    /// Tum gecisler yumusak egrilerle; devir vites oranlarindan hesaplanir.
     static func warmUp(at t: TimeInterval) -> DashboardModel {
         var m = DashboardModel.cold
-        let d = warmUpDuration
-        let p = min(max(t / d, 0), 1)
-        // Hizlanma %0-60, frenleme %60-85, bosa alma %85-100.
-        let speed: Double
-        if p < 0.6 { speed = 305 * pow(p / 0.6, 0.8) }
-        else if p < 0.85 { speed = 305 - 225 * ((p - 0.6) / 0.25) }
-        else { speed = 80 * (1 - (p - 0.85) / 0.15) }
-        let envelope = sin(.pi * p)
-        let gearSpan = 40.0
-        let gear = speed < 4 ? 0 : min(8, 1 + Int(speed / gearSpan))
-        let inGear = speed < 4 ? 0 : (speed / gearSpan).truncatingRemainder(dividingBy: 1)
+        guard t > 0 else { return m }
 
-        m.speedKPH = Int(speed)
+        let idle = 4_200.0, shiftRPM = 12_000.0
+        /// Her vitesin 12.000 devirdeki hizi.
+        let gearTop: [Double] = [0, 78, 112, 145, 178, 210, 242, 275, 310]
+
+        func ease(_ x: Double) -> Double { let c = min(max(x, 0), 1); return c * c * (3 - 2 * c) }
+        func phase(_ from: Double, _ to: Double) -> Double { ease((t - from) / (to - from)) }
+
+        // Zaman cizelgesi (sn): 0-1 rolanti, 1.2 kalkis, 1.2-5.2 hizlanma,
+        // 5.2-5.7 gaz kesme, 5.7-7.3 fren, 7.3-8.0 durma, 8.0-9.0 kapanis.
+        let launch = 1.2, lift = 5.2, brakeOn = 5.7, brakeOff = 7.3, stop = 8.0
+        let accelerating = t >= launch && t < lift
+        var speed: Double
+        if t < launch {
+            speed = 0
+        } else if t < lift {
+            speed = 250 * (1 - exp(-(t - launch) / 2.6))
+        } else {
+            let top = 250 * (1 - exp(-(lift - launch) / 2.6))
+            let coast = top - 6 * phase(lift, brakeOn)
+            let braked = coast - (coast - 28) * phase(brakeOn, brakeOff)
+            speed = braked * (1 - phase(brakeOff, stop))
+        }
+        speed = max(speed, 0)
+
+        var gear = 0
+        if t >= launch - 0.2 && t < stop + 0.1 {
+            gear = gearTop.firstIndex(where: { $0 > 0 && speed < $0 * 0.97 }) ?? 8
+            gear = max(gear, 1)
+        }
+
+        let engineOn = ease(t / 0.9) * (1 - phase(stop + 0.2, warmUpDuration))
+        var rpm = idle
+        if gear > 0 && speed > 1 { rpm = max(idle, shiftRPM * speed / gearTop[gear]) }
+        rpm *= engineOn
+
+        m.speedKPH = Int(speed.rounded())
         m.gear = gear
-        m.rpm = speed < 4 ? Int(4000 * envelope) : 6_500 + Int(inGear * 5_500)
-        m.revLightsPercent = p < 0.6 ? Int(inGear * 100) : 0
-        let lights = Int(Double(m.revLightsPercent) / 100 * 15)
-        m.revLightsBits = lights <= 0 ? 0 : UInt16((1 << min(lights, 15)) - 1)
-        m.throttle = p < 0.6 ? 1 : 0
-        m.brake = p >= 0.6 && p < 0.85 ? 0.9 : 0
-        m.gLongitudinal = Float(p < 0.6 ? 0.8 * envelope : -2.5 * envelope)
-        m.gLateral = Float(sin(p * .pi * 3) * 0.8 * envelope)
+        m.rpm = Int(rpm)
+        // Vites isiklari 9.000'den sonra dolar; tam yanip sonme noktasina gelmez.
+        let lights = min(max((rpm - 9_000) / (shiftRPM - 9_000), 0), 0.95)
+        m.revLightsPercent = Int(lights * 100)
+        let leds = Int(lights * 15)
+        m.revLightsBits = leds <= 0 ? 0 : UInt16((1 << leds) - 1)
 
-        func warm(_ cold: Int, _ hot: Int) -> Int { cold + Int(Double(hot - cold) * envelope) }
-        m.tyreSurfaceTemps = [warm(24, 96), warm(24, 98), warm(24, 92), warm(24, 94)]
-        m.tyreInnerTemps = [warm(24, 101), warm(24, 103), warm(24, 97), warm(24, 99)]
-        m.brakeTemps = [warm(24, 520), warm(24, 510), warm(24, 580), warm(24, 570)]
-        m.engineTemp = warm(24, 108)
+        m.throttle = Float(phase(launch - 0.3, launch + 0.4) * (1 - phase(lift, lift + 0.4)))
+        m.brake = Float(0.75 * phase(brakeOn, brakeOn + 0.35) * (1 - phase(brakeOff - 0.5, brakeOff)))
+        m.gLongitudinal = accelerating ? Float(1.1 * exp(-(t - launch) / 1.8)) : -Float(m.brake) * 4
 
-        m.ersStoreEnergy = Float(4_000_000 - 1_400_000 * envelope)
-        m.ersDeployedThisLap = Float(1_400_000 * envelope)
-        m.ersHarvestedThisLap = Float(p > 0.6 ? 1_200_000 * envelope : 0)
-        m.ersDeployMode = 2
-        m.aeroStraightMode = p > 0.2 && p < 0.6
-        m.aeroAvailable = true
-        m.overtakeAvailable = true
-        m.overtakeActive = p > 0.35 && p < 0.55
+        // Isinma: yavas ve olculu; sonda yeniden soguk degerlere iner.
+        let settle = 1 - phase(stop, warmUpDuration)
+        let heat = phase(launch, stop) * settle
+        let brakeHeat = phase(brakeOn, brakeOff) * settle
+        m.tyreSurfaceTemps = [24 + Int(14 * heat), 24 + Int(14 * heat), 24 + Int(11 * heat), 24 + Int(11 * heat)]
+        m.tyreInnerTemps = [24 + Int(9 * heat), 24 + Int(9 * heat), 24 + Int(7 * heat), 24 + Int(7 * heat)]
+        m.brakeTemps = [24 + Int(260 * brakeHeat), 24 + Int(250 * brakeHeat), 24 + Int(330 * brakeHeat), 24 + Int(320 * brakeHeat)]
+        m.engineTemp = 24 + Int(40 * heat)
+
+        let deployed = 900_000 * phase(launch, lift)
+        let harvested = 350_000 * phase(brakeOn, brakeOff)
+        m.ersDeployedThisLap = Float(deployed * settle)
+        m.ersHarvestedThisLap = Float(harvested * settle)
+        m.ersStoreEnergy = Float(4_000_000 - (deployed - harvested) * settle)
+        m.ersDeployMode = accelerating ? 2 : 0
+        m.aeroAvailable = t > launch
+        m.aeroStraightMode = t > 3.0 && t < lift
         return m
     }
 
