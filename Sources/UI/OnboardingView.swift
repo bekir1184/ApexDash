@@ -394,7 +394,7 @@ private struct DashCarousel: View {
     let unit: CGFloat
 
     @State private var index = 0
-    private let themes: [DashTheme] = [.broadcast, .dotMatrix, .modern, .realistic, .game, .cluster]
+    private let themes: [DashTheme] = [.realistic, .broadcast, .dotMatrix, .modern, .game, .cluster]
 
     private var screen: CGSize {
         let b = UIScreen.main.bounds.size
@@ -422,17 +422,32 @@ private struct DashCarousel: View {
                 }
                 .frame(height: cardW * screen.height / screen.width)
 
-                Text(strings.themeTitle(themes[index]))
-                    .font(Typeface.font(unit * 0.26, .black))
-                    .tracking(unit * 0.08)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .contentTransition(.numericText())
+                HStack(spacing: unit * 0.2) {
+                    Text(strings.themeTitle(themes[index]))
+                        .font(Typeface.font(unit * 0.26, .black))
+                        .tracking(unit * 0.08)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .contentTransition(.numericText())
+                    // En guvenilen pano one cikar.
+                    if themes[index] == .realistic {
+                        Text(strings.obRecommended)
+                            .font(Typeface.font(unit * 0.19, .black))
+                            .tracking(unit * 0.05)
+                            .foregroundStyle(Palette.onAccent)
+                            .padding(.horizontal, unit * 0.16)
+                            .padding(.vertical, unit * 0.05)
+                            .background(Capsule().fill(Palette.accent))
+                            .shadow(color: Palette.accent.opacity(0.6), radius: unit * 0.15)
+                            .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    }
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2.6))
+                // Realistic daha uzun onde kalir.
+                try? await Task.sleep(for: .seconds(themes[index] == .realistic ? 4.2 : 2.4))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(duration: 0.85, bounce: 0.16)) { index = (index + 1) % themes.count }
                 Haptics.impact(.soft, intensity: 0.5)
@@ -961,6 +976,7 @@ extension Strings {
         pick("Laptopta apexdash.pro'yu aç ve QR'ı okut: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma.",
              "Open apexdash.pro on a laptop and scan the QR: track map, speed and pedal traces, corner-by-corner comparison.")
     }
+    var obRecommended: String { pick("ÖNERİLEN", "RECOMMENDED") }
     var obBest: String { pick("EN İYİ", "BEST") }
     var obLap: String { pick("TUR", "LAP") }
 

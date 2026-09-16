@@ -8,7 +8,7 @@ import SwiftUI
 /// piksel piksel ayni oldugu icin yerini karta sessizce birakir.
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
-    @AppStorage("dashTheme") private var themeID: String = DashTheme.dotMatrix.rawValue
+    @AppStorage("dashTheme") private var themeID: String = DashTheme.realistic.rawValue
     /// Bos deger "otomatik" demek: telefonun dili kullanilir.
     @AppStorage("appLanguage") private var languageID: String = ""
     /// Dil ayari once iki durumluydu ve ilk dokunusta bir dile kilitliyordu.
@@ -44,7 +44,7 @@ struct RootDashboardView: View {
     /// cizimi animasyon karelerini bolmesin.
     @State private var frozenDash: DashboardModel?
     /// Tam ekran sayfalayicinin konumu; tema secimiyle esittir.
-    @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .dotMatrix
+    @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .realistic
 
     @StateObject private var uploader = SessionUploader()
 
@@ -53,7 +53,7 @@ struct RootDashboardView: View {
         .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
     }
 
-    private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .dotMatrix }
+    private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .realistic }
     private var language: AppLanguage {
         (LanguagePreference(rawValue: languageID) ?? .automatic).resolved
     }
