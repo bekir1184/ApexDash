@@ -360,6 +360,8 @@ struct RootDashboardView: View {
                     didCompleteOnboarding = true
                     didShowFlashWarning = true
                     didCompleteSetup = true
+                    // Tanitim kendi acilisiyla basladi; bitince tekrar gosterilmez.
+                    showsSplash = false
                     showsOnboarding = false
                 }
                 .zIndex(20)
