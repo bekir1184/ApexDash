@@ -995,5 +995,5 @@ extension Strings {
     var obLap: String { pick("TUR", "LAP") }
 
     var obReadyTitle: String { pick("HAZIR MISIN?", "READY?") }
-    var obLightsOut: String { pick("IŞIKLAR SÖNSÜN", "LIGHTS OUT") }
+    var obLightsOut: String { pick("BAŞLA", "START") }
 }
