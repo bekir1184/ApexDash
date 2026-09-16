@@ -22,6 +22,9 @@ struct HomeView: View {
     var frozenDash: DashboardModel? = nil
 
     @State private var position: Int?
+    /// Uzerine gelinen kartin isinma animasyonu: hangi kart, ne zaman basladi.
+    @State private var warmUpIndex: Int?
+    @State private var warmUpStart: Date = .distantPast
     @State private var showsConnection = false
 
     private let themes = DashTheme.allCases
@@ -41,10 +44,17 @@ struct HomeView: View {
                     header
                         .padding(.horizontal, unit * 0.5)
                     Spacer(minLength: 0)
-                    TimelineView(.periodic(from: .now, by: 0.1)) { _ in
+                    TimelineView(.animation(minimumInterval: 1 / 30)) { context in
                         let live = client.status == .receiving
-                        let dash = frozenDash ?? (live ? client.dash : DashboardModel.demo)
-                        carousel(size: size, cardW: cardW, cardH: cardH, dash: dash)
+                        let elapsed = context.date.timeIntervalSince(warmUpStart)
+                        carousel(size: size, cardW: cardW, cardH: cardH) { index in
+                            if let frozenDash { return frozenDash }
+                            if live { return client.dash }
+                            // Baglanti yokken panolar soguk durur; yalnizca uzerine
+                            // yeni gelinen kart bir kez canlanir.
+                            guard index == warmUpIndex, elapsed < DashboardModel.warmUpDuration else { return .cold }
+                            return .warmUp(at: elapsed)
+                        }
                     }
                     .frame(height: cardH * 1.12)
                     titleAndDots
@@ -69,9 +79,17 @@ struct HomeView: View {
             .onAppear {
                 if position == nil { position = middleBase + (themes.firstIndex(of: selectedTheme) ?? 0) }
             }
-            .onChange(of: position) { _, new in
+            .onChange(of: position) { old, new in
                 guard let new else { return }
                 let theme = themes[new % themes.count]
+                // Sonsuz donus icin ayni temanin baska kopyasina atlamak animasyon baslatmaz.
+                if old.map({ themes[$0 % themes.count] }) != theme {
+                    warmUpIndex = new
+                    // Ilk kart acilis ekraninin arkasinda kalmasin: o bitince oynar.
+                    warmUpStart = Date().addingTimeInterval(old == nil ? 2.3 : 0)
+                } else if warmUpIndex == old {
+                    warmUpIndex = new
+                }
                 if theme != selectedTheme { selectedTheme = theme }
             }
             .onChange(of: selectedTheme) { _, new in
@@ -110,14 +128,15 @@ struct HomeView: View {
 
     // MARK: Karusel
 
-    private func carousel(size: CGSize, cardW: CGFloat, cardH: CGFloat, dash: DashboardModel) -> some View {
+    private func carousel(size: CGSize, cardW: CGFloat, cardH: CGFloat,
+                          dash: @escaping (Int) -> DashboardModel) -> some View {
         let sidePad = (size.width - cardW) / 2
         return ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
                 ForEach(0..<itemCount, id: \.self) { index in
                     let theme = themes[index % themes.count]
                     let isCentre = index == position
-                    DashboardCard(theme: theme, dash: dash, strings: strings,
+                    DashboardCard(theme: theme, dash: dash(index), strings: strings,
                                   fullSize: size, width: cardW, cornerRadius: unit * 0.35,
                                   highlighted: isCentre)
                         .opacity(isCentre && hidesCentreCard ? 0 : 1)
@@ -440,6 +459,62 @@ struct ConnectionCard: View {
 }
 
 extension DashboardModel {
+    /// Kontak kapali: sifir hiz, bosta vites, soguk lastik ve frenler.
+    static var cold: DashboardModel {
+        var m = DashboardModel()
+        m.tyreSurfaceTemps = [24, 24, 24, 24]; m.tyreInnerTemps = [24, 24, 24, 24]
+        m.brakeTemps = [24, 24, 24, 24]; m.engineTemp = 24
+        m.ersStoreEnergy = 4_000_000; m.ersHarvestLimitPerLap = 8_000_000
+        m.fiaFlag = 0; m.is2026Regulations = true
+        return m
+    }
+
+    static let warmUpDuration: TimeInterval = 3.2
+
+    /// Karta ilk gelindiginde oynayan kisa tur: gaz, vites vites hizlanma,
+    /// vites isiklari, frenleme ve yeniden soguk duruma inis.
+    static func warmUp(at t: TimeInterval) -> DashboardModel {
+        var m = DashboardModel.cold
+        let d = warmUpDuration
+        let p = min(max(t / d, 0), 1)
+        // Hizlanma %0-60, frenleme %60-85, bosa alma %85-100.
+        let speed: Double
+        if p < 0.6 { speed = 305 * pow(p / 0.6, 0.8) }
+        else if p < 0.85 { speed = 305 - 225 * ((p - 0.6) / 0.25) }
+        else { speed = 80 * (1 - (p - 0.85) / 0.15) }
+        let envelope = sin(.pi * p)
+        let gearSpan = 40.0
+        let gear = speed < 4 ? 0 : min(8, 1 + Int(speed / gearSpan))
+        let inGear = speed < 4 ? 0 : (speed / gearSpan).truncatingRemainder(dividingBy: 1)
+
+        m.speedKPH = Int(speed)
+        m.gear = gear
+        m.rpm = speed < 4 ? Int(4000 * envelope) : 6_500 + Int(inGear * 5_500)
+        m.revLightsPercent = p < 0.6 ? Int(inGear * 100) : 0
+        let lights = Int(Double(m.revLightsPercent) / 100 * 15)
+        m.revLightsBits = lights <= 0 ? 0 : UInt16((1 << min(lights, 15)) - 1)
+        m.throttle = p < 0.6 ? 1 : 0
+        m.brake = p >= 0.6 && p < 0.85 ? 0.9 : 0
+        m.gLongitudinal = Float(p < 0.6 ? 0.8 * envelope : -2.5 * envelope)
+        m.gLateral = Float(sin(p * .pi * 3) * 0.8 * envelope)
+
+        func warm(_ cold: Int, _ hot: Int) -> Int { cold + Int(Double(hot - cold) * envelope) }
+        m.tyreSurfaceTemps = [warm(24, 96), warm(24, 98), warm(24, 92), warm(24, 94)]
+        m.tyreInnerTemps = [warm(24, 101), warm(24, 103), warm(24, 97), warm(24, 99)]
+        m.brakeTemps = [warm(24, 520), warm(24, 510), warm(24, 580), warm(24, 570)]
+        m.engineTemp = warm(24, 108)
+
+        m.ersStoreEnergy = Float(4_000_000 - 1_400_000 * envelope)
+        m.ersDeployedThisLap = Float(1_400_000 * envelope)
+        m.ersHarvestedThisLap = Float(p > 0.6 ? 1_200_000 * envelope : 0)
+        m.ersDeployMode = 2
+        m.aeroStraightMode = p > 0.2 && p < 0.6
+        m.aeroAvailable = true
+        m.overtakeAvailable = true
+        m.overtakeActive = p > 0.35 && p < 0.55
+        return m
+    }
+
     /// Veri yokken karusel onizlemeleri icin canli gorunen ornek degerler.
     static var demo: DashboardModel {
         var m = DashboardModel()

@@ -64,7 +64,7 @@ struct RootDashboardView: View {
     private var dash: DashboardModel { client.dash }
     /// Ekranda gosterilen veri: baglanti yokken menu onizlemeleriyle ayni
     /// ornek degerler, boylece buyutup geri donunce goruntu degismez.
-    private var shownDash: DashboardModel { client.status == .receiving ? client.dash : .demo }
+    private var shownDash: DashboardModel { client.status == .receiving ? client.dash : .cold }
     private var inMenu: Bool { !stageMounted }
     private var fullscreen: Bool { stageMounted && stage == 0 }
 
