@@ -36,7 +36,7 @@ struct HomeView: View {
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let cardW = size.width * 0.50, cardH = cardW * size.height / size.width
+            let cardW = size.width * 0.53, cardH = cardW * size.height / size.width
             ZStack {
                 StripedBackground()
 
@@ -149,7 +149,7 @@ struct HomeView: View {
                         }
                         .scrollTransition(.interactive, axis: .horizontal) { content, phase in
                             content
-                                .scaleEffect(1 - abs(phase.value) * 0.26)
+                                .scaleEffect(1 - abs(phase.value) * 0.4)
                                 .opacity(1 - abs(phase.value) * 0.45)
                         }
                         .frame(width: cardW, height: cardH)
@@ -299,6 +299,11 @@ struct DashboardCard: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .padding(feather)
                     .blur(radius: feather)
+            }
+            // Ince cerceve: zemindeki gri seritlerle ayni renk.
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Palette.stripeFar, lineWidth: 1.5)
             }
             .background {
                 if halo {
