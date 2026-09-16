@@ -430,7 +430,9 @@ struct ConnectionCard: View {
     private var title: String {
         switch client.status {
         case .idle: return strings.connectionOff
-        case .listening: return strings.waitingForData
+        case .listening:
+            if let game = client.mismatchedFormat { return strings.formatMismatch(game.label) }
+            return strings.waitingForData
         case .receiving: return strings.connected
         case .failed(let message): return strings.failure(message)
         }

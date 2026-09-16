@@ -37,6 +37,12 @@ final class TelemetryClient: ObservableObject {
     @Published private(set) var sessionInfo = SessionInfo()
     /// Son paketin bicimi; ekranlar DRS mi aktif aero mu gosterecegini buna sorar.
     @Published private(set) var packetFormat: PacketFormat = .f126
+    /// Kullanicinin sectigi UDP bicimi. Yalnizca bu bicimdeki paketler islenir.
+    @Published var selectedFormat: PacketFormat = .f126 {
+        didSet { if selectedFormat != oldValue { mismatchedFormat = nil } }
+    }
+    /// Oyun secilenden farkli bir bicim gonderiyorsa o bicim; ekranda uyari icin.
+    @Published private(set) var mismatchedFormat: PacketFormat?
     private let pathMonitor = NWPathMonitor()
     private var monitoring = false
     private var packetCounter = 0
@@ -137,6 +143,12 @@ final class TelemetryClient: ObservableObject {
     private func handle(_ data: Data) {
         guard let header = PacketHeader(data) else { return }
         let format = header.format
+        // Secilmeyen bicimdeki paketler farkli yerlesimde oldugundan okunmaz.
+        guard format == selectedFormat else {
+            if mismatchedFormat != format { mismatchedFormat = format }
+            return
+        }
+        if mismatchedFormat != nil { mismatchedFormat = nil }
         if format != packetFormat { packetFormat = format }
         packetCounter += 1
         lastPacketDate = Date()

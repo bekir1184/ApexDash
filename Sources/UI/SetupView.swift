@@ -5,6 +5,9 @@ import SwiftUI
 /// adresi de buradan kopyalanir.
 struct SetupView: View {
     @Binding var port: Int
+    /// Oyundaki UDP Format ayariyla ayni olmasi gereken yil (2025 / 2026).
+    @Binding var format: Int
+    var mismatch: PacketFormat? = nil
     let strings: Strings
     let localIP: String
     let unit: CGFloat
@@ -135,15 +138,50 @@ struct SetupView: View {
             row("UDP IP Address", localIP)
             row("UDP Port", "\(port)")
             row("UDP Send Rate", "60 Hz")
-            row("UDP Format", "2026")
+            formatRow
             row("Your Telemetry", "Public")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(unit * 0.3)
+        .overlay(alignment: .bottomLeading) {
+            if let mismatch {
+                Label(strings.formatMismatch(mismatch.label), systemImage: "exclamationmark.triangle.fill")
+                    .font(Typeface.digits(unit * 0.22, .heavy))
+                    .foregroundStyle(accent)
+                    .offset(y: unit * 0.45)
+            }
+        }
         .background(
             RoundedRectangle(cornerRadius: unit * 0.16, style: .continuous)
                 .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
         )
+    }
+
+    /// Oyundaki UDP Format secimi: iki yil arasinda gecis.
+    private var formatRow: some View {
+        HStack {
+            Text(verbatim: "UDP Format")
+                .foregroundStyle(.white.opacity(0.6))
+            Spacer(minLength: unit * 0.3)
+            HStack(spacing: 0) {
+                ForEach([2025, 2026], id: \.self) { year in
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) { format = year }
+                    } label: {
+                        Text(verbatim: "\(year)")
+                            .foregroundStyle(format == year ? Palette.onAccent : .white.opacity(0.5))
+                            .padding(.horizontal, unit * 0.18)
+                            .padding(.vertical, unit * 0.03)
+                            .background {
+                                if format == year { Capsule().fill(accent) }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .background(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
+        }
+        .font(Typeface.digits(unit * 0.28, .heavy))
     }
 
     private func row(_ name: String, _ value: String) -> some View {

@@ -55,6 +55,12 @@ struct Strings {
 
     var connectionOff: String { pick("BAGLANTI KAPALI", "NOT LISTENING") }
     var waitingForData: String { pick("VERI BEKLENIYOR", "WAITING FOR DATA") }
+    func formatMismatch(_ game: String) -> String {
+        pick("OYUN \(game) BİÇİMİNDE GÖNDERİYOR", "GAME SENDS \(game) FORMAT")
+    }
+    var formatMismatchHint: String {
+        pick("Oyundaki UDP Format ayarı buradakiyle aynı olmalı.", "The UDP Format in the game must match the one selected here.")
+    }
     func failure(_ message: String) -> String { pick("HATA: \(message)", "ERROR: \(message)") }
 
     var settingsPath: String { pick("Oyunda: Ayarlar › Telemetri", "In game: Settings › Telemetry") }

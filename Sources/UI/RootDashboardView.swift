@@ -15,6 +15,8 @@ struct RootDashboardView: View {
     /// Eski kayit bir kez temizlenir, boylece uygulama otomatige doner.
     @AppStorage("languagePreferenceReset") private var didResetLanguage = false
     @AppStorage("udpPort") private var udpPort: Int = 20777
+    /// Varsayilan F1 26; F1 25 icin 2025 secilir.
+    @AppStorage("udpFormat") private var udpFormat: Int = 2026
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
@@ -117,9 +119,13 @@ struct RootDashboardView: View {
                 page = theme
                 uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
+                client.selectedFormat = PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126
                 if !didCompleteSetup && !showsOnboarding { showsSetup = true }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
+            .onChange(of: udpFormat) { _, new in
+                client.selectedFormat = PacketFormat(rawValue: UInt16(new)) ?? .f126
+            }
             // Vites uyarisi: ekranla birlikte telefonun flasi (ayarlardan acilir).
             .onChange(of: dash.shiftFlash) { _, on in
                 ShiftTorch.shared.update(active: on && fullscreen && client.status == .receiving,
@@ -348,7 +354,8 @@ struct RootDashboardView: View {
                 .zIndex(10)
             }
             if showsSetup {
-                SetupView(port: $udpPort, strings: strings, localIP: client.localIP, unit: unit) {
+                SetupView(port: $udpPort, format: $udpFormat, mismatch: client.mismatchedFormat,
+                          strings: strings, localIP: client.localIP, unit: unit) {
                     didCompleteSetup = true
                     withAnimation(spring) { showsSetup = false }
                 }
