@@ -422,25 +422,11 @@ private struct DashCarousel: View {
                 }
                 .frame(height: cardW * screen.height / screen.width)
 
-                HStack(spacing: unit * 0.2) {
-                    Text(strings.themeTitle(themes[index]))
-                        .font(Typeface.font(unit * 0.26, .black))
-                        .tracking(unit * 0.08)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .contentTransition(.numericText())
-                    // En guvenilen pano one cikar.
-                    if themes[index] == .realistic {
-                        Text(strings.obRecommended)
-                            .font(Typeface.font(unit * 0.19, .black))
-                            .tracking(unit * 0.05)
-                            .foregroundStyle(Palette.onAccent)
-                            .padding(.horizontal, unit * 0.16)
-                            .padding(.vertical, unit * 0.05)
-                            .background(Capsule().fill(Palette.accent))
-                            .shadow(color: Palette.accent.opacity(0.6), radius: unit * 0.15)
-                            .transition(.scale(scale: 0.6).combined(with: .opacity))
-                    }
-                }
+                Text(strings.themeTitle(themes[index]))
+                    .font(Typeface.font(unit * 0.26, .black))
+                    .tracking(unit * 0.08)
+                    .foregroundStyle(.white.opacity(0.8))
+                    .contentTransition(.numericText())
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -976,7 +962,6 @@ extension Strings {
         pick("Laptopta apexdash.pro'yu aç ve QR'ı okut: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma.",
              "Open apexdash.pro on a laptop and scan the QR: track map, speed and pedal traces, corner-by-corner comparison.")
     }
-    var obRecommended: String { pick("ÖNERİLEN", "RECOMMENDED") }
     var obBest: String { pick("EN İYİ", "BEST") }
     var obLap: String { pick("TUR", "LAP") }
 
