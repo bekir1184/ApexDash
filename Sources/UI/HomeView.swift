@@ -87,13 +87,7 @@ struct HomeView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: unit * 0.18) {
-                // Uygulama ikonu, yazinin yuksekliginde.
-                Image("Logo")
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: unit * 0.56, height: unit * 0.56)
-                    .clipShape(RoundedRectangle(cornerRadius: unit * 0.13, style: .continuous))
+            HStack(spacing: 0) {
                 Text(verbatim: "APEX")
                     .font(Typeface.font(unit * 0.52, .black))
                     .foregroundStyle(.white)
