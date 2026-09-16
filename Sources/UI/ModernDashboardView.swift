@@ -82,19 +82,17 @@ struct ModernDashboardView: View {
     }
 
     private func badge(text: String, active: Bool, ready: Bool, color: Color) -> some View {
-        Text(text)
+        let ink: Color = active ? .black : (ready ? color : Color.white.opacity(0.18))
+        let fill: Color = active ? color : Color.white.opacity(0.05)
+        let edge: Color = ready ? color.opacity(0.7) : Color.white.opacity(0.1)
+        let shape = RoundedRectangle(cornerRadius: unit * 0.14, style: .continuous)
+        return Text(text)
             .font(.system(size: unit * 0.32, weight: .black, design: .monospaced))
-            .foregroundStyle(active ? .black : (ready ? color : Color.white.opacity(0.18)))
+            .foregroundStyle(ink)
             .padding(.horizontal, unit * 0.28)
             .padding(.vertical, unit * 0.14)
-            .background(
-                RoundedRectangle(cornerRadius: unit * 0.14, style: .continuous)
-                    .fill(active ? color : Color.white.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: unit * 0.14, style: .continuous)
-                    .stroke(ready ? color.opacity(0.7) : Color.white.opacity(0.1), lineWidth: 1.5)
-            )
+            .background(shape.fill(fill))
+            .overlay(shape.stroke(edge, lineWidth: 1.5))
     }
 
     private func label(_ text: String) -> some View {
