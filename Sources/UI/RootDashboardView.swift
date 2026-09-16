@@ -29,6 +29,9 @@ struct RootDashboardView: View {
     /// Her acilista kisa acilis ekrani; tanitim varsa onun kendi acilisi yeter.
     @State private var showsSplash = true
     @State private var warnsAfterOnboarding = false
+    /// Tam ekranda dokununca sol ustte beliren geri dugmesi.
+    @State private var showsBack = false
+    @State private var backHide: Task<Void, Never>?
     @State private var showsSettings = false
     /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
     @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
@@ -92,6 +95,7 @@ struct RootDashboardView: View {
     private func screen(geo: GeometryProxy, unit: CGFloat) -> some View {
         layers(geo: geo, unit: unit)
             .overlay { connectionOverlay(unit: unit) }
+            .overlay { backOverlay(geo: geo, unit: unit) }
             .overlay { startLightsOverlay(unit: unit) }
             .overlay(alignment: .top) { sectorOverlay(unit: unit) }
             .overlay { sheets(unit: unit) }
@@ -240,6 +244,46 @@ struct RootDashboardView: View {
         .scaleEffect(t.scale)
         .offset(t.offset)
         .simultaneousGesture(pullGesture(geo))
+        .simultaneousGesture(TapGesture().onEnded { if fullscreen { revealBack() } })
+    }
+
+    /// Geri dugmesini gosterir; birkac saniye dokunulmazsa kendiliginden kaybolur.
+    private func revealBack() {
+        withAnimation(.easeOut(duration: 0.25)) { showsBack = true }
+        backHide?.cancel()
+        backHide = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeIn(duration: 0.4)) { showsBack = false }
+        }
+    }
+
+    @ViewBuilder
+    private func backOverlay(geo: GeometryProxy, unit: CGFloat) -> some View {
+        if fullscreen && showsBack && !settling && !showsSetup && !showsLaps && !showsSettings {
+            Button {
+                backHide?.cancel()
+                showsBack = false
+                showsConnection = false
+                frozenDash = shownDash
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: unit * 0.32, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: unit * 0.8, height: unit * 0.8)
+                    .background(Circle().fill(Color.black.opacity(0.45)))
+                    .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(PressScaleStyle())
+            // Yari saydam: panoyu kapatmaz ama secilebilir kalir.
+            .opacity(0.7)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.top, unit * 0.3)
+            .padding(.leading, unit * 0.5)
+            .transition(.opacity.combined(with: .scale(scale: 0.85)))
+        }
     }
 
     /// Bu kadar cekilince sahne tam olarak kartin yerine oturur.
