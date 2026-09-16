@@ -60,8 +60,10 @@ struct OnboardingView: View {
     private func scene(_ index: Int) -> some View {
         switch index {
         case 0:
-            IgnitionScene(strings: strings, unit: unit) { introDone = true }
-                .onTapGesture { if introDone { go(to: 1) } }
+            IgnitionScene(strings: strings, unit: unit) {
+                introDone = true
+                go(to: 1)
+            }
         case 1:
             DashesScene(strings: strings, unit: unit)
         case 2:
@@ -352,97 +354,35 @@ private struct SplitLayout<Left: View, Right: View>: View {
     }
 }
 
-// MARK: - 1. Kontak
+// MARK: - 1. Acilis
 
+/// Kisa acilis ekrani: logo ve yazi yumusakca belirir, kisa bir an durur,
+/// tanitim kendiliginden ilk sahneye gecer.
 private struct IgnitionScene: View {
     let strings: Strings
     let unit: CGFloat
     let onDone: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var lit = 0
-    @State private var flash = false
-    @State private var revealed = false
-    @State private var sheen: CGFloat = -1
-
-    private let letters = Array("APEXDASH")
+    @State private var shown = false
 
     var body: some View {
-        ZStack {
-            VStack(spacing: unit * (revealed ? 0.42 : 0)) {
-                ShiftBars(lit: lit,
-                          barWidth: unit * (revealed ? 0.3 : 0.6),
-                          barHeight: unit * (revealed ? 1.0 : 2.3),
-                          spacing: unit * (revealed ? 0.17 : 0.32),
-                          glow: flash ? 2.4 : 1)
-
-                if revealed {
-                    wordmark
-                    Text(strings.obTagline)
-                        .font(Typeface.font(unit * 0.3, .medium))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .reveal(revealed, 0.75)
-                }
+        VStack(spacing: unit * 0.42) {
+            ShiftBars(lit: 5, barWidth: unit * 0.3, barHeight: unit * 1.0, spacing: unit * 0.17)
+            HStack(spacing: 0) {
+                Text(verbatim: "APEX").foregroundStyle(.white)
+                Text(verbatim: "DASH").foregroundStyle(Palette.accent)
             }
-
-            Color.white
-                .opacity(flash ? 0.22 : 0)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+            .font(Typeface.font(unit * 0.95, .black))
+            .tracking(unit * 0.07)
         }
+        .scaleEffect(shown ? 1 : 0.94)
+        .opacity(shown ? 1 : 0)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { await ignite() }
-    }
-
-    private var wordmark: some View {
-        HStack(spacing: unit * 0.07) {
-            ForEach(letters.indices, id: \.self) { index in
-                Text(String(letters[index]))
-                    .font(Typeface.font(unit * 0.95, .black))
-                    .foregroundStyle(index < 4 ? Color.white : Palette.accent)
-                    .reveal(revealed, 0.08 + Double(index) * 0.045, distance: unit * 0.4)
-            }
+        .task {
+            withAnimation(.easeOut(duration: 0.6)) { shown = true }
+            try? await Task.sleep(for: .milliseconds(1500))
+            onDone()
         }
-        // Harflerin ustunden bir kez gecen parlama.
-        .overlay {
-            GeometryReader { geo in
-                LinearGradient(colors: [.clear, .white.opacity(0.75), .clear],
-                               startPoint: .leading, endPoint: .trailing)
-                    .frame(width: geo.size.width * 0.35)
-                    .rotationEffect(.degrees(18))
-                    .offset(x: sheen * geo.size.width * 1.3)
-            }
-            .mask {
-                HStack(spacing: unit * 0.07) {
-                    ForEach(letters.indices, id: \.self) { index in
-                        Text(String(letters[index])).font(Typeface.font(unit * 0.95, .black))
-                    }
-                }
-            }
-            .allowsHitTesting(false)
-        }
-    }
-
-    private func ignite() async {
-        try? await Task.sleep(for: .milliseconds(450))
-        for step in 1...5 {
-            withAnimation(.spring(duration: 0.22, bounce: 0.4)) { lit = step }
-            Haptics.impact(step < 4 ? .light : .medium, intensity: 0.5 + CGFloat(step) * 0.1)
-            try? await Task.sleep(for: .milliseconds(170))
-        }
-        try? await Task.sleep(for: .milliseconds(120))
-
-        Haptics.impact(.heavy)
-        if !reduceMotion {
-            withAnimation(.easeOut(duration: 0.09)) { flash = true }
-            try? await Task.sleep(for: .milliseconds(110))
-        }
-        withAnimation(.easeOut(duration: 0.7)) { flash = false }
-        withAnimation(.spring(duration: 0.95, bounce: 0.22)) { revealed = true }
-        try? await Task.sleep(for: .milliseconds(650))
-        Haptics.success()
-        withAnimation(.easeInOut(duration: 1.1)) { sheen = 1 }
-        onDone()
     }
 }
 
@@ -735,63 +675,216 @@ private struct AnalyseScene: View {
     }
 }
 
-/// Kendini cizen pist ve etrafinda donen arac.
+/// Koyu sehir haritasi ustunde kendini cizen beyaz sokak pisti (Monako
+/// duzeni) ve pistte donen arac. Harita tamamen kodla cizilir: yapilar ve
+/// sokaklar sabit tohumlu rastgele uretilir, deniz ve liman siyahtir.
 private struct TrackTrace: View {
     let unit: CGFloat
     let shown: Bool
 
     var body: some View {
         GeometryReader { geo in
-            let rect = CGRect(origin: .zero, size: geo.size).insetBy(dx: unit * 0.8, dy: unit * 0.55)
+            let height = min(geo.size.height * 0.96, geo.size.width / StreetCircuit.aspect)
+            let size = CGSize(width: height * StreetCircuit.aspect, height: height)
+            let radius = unit * 0.35
             ZStack {
-                TrackShape()
+                Canvas { context, canvasSize in
+                    StreetCircuit.drawCity(in: &context, size: canvasSize)
+                }
+
+                // Pistin isimasi, sonra kendisi.
+                CircuitShape()
                     .trim(from: 0, to: shown ? 1 : 0)
-                    .stroke(Color.white.opacity(0.07), style: StrokeStyle(lineWidth: unit * 0.36, lineCap: .round, lineJoin: .round))
-                TrackShape()
+                    .stroke(Color.white.opacity(0.35), style: StrokeStyle(lineWidth: unit * 0.22, lineCap: .round, lineJoin: .round))
+                    .blur(radius: unit * 0.14)
+                CircuitShape()
                     .trim(from: 0, to: shown ? 1 : 0)
-                    .stroke(AngularGradient(colors: [.blue, .green, .yellow, .red, .yellow, .green, .blue], center: .center),
-                            style: StrokeStyle(lineWidth: unit * 0.09, lineCap: .round, lineJoin: .round))
-                    .shadow(color: .white.opacity(0.15), radius: unit * 0.1)
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: unit * 0.085, lineCap: .round, lineJoin: .round))
+
+                // Tunel: beyaz cizginin ustunde kesik kesik karartma.
+                CircuitShape(range: StreetCircuit.tunnel)
+                    .stroke(Color.black.opacity(0.75),
+                            style: StrokeStyle(lineWidth: unit * 0.1, dash: [unit * 0.035, unit * 0.045]))
+                    .opacity(shown ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4).delay(1.2), value: shown)
 
                 TimelineView(.animation) { context in
                     let t = context.date.timeIntervalSinceReferenceDate
-                    let p = TrackShape.point((t / 7).truncatingRemainder(dividingBy: 1), in: rect)
+                    let f = (t / 9).truncatingRemainder(dividingBy: 1)
+                    let p = StreetCircuit.point(at: f)
                     Circle()
-                        .fill(Color.white)
-                        .frame(width: unit * 0.2, height: unit * 0.2)
-                        .shadow(color: .white, radius: unit * 0.15)
-                        .shadow(color: Palette.accent, radius: unit * 0.35)
-                        .position(p)
+                        .fill(Palette.accent)
+                        .overlay(Circle().stroke(Color.white, lineWidth: unit * 0.035))
+                        .frame(width: unit * 0.24, height: unit * 0.24)
+                        .shadow(color: Palette.accent, radius: unit * 0.25)
+                        .position(x: p.x * size.width, y: p.y * size.height)
                 }
                 .opacity(shown ? 1 : 0)
-                .animation(.easeIn(duration: 0.5).delay(1.8), value: shown)
+                .animation(.easeIn(duration: 0.5).delay(1.9), value: shown)
             }
-            .padding(0)
+            .frame(width: size.width, height: size.height)
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1))
+            .shadow(color: .black.opacity(0.6), radius: unit * 0.4, y: unit * 0.2)
+            .animation(.easeInOut(duration: 1.8).delay(0.35), value: shown)
             .frame(width: geo.size.width, height: geo.size.height)
-            .animation(.easeInOut(duration: 1.6).delay(0.3), value: shown)
         }
     }
 }
 
-private struct TrackShape: Shape {
-    /// Kapali, pist benzeri bir egri: birkac harmonik ile bozulmus elips.
-    static func point(_ f: Double, in rect: CGRect) -> CGPoint {
-        let theta = f * 2 * .pi
-        let r = 1 + 0.2 * sin(2 * theta) + 0.12 * cos(3 * theta + 0.8) + 0.05 * sin(5 * theta + 0.3)
-        let x = cos(theta) * r / 1.35
-        let y = sin(theta) * r / 1.35
-        return CGPoint(x: rect.midX + CGFloat(x) * rect.width / 2,
-                       y: rect.midY + CGFloat(y) * rect.height / 2)
-    }
+private struct CircuitShape: Shape {
+    var range: Range<Int>? = nil
 
     func path(in rect: CGRect) -> Path {
+        let points = StreetCircuit.points
+        let indices = range.map { Array($0) } ?? Array(points.indices) + [0]
         var path = Path()
-        let steps = 260
-        for i in 0...steps {
-            let p = Self.point(Double(i) / Double(steps), in: rect)
-            if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
+        for (n, i) in indices.enumerated() {
+            let p = CGPoint(x: rect.minX + points[i].x * rect.width, y: rect.minY + points[i].y * rect.height)
+            if n == 0 { path.move(to: p) } else { path.addLine(to: p) }
         }
         return path
+    }
+}
+
+/// Pist ve cevresindeki sehir; koordinatlar 846 x 930'luk bir haritada.
+private enum StreetCircuit {
+    static let mapSize = CGSize(width: 846, height: 930)
+    static var aspect: CGFloat { mapSize.width / mapSize.height }
+
+    private static let raw: [CGPoint] = [
+        (178, 484), (260, 472), (340, 461), (390, 452), (470, 428), (540, 405),
+        (575, 392), (630, 360), (675, 318), (700, 275), (712, 230), (720, 180), (724, 130), (722, 95),
+        (715, 78), (695, 80), (665, 92), (656, 104), (662, 125), (672, 148), (682, 158), (688, 150),
+        (684, 135), (668, 110), (648, 88), (630, 76), (615, 90), (580, 135), (545, 178), (518, 210),
+        (515, 232), (530, 255), (552, 285), (560, 310), (552, 338), (530, 358), (480, 372), (420, 392),
+        (370, 410), (300, 428), (220, 445), (140, 462), (125, 480), (120, 540), (118, 620), (122, 700),
+        (135, 780), (160, 840), (190, 888), (230, 892), (262, 885), (262, 872), (240, 850), (210, 800),
+        (190, 760), (182, 735), (190, 710), (178, 660), (160, 630), (152, 590), (150, 540), (160, 500)
+    ].map { CGPoint(x: $0.0, y: $0.1) }
+
+    /// 0...1 araliginda pist noktalari.
+    static let points: [CGPoint] = raw.map { CGPoint(x: $0.x / mapSize.width, y: $0.y / mapSize.height) }
+    /// Limandan yukari cikan tunel.
+    static let tunnel = 6..<14
+
+    /// Kapali pist boyunca birikimli uzunluk; arac sabit hizla ilerlesin.
+    private static let lengths: [CGFloat] = {
+        var out: [CGFloat] = [0]
+        let closed = raw + [raw[0]]
+        for i in 1..<closed.count {
+            out.append(out[i - 1] + hypot(closed[i].x - closed[i - 1].x, closed[i].y - closed[i - 1].y))
+        }
+        return out
+    }()
+
+    static func point(at fraction: Double) -> CGPoint {
+        let closed = points + [points[0]]
+        let target = CGFloat(fraction) * lengths[lengths.count - 1]
+        var i = 1
+        while i < lengths.count - 1 && lengths[i] < target { i += 1 }
+        let span = max(lengths[i] - lengths[i - 1], 0.001)
+        let f = (target - lengths[i - 1]) / span
+        return CGPoint(x: closed[i - 1].x + (closed[i].x - closed[i - 1].x) * f,
+                       y: closed[i - 1].y + (closed[i].y - closed[i - 1].y) * f)
+    }
+
+    /// Liman ve acik deniz.
+    private static let sea: [CGPoint] = [
+        (185, 500), (560, 412), (690, 335), (748, 150), (790, 60), (846, 40), (846, 930),
+        (600, 930), (560, 860), (275, 900), (228, 800), (200, 700), (172, 600), (165, 520)
+    ].map { CGPoint(x: $0.0, y: $0.1) }
+
+    private struct Block { let rect: CGRect; let shade: Double }
+
+    private static let city: (blocks: [Block], streets: [[CGPoint]]) = {
+        var seed: UInt64 = 0x5EED_A9E7
+        func random() -> CGFloat {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            return CGFloat(seed >> 33) / CGFloat(UInt64(1) << 31)
+        }
+        func nearTrack(_ p: CGPoint, _ margin: CGFloat) -> Bool {
+            let closed = raw + [raw[0]]
+            for i in 1..<closed.count where distance(p, closed[i - 1], closed[i]) < margin { return true }
+            return false
+        }
+
+        var streets: [[CGPoint]] = []
+        while streets.count < 24 {
+            var p = CGPoint(x: random() * mapSize.width, y: random() * mapSize.height)
+            guard !inside(p, sea) else { continue }
+            var angle = random() * .pi * 2
+            var line = [p]
+            for _ in 0..<7 {
+                angle += (random() - 0.5) * 0.9
+                let length = 50 + random() * 90
+                let next = CGPoint(x: p.x + cos(angle) * length, y: p.y + sin(angle) * length)
+                if inside(next, sea) { break }
+                line.append(next); p = next
+            }
+            if line.count > 2 { streets.append(line) }
+        }
+
+        var blocks: [Block] = []
+        var tries = 0
+        while blocks.count < 360 && tries < 6000 {
+            tries += 1
+            let w = 12 + random() * 38, h = 10 + random() * 34
+            let c = CGPoint(x: random() * mapSize.width, y: random() * mapSize.height)
+            guard !inside(c, sea), !nearTrack(c, 18 + max(w, h) * 0.6) else { continue }
+            let rect = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+            guard !blocks.contains(where: { $0.rect.insetBy(dx: -4, dy: -4).intersects(rect) }) else { continue }
+            blocks.append(Block(rect: rect, shade: Double(0.2 + random() * 0.07)))
+        }
+        return (blocks, streets)
+    }()
+
+    static func drawCity(in context: inout GraphicsContext, size: CGSize) {
+        let k = size.width / mapSize.width
+        let sy = size.height / mapSize.height
+
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(white: 0.15)))
+
+        for line in city.streets {
+            var path = Path()
+            for (n, p) in line.enumerated() {
+                let q = CGPoint(x: p.x * k, y: p.y * sy)
+                if n == 0 { path.move(to: q) } else { path.addLine(to: q) }
+            }
+            context.stroke(path, with: .color(Color(white: 0.23)),
+                           style: StrokeStyle(lineWidth: max(1.2, 5 * k), lineCap: .round, lineJoin: .round))
+        }
+        for block in city.blocks {
+            let r = CGRect(x: block.rect.minX * k, y: block.rect.minY * sy,
+                           width: block.rect.width * k, height: block.rect.height * sy)
+            context.fill(Path(roundedRect: r, cornerRadius: 1.5), with: .color(Color(white: block.shade)))
+        }
+
+        var water = Path()
+        for (n, p) in sea.enumerated() {
+            let q = CGPoint(x: p.x * k, y: p.y * sy)
+            if n == 0 { water.move(to: q) } else { water.addLine(to: q) }
+        }
+        water.closeSubpath()
+        context.fill(water, with: .color(Color(white: 0.02)))
+    }
+
+    private static func inside(_ p: CGPoint, _ polygon: [CGPoint]) -> Bool {
+        var result = false
+        var j = polygon.count - 1
+        for i in polygon.indices {
+            let a = polygon[i], b = polygon[j]
+            if (a.y > p.y) != (b.y > p.y), p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x { result.toggle() }
+            j = i
+        }
+        return result
+    }
+
+    private static func distance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGFloat {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let t = max(0, min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / max(dx * dx + dy * dy, 0.001)))
+        return hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
     }
 }
 
@@ -871,7 +964,6 @@ private struct LightsOutScene: View {
 // MARK: - Metinler
 
 extension Strings {
-    var obTagline: String { pick("Telefonun artık bir yarış direksiyonu ekranı.", "Your phone is now a racing wheel display.") }
     var obNext: String { pick("DEVAM", "NEXT") }
     var obSkip: String { pick("ATLA", "SKIP") }
 
