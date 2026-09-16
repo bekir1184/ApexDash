@@ -1,187 +1,386 @@
 <!doctype html>
-<html lang="tr">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apex Dash · Telemetri</title>
+<title>Apex Dash · Telemetry</title>
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  /* Tasarim ilkesi: once cevap, sonra ayrinti.
+     1. Oturum  — en iyi tur, teorik en iyi, en yuksek hiz ve tur listesi.
+     2. Tur     — secilen turun haritasi, hiz / pedal / fark grafikleri.
+     3. Ayrinti — diger kanallar, virajlar ve enerji; istenince acilir.
+     Gorunum uygulamayla ayni: lacivert zemin, iki yatik serit, kirmizi vurgu, Saira. */
   :root {
-    /* Uygulamayla ayni: lacivert zemin, kirmizi vurgu. */
-    --bg: #121219; --panel: #1a1a23; --panel2: #21212c; --line: rgba(255,255,255,.09);
+    --bg: #121219; --panel: rgba(26,26,35,.92); --raise: #21212c; --line: rgba(255,255,255,.08);
     --stripe: #292933;
-    --ink: #f1f2f5; --dim: #87879a; --accent: #e10600;
-    /* Veri renkleri anlam tasir, degismez. */
-    --purple: #b45cff; --green: #3ce85a; --yellow: #f5d92b;
-    --red: #ff4438; --cyan: #3fd9c9; --blue: #4aa3ff;
-    --c1: #3fd9c9; --c2: #ff7a3d; --c3: #b45cff;
+    --ink: #f1f2f5; --dim: #8a8a9c; --faint: #5d5d6e; --accent: #e10600;
+    /* Veri renkleri anlam tasir. */
+    --purple: #b45cff; --green: #3ce85a; --yellow: #f5d92b; --red: #ff4438; --blue: #4aa3ff;
+    --lapA: #3fd9c9; --lapB: #ff7a3d;
+    --radius: 14px; --gutter: 20px;
   }
+  @media (max-width: 600px) { :root { --gutter: 16px; } }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--ink); position: relative;
-         font: 13px/1.45 "Saira", -apple-system, "Segoe UI", system-ui, sans-serif; }
-  /* Uygulamadaki gibi, zemine yatik iki serit. */
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); position: relative;
+         font: 14px/1.45 "Saira", -apple-system, "Segoe UI", system-ui, sans-serif;
+         font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
   body::before {
     content: ""; position: fixed; inset: -20vh -20vw; z-index: -1; pointer-events: none;
     background:
       linear-gradient(110.3deg, transparent 28%, var(--stripe) 28%, var(--stripe) 39%, transparent 39%),
       linear-gradient(110.3deg, transparent 46%, var(--stripe) 46%, var(--stripe) 57%, transparent 57%);
   }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
-  b, th, .label { letter-spacing: .12em; text-transform: uppercase; font-size: 10.5px; color: var(--dim); font-weight: 700; }
+  button { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: var(--gutter); }
+  .label { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .purple { color: var(--purple); } .green { color: var(--green); } .yellow { color: var(--yellow); } .red { color: var(--red); }
 
   /* ---- ust cubuk */
-  .top { display: flex; align-items: center; gap: 22px; padding: 12px 20px; border-bottom: 1px solid var(--line);
-         background: rgba(18,18,25,.92); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 5; }
-  .top h1 { margin: 0; font-size: 17px; letter-spacing: .32em; font-weight: 900; }
-  .top h1 { display: flex; align-items: center; gap: 10px; }
-  .top h1 .logo { width: 26px; height: 26px; border-radius: 6px; }
-  .top h1 span { color: var(--accent); }
-  .top .meta { display: flex; gap: 22px; margin-left: auto; align-items: center; }
-  .top .meta div { display: flex; flex-direction: column; line-height: 1.15; }
-  .top .meta u { text-decoration: none; font-size: 14px; font-weight: 700; }
-  .status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
-  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .top { position: sticky; top: 0; z-index: 10; background: rgba(18,18,25,.9); backdrop-filter: blur(14px);
+         -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; gap: 16px; height: 58px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 900;
+           letter-spacing: .3em; white-space: nowrap; }
+  .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  .brand span { color: var(--accent); }
+  .status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 12px;
+            font-weight: 600; color: var(--dim); white-space: nowrap; }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
   .status.live i { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status.error i { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  main { padding-block: 24px 48px; display: flex; flex-direction: column; gap: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+  .panel-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px;
+                border-bottom: 1px solid var(--line); }
+  .panel-head h3 { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+  .panel-head .end { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .panel-body { padding: 16px 18px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .seg button { background: none; border: 0; color: var(--dim); padding: 6px 11px; font-size: 10.5px; font-weight: 700;
+                letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.on { background: rgba(225,6,0,.2); color: #fff; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--raise); border: 1px solid var(--line);
+         border-radius: 999px; padding: 7px 14px; font-size: 11px; font-weight: 700; letter-spacing: .1em;
+         text-transform: uppercase; color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); }
+  .btn:disabled { opacity: .35; cursor: default; border-color: var(--line); }
+  select.btn { appearance: none; -webkit-appearance: none; padding-right: 30px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%), linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 
   /* ---- eslesme */
-  .pair { display: flex; gap: 22px; align-items: center; margin: 18px 20px 0; background: rgba(26,26,35,.92);
-          border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-  .pair img { width: 176px; height: 176px; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 10px; }
-  .pair .code { font-size: 34px; letter-spacing: .3em; font-weight: 900; color: var(--accent); }
-  .pair p { margin: 6px 0 0; color: var(--dim); max-width: 460px; }
-  .btn { background: none; border: 1px solid var(--line); color: var(--dim); border-radius: 999px;
-         padding: 6px 14px; font: inherit; font-size: 11px; letter-spacing: .1em; cursor: pointer; }
-  .btn:hover { color: var(--ink); border-color: var(--accent); }
-  .hidden { display: none !important; }
+  .pair { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: center; padding: 32px;
+          max-width: 820px; margin: 6vh auto 0; width: 100%; }
+  .pair .qr img { display: block; width: 208px; height: 208px; image-rendering: pixelated; background: #fff;
+                  padding: 10px; border-radius: 12px; }
+  .pair h2 { margin: 2px 0 0; font-size: 44px; line-height: 1.1; font-weight: 900; letter-spacing: .22em; color: var(--accent); }
+  .pair ol { margin: 18px 0 20px; padding-left: 20px; color: var(--dim); display: grid; gap: 6px; }
+  .pair ol b { color: var(--ink); font-weight: 700; }
+  @media (max-width: 640px) {
+    .pair { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 24px 20px; gap: 20px; }
+    .pair ol { text-align: left; }
+    .pair h2 { font-size: 34px; }
+  }
 
-  /* ---- yerlesim */
-  .grid { display: grid; grid-template-columns: 300px 1fr; gap: 18px; padding: 18px 20px 60px; }
-  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-  .panel { background: rgba(26,26,35,.92); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-  .panel h2 { margin: 0 0 10px; font-size: 11px; letter-spacing: .18em; color: var(--dim); font-weight: 800;
-              display: flex; align-items: center; gap: 10px; }
-  .panel h2 .spacer { flex: 1; }
+  /* ---- baslik alani */
+  .context { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .context h2 { margin: 2px 0 0; font-size: 34px; line-height: 1.05; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; }
+  .context p { margin: 4px 0 0; color: var(--dim); }
+  .context .end { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 600px) { .context h2 { font-size: 26px; } }
 
-  /* ---- tur listesi */
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: right; padding: 7px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
-  tr.lap { cursor: pointer; }
-  tr.lap:hover td { background: rgba(255,255,255,.03); }
-  tr.best td:nth-child(3) { color: var(--purple); font-weight: 800; }
-  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -2px; }
-  .sw.on { border-color: transparent; }
-  .gap { color: var(--yellow); font-size: 11px; }
-  .purple { color: var(--purple); } .green { color: var(--green); }
+  /* ---- ana degerler */
+  .hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  @media (max-width: 900px) { .hero { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          padding: 16px 18px 15px; min-width: 0; text-align: left; overflow: hidden; }
+  button.card { cursor: pointer; transition: border-color .15s; }
+  button.card:hover { border-color: rgba(225,6,0,.6); }
+  .card.key::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+                      border-radius: 0 3px 3px 0; background: var(--accent); }
+  .card .value { display: block; margin-top: 6px; font-size: 32px; line-height: 1.05; font-weight: 800;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .value small { font-size: 14px; font-weight: 600; color: var(--dim); margin-left: 4px; }
+  .card .sub { display: block; margin-top: 6px; font-size: 12px; color: var(--dim); white-space: nowrap;
+               overflow: hidden; text-overflow: ellipsis; }
+  .hero.compact .card .value { font-size: 24px; }
+  @media (max-width: 600px) {
+    .hero { gap: 10px; }
+    .card { padding: 13px 14px; }
+    .card .value { font-size: 24px; }
+    .hero.compact .card .value { font-size: 20px; }
+  }
 
-  /* ---- ana alan */
-  .main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-  .row { display: grid; grid-template-columns: minmax(300px, 440px) 1fr; gap: 18px; }
-  @media (max-width: 1250px) { .row { grid-template-columns: 1fr; } }
-  canvas { display: block; width: 100%; }
-  #map { aspect-ratio: 1 / 1; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
-  .stat { background: var(--panel2); border-radius: 10px; padding: 10px 12px; border: 1px solid var(--line); }
-  .stat u { display: block; text-decoration: none; font-size: 20px; font-weight: 800; margin-top: 4px; }
-  .stat small { color: var(--dim); }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--dim); }
-  .legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .seg button { background: none; border: 0; color: var(--dim); padding: 5px 10px; font: inherit; font-size: 10.5px;
-                letter-spacing: .1em; cursor: pointer; }
-  .seg button.on { background: rgba(225,6,0,.18); color: #ff6b63; }
+  /* ---- tur listesi: sabit sutunlar, tasma yok */
+  .laps { display: flex; flex-direction: column; }
+  .lap-row { display: grid; align-items: center; gap: 14px; width: 100%; padding: 10px 18px; background: none;
+             border: 0; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer;
+             grid-template-columns: 2.6rem 6.4rem minmax(0, 1fr) 13.5rem 4.6rem 0.8rem; }
+  .lap-row:last-child { border-bottom: 0; }
+  .lap-row:hover { background: rgba(255,255,255,.035); }
+  .lap-row.head { cursor: default; padding-block: 9px; }
+  .lap-row.head:hover { background: none; }
+  .lap-row.head span { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .lap-row .no { color: var(--dim); font-weight: 600; }
+  .lap-row .time { font-size: 16px; font-weight: 700; }
+  .lap-row.best .time { color: var(--purple); }
+  .lap-row .gap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .lap-row .gap .bar { flex: 1; min-width: 0; height: 4px; border-radius: 2px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .lap-row .gap .bar i { display: block; height: 100%; width: calc(var(--w) * 100%); background: var(--yellow); border-radius: 2px; }
+  .lap-row .gap em { font-style: normal; font-size: 12px; color: var(--yellow); min-width: 4.2rem; text-align: right; }
+  .lap-row.best .gap em { color: var(--purple); }
+  .lap-row .secs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12.5px; color: var(--dim); text-align: right; }
+  .lap-row .vmax { text-align: right; font-weight: 600; }
+  .lap-row .vmax.top { color: var(--purple); }
+  .lap-row .chev { color: var(--faint); font-size: 18px; line-height: 1; text-align: right; }
+  .lap-row.nodata { cursor: default; opacity: .55; }
+  .lap-row.nodata .chev { visibility: hidden; }
+  @media (max-width: 860px) {
+    .lap-row { grid-template-columns: 2.2rem 6rem minmax(0, 1fr) 4.2rem 0.8rem; }
+    .lap-row .secs { display: none; }
+  }
+  @media (max-width: 460px) {
+    .lap-row { grid-template-columns: 1.8rem 5.6rem minmax(0, 1fr) 3.4rem; gap: 10px; padding-inline: 14px; }
+    .lap-row .chev { display: none; }
+    .lap-row .time { font-size: 15px; }
+    .lap-row .gap .bar { display: none; }
+    .lap-row .gap em { min-width: 0; }
+  }
 
-  /* ---- grafikler */
-  .charts { position: relative; }
-  .chart { position: relative; margin-bottom: 4px; }
-  .chart .name { position: absolute; left: 50px; top: 5px; }
-  .chart .val { position: absolute; right: 8px; top: 6px; font-size: 11px; display: flex; gap: 12px; }
-  .readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
-  .readout div { background: var(--panel2); border-radius: 8px; padding: 6px 10px; border: 1px solid var(--line); }
-  .readout u { text-decoration: none; display: block; font-size: 15px; font-weight: 700; }
+  /* ---- tur ayrintisi */
+  .crumbs { display: flex; align-items: center; gap: 10px; }
+  .crumbs .end { margin-left: auto; display: flex; gap: 8px; }
+  .lap-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .lap-title .time { font-size: 34px; font-weight: 800; }
+  .lap-title .tag { font-size: 11px; font-weight: 800; letter-spacing: .14em; padding: 3px 9px; border-radius: 999px;
+                    background: rgba(180,92,255,.16); color: var(--purple); }
+  .lap-title .tag.slow { background: rgba(245,217,43,.12); color: var(--yellow); }
+  .sectors { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .sectors > span { background: var(--raise); border: 1px solid var(--line); border-radius: 9px; padding: 4px 10px; font-size: 12.5px; }
+  .sectors > span b { font-size: 10px; letter-spacing: .12em; color: var(--dim); margin-right: 6px; }
+  .compare { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .key-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
 
-  /* ---- viraj tablosu */
-  .corners td:first-child { font-weight: 800; color: var(--accent); }
-  .empty { color: var(--dim); padding: 30px; text-align: center; }
-  footer { color: var(--dim); font-size: 11px; padding: 0 20px 30px; }
+  .split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+  @media (max-width: 960px) { .split { grid-template-columns: minmax(0, 1fr); } }
+  canvas { display: block; width: 100%; touch-action: pan-y; }
+  #map { height: 320px; }
+  .map-foot { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 18px 14px; font-size: 11px; color: var(--dim); }
+  .map-foot i { display: inline-block; width: 16px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .readout { display: flex; gap: 18px; flex-wrap: wrap; min-height: 22px; font-size: 12px; color: var(--dim); }
+  .readout b { color: var(--ink); font-weight: 700; margin-left: 4px; }
+  .chart { position: relative; }
+  .chart + .chart { border-top: 1px solid var(--line); }
+  .chart .name { position: absolute; left: 46px; top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .12em;
+                 text-transform: uppercase; color: var(--faint); pointer-events: none; }
+  .chart .val { position: absolute; right: 8px; top: 5px; display: flex; gap: 12px; font-size: 12px; font-weight: 600; pointer-events: none; }
+  .more { display: flex; justify-content: center; padding-top: 14px; }
+
+  details.panel > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+                            padding: 15px 18px; }
+  details.panel > summary::-webkit-details-marker { display: none; }
+  details.panel > summary h3 { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+  details.panel > summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--dim);
+                                   border-bottom: 2px solid var(--dim); transform: rotate(45deg); transition: transform .2s; }
+  details.panel[open] > summary::after { transform: rotate(225deg); }
+  details.panel[open] > summary { border-bottom: 1px solid var(--line); }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 14px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  th { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  th:first-child, td:first-child { text-align: left; }
+  tr:last-child td { border-bottom: 0; }
+  td .vs { display: block; font-size: 11px; }
+  td.turn { font-weight: 800; color: var(--accent); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stats-grid div { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .stats-grid strong { display: block; font-size: 20px; font-weight: 700; margin-top: 2px; }
+  .stats-grid small { color: var(--dim); font-size: 12px; }
+
+  .empty { color: var(--dim); padding: 40px 20px; text-align: center; }
+  footer { color: var(--faint); font-size: 12px; padding-bottom: 32px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  footer button { background: none; border: 0; padding: 0; color: var(--dim); text-decoration: underline; cursor: pointer; font-size: 12px; }
 </style>
 </head>
 <body>
 
-<div class="top">
-  <h1><img class="logo" src="/logo.svg" alt="">APEX<span>DASH</span></h1>
-  <span class="label">Telemetri Analizi</span>
-  <div class="meta">
-    <div><b>Pist</b><u id="trackName">—</u></div>
-    <div><b>Hava</b><u id="weather">—</u></div>
-    <div><b>Kod</b><u id="codeTop" class="mono">—</u></div>
-    <span class="status" id="status"><i></i><span>Bekleniyor</span></span>
+<header class="top">
+  <div class="wrap">
+    <h1 class="brand"><img src="/logo.svg" alt="">APEX<span>DASH</span></h1>
+    <span class="status" id="status"><i></i><span></span></span>
   </div>
-</div>
+</header>
 
-<div class="pair" id="pair"></div>
-
-<div class="grid">
-  <aside class="panel">
-    <h2>Turlar <span class="spacer"></span><span id="lapCount" class="label"></span></h2>
-    <div id="laps"><div class="empty">Telefondan tur bekleniyor.</div></div>
-  </aside>
-
-  <section class="main">
-    <div class="stats" id="stats"></div>
-
-    <div class="row">
-      <div class="panel">
-        <h2>Pist Haritası <span class="spacer"></span>
-          <span class="seg" id="mapMode">
-            <button data-m="speed" class="on">Hız</button>
-            <button data-m="pedal">Gaz / Fren</button>
-            <button data-m="ers">ERS</button>
-            <button data-m="sector">Sektör</button>
-          </span>
-        </h2>
-        <canvas id="map"></canvas>
-      </div>
-      <div class="panel">
-        <h2>Telemetri <span class="spacer"></span><span class="legend" id="legend"></span></h2>
-        <div class="charts" id="charts"></div>
-        <div class="readout" id="readout"></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Virajlar <span class="spacer"></span><span class="label">Referans: <span id="refLap">—</span></span></h2>
-      <div style="overflow-x:auto"><table class="corners" id="corners"></table></div>
+<main class="wrap">
+  <!-- Eslesme: veri yokken tek ekran -->
+  <section class="panel pair hidden" id="pairView">
+    <div class="qr" id="qr"></div>
+    <div>
+      <span class="label" data-t="pairLabel"></span>
+      <h2 id="pairCode"></h2>
+      <ol>
+        <li data-t="pair1"></li>
+        <li data-t="pair2"></li>
+        <li data-t="pair3"></li>
+      </ol>
+      <button class="btn" onclick="resetSession()" data-t="newCode"></button>
     </div>
   </section>
-</div>
 
-<footer>Veri telefondaki Apex Dash uygulamasından gelir. Bir tur bittiğinde 20 Hz'lik izi otomatik yüklenir; sayfa 3 saniyede bir yoklar.</footer>
+  <!-- 1. Oturum -->
+  <section id="overview" class="hidden" style="display:flex;flex-direction:column;gap:20px">
+    <div class="context">
+      <div>
+        <span class="label" id="sessionType"></span>
+        <h2 id="trackTitle"></h2>
+        <p id="trackMeta"></p>
+      </div>
+    </div>
+    <div class="hero" id="hero"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3 data-t="laps"></h3>
+        <span class="label" id="lapCount"></span>
+        <div class="end">
+          <span class="seg" id="sortSeg">
+            <button data-s="lap" class="on" data-t="sortLap"></button>
+            <button data-s="time" data-t="sortTime"></button>
+          </span>
+        </div>
+      </div>
+      <div class="laps" id="lapList"></div>
+    </div>
+  </section>
+
+  <!-- 2. Tur -->
+  <section id="lapView" class="hidden" style="display:flex;flex-direction:column;gap:20px">
+    <div class="crumbs">
+      <button class="btn" onclick="go(null)">‹ <span data-t="allLaps"></span></button>
+      <div class="end">
+        <button class="btn" id="prevLap" aria-label="previous">‹</button>
+        <button class="btn" id="nextLap" aria-label="next">›</button>
+      </div>
+    </div>
+
+    <div class="context">
+      <div>
+        <span class="label" id="lapLabel"></span>
+        <div class="lap-title"><span class="time" id="lapTime"></span><span class="tag" id="lapTag"></span></div>
+        <div class="sectors" id="lapSectors"></div>
+      </div>
+      <div class="end compare">
+        <span class="label" data-t="compareWith"></span>
+        <select class="btn" id="compareSel"></select>
+      </div>
+    </div>
+
+    <div class="hero compact" id="lapHero"></div>
+
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-t="trackMap"></h3>
+          <div class="end">
+            <span class="seg" id="mapMode">
+              <button data-m="speed" class="on" data-t="mSpeed"></button>
+              <button data-m="pedal" data-t="mPedal"></button>
+              <button data-m="sector" data-t="mSector"></button>
+            </span>
+          </div>
+        </div>
+        <div class="panel-body" style="padding-bottom:10px"><canvas id="map"></canvas></div>
+        <div class="map-foot" id="mapFoot"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-t="telemetry"></h3>
+          <div class="end readout" id="readout"></div>
+        </div>
+        <div class="panel-body">
+          <div id="charts"></div>
+          <div class="more"><button class="btn" id="moreBtn"></button></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="panel" id="cornersBox">
+      <summary><h3 data-t="corners"></h3><span class="label" id="cornerCount"></span></summary>
+      <div class="table-wrap"><table id="corners"></table></div>
+    </details>
+
+    <details class="panel" id="energyBox">
+      <summary><h3 data-t="energy"></h3></summary>
+      <div class="panel-body"><div class="stats-grid" id="energy"></div></div>
+    </details>
+  </section>
+
+  <footer id="footer" class="hidden">
+    <span><span data-t="code"></span> <b id="codeFoot" style="color:var(--dim)"></b></span>
+    <button onclick="resetSession()" data-t="newCode"></button>
+    <span data-t="footNote"></span>
+  </footer>
+</main>
 
 <script src="/qrcode.js"></script>
 <script>
 "use strict";
 
+// ---------------------------------------------------------------- dil
+// Uygulama gibi: tarayici Turkce ise Turkce, degilse Ingilizce.
+const TR = (navigator.language || "").toLowerCase().startsWith("tr");
+document.documentElement.lang = TR ? "tr" : "en";
+const L = (tr, en) => TR ? tr : en;
+const TEXT = {
+  pairLabel: L("Eşleştirme kodu", "Pairing code"),
+  pair1: L("Telefonda Apex Dash'i aç, <b>Ayarlar → Telemetri sitesi</b>'ne gir.", "Open Apex Dash on your phone and go to <b>Settings → Telemetry site</b>."),
+  pair2: L("<b>QR OKUT</b>'a bas ve bu QR kodunu okut.", "Tap <b>SCAN QR</b> and scan this code."),
+  pair3: L("Oyunda tur at. Her tur bittiğinde veriler burada belirir.", "Drive. Every completed lap appears here on its own."),
+  newCode: L("Yeni kod", "New code"),
+  laps: L("Turlar", "Laps"), sortLap: L("Sıra", "Order"), sortTime: L("Süre", "Time"),
+  allLaps: L("Tüm turlar", "All laps"), compareWith: L("Karşılaştır", "Compare"),
+  trackMap: L("Pist", "Track"), mSpeed: L("Hız", "Speed"), mPedal: L("Pedal", "Pedals"), mSector: L("Sektör", "Sectors"),
+  telemetry: L("Telemetri", "Telemetry"), corners: L("Virajlar", "Corners"), energy: L("Enerji ve aero", "Energy & aero"),
+  code: L("Kod", "Code"),
+  footNote: L("Veriler telefondaki Apex Dash uygulamasından gelir; sayfa kendiliğinden yenilenir.", "Data comes from the Apex Dash app on your phone; this page updates on its own.")
+};
+document.querySelectorAll("[data-t]").forEach(el => el.innerHTML = TEXT[el.dataset.t]);
+document.title = `Apex Dash · ${L("Telemetri", "Telemetry")}`;
+
 // ---------------------------------------------------------------- yardimcilar
 const $ = id => document.getElementById(id);
 const fmtLap = ms => {
-  if (!ms) return "--";
+  if (!ms && ms !== 0) return "—";
+  ms = Math.round(ms);
   const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000), t = ms % 1000;
   return `${m}:${String(s).padStart(2, "0")}.${String(t).padStart(3, "0")}`;
 };
-const fmtSec = ms => ms ? (ms / 1000).toFixed(3) : "--";
-const COLOURS = ["#3fd9c9", "#ff7a3d", "#b45cff"];
-const TRACKS = {0:"Melbourne",1:"Paul Ricard",2:"Shanghai",3:"Sakhir",4:"Barselona",5:"Monako",6:"Montreal",
-  7:"Silverstone",8:"Hockenheim",9:"Hungaroring",10:"Spa",11:"Monza",12:"Singapur",13:"Suzuka",14:"Abu Dabi",
-  15:"Austin",16:"Interlagos",17:"Spielberg",18:"Soçi",19:"Meksiko",20:"Bakü",21:"Sakhir Kısa",22:"Silverstone Kısa",
-  23:"Austin Kısa",24:"Suzuka Kısa",25:"Hanoi",26:"Zandvoort",27:"Imola",28:"Portimão",29:"Cidde",30:"Miami",
-  31:"Las Vegas",32:"Losail",39:"Silverstone Ters",40:"Spielberg Ters",41:"Zandvoort Ters",42:"Madrid"};
-const WEATHER = ["Açık", "Az bulutlu", "Kapalı", "Hafif yağmur", "Sağanak", "Fırtına"];
+const fmtSec = ms => ms ? (ms / 1000).toFixed(3) : "—";
+const fmtGap = ms => `${ms >= 0 ? "+" : "−"}${(Math.abs(ms) / 1000).toFixed(3)}`;
+const LAP_COLOURS = ["#3fd9c9", "#ff7a3d"];
+const TRACKS = {0:"Melbourne",1:"Paul Ricard",2:"Shanghai",3:"Sakhir",4:L("Barselona","Barcelona"),5:L("Monako","Monaco"),6:"Montreal",
+  7:"Silverstone",8:"Hockenheim",9:"Hungaroring",10:"Spa",11:"Monza",12:L("Singapur","Singapore"),13:"Suzuka",14:L("Abu Dabi","Abu Dhabi"),
+  15:"Austin",16:"Interlagos",17:"Spielberg",18:L("Soçi","Sochi"),19:L("Meksiko","Mexico City"),20:L("Bakü","Baku"),21:L("Sakhir Kısa","Sakhir Short"),
+  22:L("Silverstone Kısa","Silverstone Short"),23:L("Austin Kısa","Austin Short"),24:L("Suzuka Kısa","Suzuka Short"),25:"Hanoi",26:"Zandvoort",
+  27:"Imola",28:"Portimão",29:L("Cidde","Jeddah"),30:"Miami",31:"Las Vegas",32:"Losail",
+  39:L("Silverstone Ters","Silverstone Reverse"),40:L("Spielberg Ters","Spielberg Reverse"),41:L("Zandvoort Ters","Zandvoort Reverse"),42:"Madrid"};
+const WEATHER = [L("Açık","Clear"), L("Az bulutlu","Light cloud"), L("Kapalı","Overcast"), L("Hafif yağmur","Light rain"), L("Sağanak","Heavy rain"), L("Fırtına","Storm")];
+const SESSIONS = {1:"P1",2:"P2",3:"P3",4:L("Kısa antrenman","Short practice"),5:"Q1",6:"Q2",7:"Q3",8:L("Kısa sıralama","Short qualifying"),
+  9:L("Tek tur sıralama","One-shot qualifying"),10:"SQ1",11:"SQ2",12:"SQ3",13:L("Kısa sprint sıralama","Short sprint shootout"),
+  14:L("Tek tur sprint sıralama","One-shot sprint shootout"),15:L("Yarış","Race"),16:L("Yarış 2","Race 2"),17:L("Yarış 3","Race 3"),
+  18:L("Zamana karşı","Time trial")};
 
 // ---------------------------------------------------------------- oturum
 function newCode() {
@@ -193,107 +392,96 @@ function sessionId() {
   let id = (params.get("s") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (id.length < 4) id = (localStorage.getItem("apexdash-session") || "").toUpperCase();
   if (id.length < 4) id = newCode();
-  localStorage.setItem("apexdash-session", id);
+  try { localStorage.setItem("apexdash-session", id); } catch (_) {}
   params.set("s", id);
-  history.replaceState(null, "", `${location.pathname}?${params}`);
+  history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
   return id;
 }
 const session = sessionId();
-$("codeTop").textContent = session;
-
-function renderPair(connected) {
-  const pair = $("pair");
-  if (connected) { pair.classList.add("hidden"); return; }
-  pair.classList.remove("hidden");
-  const qr = qrcode(0, "M");
-  qr.addData(`${location.origin}/?s=${session}`);
-  qr.make();
-  pair.innerHTML = `${qr.createImgTag(5, 8)}
-    <div>
-      <div class="code">${session}</div>
-      <p>Telefondaki Apex Dash uygulamasında <b>TURLAR</b> ekranını aç, <b>QR OKUT</b>'a bas ve bu kodu okut.
-         Her tur bittiğinde tüm telemetri buraya kendiliğinden düşer.</p>
-      <button class="btn" onclick="resetSession()">YENİ KOD</button>
-    </div>`;
-}
-function resetSession() { localStorage.removeItem("apexdash-session"); location.href = location.pathname; }
+// Yerelde denerken canli API kullanilir.
+const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.protocol === "file:" ? "https://www.apexdash.pro" : "";
+function resetSession() { try { localStorage.removeItem("apexdash-session"); } catch (_) {} location.href = location.pathname; }
 
 // ---------------------------------------------------------------- durum
 const state = {
-  laps: [], track: null, updatedAt: null,
-  selected: [],            // karsilastirilan tur numaralari (en fazla 3)
-  traces: new Map(),       // lap -> {d,t,x,z,v,...} sutun dizileri
-  loading: new Set(),
-  mapMode: "speed",
-  orient: null,
-  cursor: null,            // mesafe (m)
-  corners: []
+  laps: [], track: null, updatedAt: null, error: false, loaded: false,
+  traces: new Map(),        // tur -> sutun dizileri
+  loading: new Map(),       // tur -> bekleyen istek
+  missing: new Set(),       // izi sunucuda olmayan turlar
+  sort: "lap",
+  lap: null, compare: null, // tur ayrintisi
+  mapMode: "speed", showAll: false,
+  orient: null, cursor: null, corners: []
 };
+const lapInfo = n => state.laps.find(l => l.lap === n);
+const hasTrace = l => l && l.trace && !state.missing.has(l.lap);
+const topSpeedOf = l => l?.vmax ?? state.traces.get(l?.lap)?.vmax ?? null;
 
 async function poll() {
   try {
-    const r = await fetch(`/api/session?id=${session}`, { cache: "no-store" });
+    const r = await fetch(`${API}/api/session?id=${session}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
     const data = await r.json();
-    if (!data.updatedAt) return;
-    const changed = data.updatedAt !== state.updatedAt;
-    state.updatedAt = data.updatedAt;
-    state.laps = data.laps || [];
+    state.error = false;
+    const changed = (data.updatedAt || null) !== state.updatedAt;
+    state.updatedAt = data.updatedAt || null;
+    state.laps = (data.laps || []).filter(l => l.time > 0);
     state.track = data.track || null;
-    renderPair(true);
-    setStatus(true);
-    if (changed) {
-      renderHeader();
-      if (!state.selected.length) autoSelect();
-      renderLaps();
-      await ensureTraces();
-      renderAll();
+    if (changed || !state.loaded) { state.loaded = true; render(); }
+    fillTopSpeeds();
+  } catch (_) { state.error = true; }
+  renderStatus();
+}
+
+function renderStatus() {
+  const el = $("status"), text = el.querySelector("span");
+  el.classList.remove("live", "error");
+  if (state.error) { el.classList.add("error"); text.textContent = L("Bağlantı yok", "Offline"); return; }
+  if (!state.updatedAt) { text.textContent = L("Telefon bekleniyor", "Waiting for phone"); return; }
+  const age = Date.now() - new Date(state.updatedAt).getTime();
+  if (age < 3 * 60 * 1000) { el.classList.add("live"); text.textContent = L("Canlı", "Live"); return; }
+  text.textContent = `${L("Son veri", "Last data")} ${ago(age)}`;
+}
+function ago(ms) {
+  const m = Math.round(ms / 60000), h = Math.round(ms / 3600000), d = Math.round(ms / 86400000);
+  if (m < 60) return L(`${m} dk önce`, `${m} min ago`);
+  if (h < 48) return L(`${h} sa önce`, `${h} h ago`);
+  return L(`${d} gün önce`, `${d} days ago`);
+}
+
+/** Izi indirir ve sutunlara cevirir; ayni tur icin tek istek. */
+function loadTrace(lap) {
+  const info = lapInfo(lap);
+  if (!hasTrace(info)) return Promise.resolve(null);
+  const have = state.traces.get(lap);
+  if (have && (!have.time || have.time === info.time)) return Promise.resolve(have);
+  if (state.loading.has(lap)) return state.loading.get(lap);
+  const p = fetch(`${API}/api/session?id=${session}&lap=${lap}`, { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(json => {
+      if (!json?.rows?.length) { state.missing.add(lap); return null; }
+      const tr = columnise(json, info);
+      state.traces.set(lap, tr);
+      return tr;
+    })
+    .catch(() => null)
+    .finally(() => state.loading.delete(lap));
+  state.loading.set(lap, p);
+  return p;
+}
+
+/** Eski oturumlarda tur listesinde en yuksek hiz yok; izlerden ikiser ikiser tamamlanir. */
+let filling = false;
+async function fillTopSpeeds() {
+  if (filling) return;
+  filling = true;
+  try {
+    const todo = state.laps.filter(l => hasTrace(l) && l.vmax == null && !state.traces.has(l.lap)).reverse();
+    for (let k = 0; k < todo.length; k += 2) {
+      await Promise.all(todo.slice(k, k + 2).map(l => loadTrace(l.lap)));
+      if (route() == null) renderOverview();
     }
-  } catch (_) { setStatus(false); }
-}
-function setStatus(live) {
-  const el = $("status");
-  el.classList.toggle("live", live);
-  el.querySelector("span").textContent = live
-    ? `Bağlı · ${new Date(state.updatedAt).toLocaleTimeString("tr-TR")}` : "Bağlantı yok";
-}
-function renderHeader() {
-  const t = state.track;
-  $("trackName").textContent = t ? (TRACKS[t.id] || (t.id >= 0 ? `Pist #${t.id}` : "—")) + (t.length ? ` · ${t.length} m` : "") : "—";
-  $("weather").textContent = t ? `${WEATHER[t.weather] || "—"} · pist ${t.trackTemp}° · hava ${t.airTemp}°` : "—";
-}
-
-/** Ilk secim: en iyi tur + son tur. */
-function autoSelect() {
-  const withTrace = state.laps.filter(l => l.trace);
-  if (!withTrace.length) return;
-  const best = withTrace.reduce((a, b) => (b.time < a.time ? b : a));
-  state.selected = [best.lap];
-  const last = withTrace[withTrace.length - 1];
-  if (last.lap !== best.lap) state.selected.push(last.lap);
-}
-
-async function ensureTraces() {
-  await Promise.all(state.selected.map(async lap => {
-    if (state.traces.has(lap) || state.loading.has(lap)) return;
-    state.loading.add(lap);
-    try {
-      const r = await fetch(`/api/session?id=${session}&lap=${lap}`, { cache: "no-store" });
-      if (r.ok) state.traces.set(lap, columnise(await r.json(), state.laps.find(l => l.lap === lap)));
-      else markMissing(lap);
-    } catch (_) { markMissing(lap); }
-    finally { state.loading.delete(lap); }
-  }));
-  // Izi gelmemis turlar secimden duser; hic kalmazsa yeniden secilir.
-  state.selected = state.selected.filter(l => state.traces.has(l));
-  if (!state.selected.length) {
-    autoSelect();
-    if (state.selected.some(l => !state.traces.has(l))) return ensureTraces();
-  }
-  renderLaps();
-}
-function markMissing(lap) {
-  const info = state.laps.find(l => l.lap === lap);
-  if (info) info.trace = false;
+  } finally { filling = false; }
 }
 
 /** Satir dizilerini sutun dizilerine cevirir ve mesafeye gore siralar. */
@@ -302,8 +490,8 @@ function columnise(trace, info) {
   const out = { n: rows.length, time: trace.time };
   cols.forEach((c, i) => out[c] = Float64Array.from(rows, r => r[i]));
   const n = out.n;
-  // Isinlanma / geri sarma: ardisik ornekler arasi 60 m ustu sicrama cizgiyi
-  // koparir; iki tarafi da kopuk tek ornekler (tur oncesi bayat konum) atilir.
+  // Isinlanma / geri sarma: 60 m ustu sicrama cizgiyi koparir; iki yani
+  // kopuk tek ornekler (tur oncesi bayat konum) atilir.
   const jump = new Float64Array(n);
   for (let i = 1; i < n; i++) jump[i] = Math.hypot(out.x[i] - out.x[i - 1], out.z[i] - out.z[i - 1]);
   out.brk = new Uint8Array(n); out.ok = new Uint8Array(n);
@@ -312,18 +500,263 @@ function columnise(trace, info) {
     out.brk[i] = before ? 1 : 0;
     out.ok[i] = before && after ? 0 : 1;
   }
-  // Sektorler: tur bilgisindeki sureler uzerinden
   const sectors = info?.sectors || [];
   const s1 = sectors[0] || Infinity, s2 = s1 + (sectors[1] || Infinity);
   out.sec = Uint8Array.from(out.t, t => t < s1 ? 0 : t < s2 ? 1 : 2);
+  let vmax = 0; for (let i = 0; i < n; i++) if (out.ok[i] && out.v[i] > vmax) vmax = out.v[i];
+  out.vmax = vmax;
   return out;
 }
 
-/** Haritayi gercek pist cizimleri gibi yerlestirir: en uzun duz yatay, pist
- *  govdesi onun ustunde. Yalnizca dondurme yapilir (ayna yok), boylece pistin
- *  yonu korunur. Referans turdan bir kez hesaplanir, tum turlara uygulanir. */
+// ---------------------------------------------------------------- yonlendirme
+const route = () => { const m = location.hash.match(/tur\/(\d+)/); return m ? Number(m[1]) : null; };
+function go(lap, replace = false) {
+  const url = `${location.pathname}${location.search}${lap == null ? "" : `#tur/${lap}`}`;
+  if (lap == null && history.state?.fromList) { history.back(); return; }
+  if (replace) history.replaceState(history.state, "", url);
+  else history.pushState({ fromList: lap != null }, "", url);
+  render();
+  window.scrollTo({ top: 0 });
+}
+window.addEventListener("popstate", render);
+
+function render() {
+  if (!state.loaded) return;
+  const hasData = state.laps.length > 0;
+  const lap = route();
+  $("pairView").classList.toggle("hidden", hasData || !!state.updatedAt);
+  $("footer").classList.toggle("hidden", !hasData && !state.updatedAt);
+  $("codeFoot").textContent = session;
+  if (!hasData) {
+    $("overview").classList.add("hidden"); $("lapView").classList.add("hidden");
+    if (!state.updatedAt) renderPair();
+    else { $("overview").classList.remove("hidden"); renderOverview(); }
+    return;
+  }
+  const showLap = lap != null && lapInfo(lap);
+  $("overview").classList.toggle("hidden", !!showLap);
+  $("lapView").classList.toggle("hidden", !showLap);
+  if (showLap) renderLapView(lap); else renderOverview();
+}
+
+function renderPair() {
+  $("pairCode").textContent = session;
+  if ($("qr").dataset.code === session) return;
+  const qr = qrcode(0, "M");
+  qr.addData(`${location.origin}/?s=${session}`);
+  qr.make();
+  $("qr").innerHTML = qr.createImgTag(5, 8);
+  $("qr").dataset.code = session;
+}
+
+// ---------------------------------------------------------------- 1. oturum
+function sessionSummary() {
+  const laps = state.laps;
+  if (!laps.length) return null;
+  const best = laps.reduce((a, b) => b.time < a.time ? b : a);
+  const bestS = [0, 1, 2].map(i => {
+    const v = laps.map(l => l.sectors?.[i]).filter(x => x > 0);
+    return v.length ? Math.min(...v) : null;
+  });
+  const theoretical = bestS.every(Boolean) ? bestS.reduce((a, b) => a + b, 0) : null;
+  let fastest = null;
+  laps.forEach(l => { const v = topSpeedOf(l); if (v != null && (!fastest || v > fastest.v)) fastest = { lap: l.lap, v }; });
+  const times = laps.map(l => l.time).sort((a, b) => a - b);
+  const median = times[Math.floor(times.length / 2)];
+  return { best, bestS, theoretical, fastest, median, worst: times[times.length - 1] };
+}
+
+function renderOverview() {
+  const t = state.track, sum = sessionSummary();
+  $("sessionType").textContent = t ? (SESSIONS[t.sessionType] || L("Oturum", "Session")) : L("Oturum", "Session");
+  $("trackTitle").textContent = t && t.id >= 0 ? (TRACKS[t.id] || `${L("Pist", "Track")} #${t.id}`) : L("Pist bekleniyor", "Waiting for track");
+  $("trackMeta").textContent = t ? [
+    t.length ? `${(t.length / 1000).toFixed(3)} km` : null,
+    WEATHER[t.weather],
+    t.trackTemp != null ? `${L("Pist", "Track")} ${t.trackTemp}°` : null,
+    t.airTemp != null ? `${L("Hava", "Air")} ${t.airTemp}°` : null
+  ].filter(Boolean).join("  ·  ") : "";
+
+  if (!sum) {
+    $("hero").innerHTML = "";
+    $("lapCount").textContent = "";
+    $("lapList").innerHTML = `<div class="empty">${L("İlk turun bitmesi bekleniyor.", "Waiting for the first lap to finish.")}</div>`;
+    return;
+  }
+
+  const gain = sum.theoretical ? sum.best.time - sum.theoretical : null;
+  $("hero").innerHTML = [
+    card({ key: true, lap: sum.best.lap, label: L("En iyi tur", "Best lap"), value: fmtLap(sum.best.time),
+           sub: `${L("Tur", "Lap")} ${sum.best.lap}` }),
+    card({ label: L("Teorik en iyi", "Theoretical best"), value: fmtLap(sum.theoretical),
+           sub: gain > 0 ? `<span class="green">${fmtGap(-gain)}</span> ${L("en iyi sektörlerle", "from best sectors")}` : L("En iyi sektörlerin toplamı", "Sum of best sectors") }),
+    card({ lap: sum.fastest?.lap, label: L("En yüksek hız", "Top speed"),
+           value: sum.fastest ? `${Math.round(sum.fastest.v)}<small>km/h</small>` : "—",
+           sub: sum.fastest ? `${L("Tur", "Lap")} ${sum.fastest.lap}` : L("Tur izleri yükleniyor", "Loading lap traces") }),
+    card({ label: L("Turlar", "Laps"), value: String(state.laps.length),
+           sub: `${L("Ortanca", "Median")} ${fmtLap(sum.median)}` })
+  ].join("");
+  $("hero").querySelectorAll("button[data-lap]").forEach(b => b.onclick = () => go(Number(b.dataset.lap)));
+
+  renderLapList(sum);
+}
+
+function card({ key, lap, label, value, sub }) {
+  const tag = lap != null && hasTrace(lapInfo(lap)) ? "button" : "div";
+  return `<${tag} class="card ${key ? "key" : ""}" ${tag === "button" ? `data-lap="${lap}"` : ""}>
+    <span class="label">${label}</span><span class="value">${value}</span><span class="sub">${sub}</span></${tag}>`;
+}
+
+function renderLapList(sum) {
+  const laps = state.laps.slice();
+  if (state.sort === "time") laps.sort((a, b) => a.time - b.time); else laps.reverse();
+  $("lapCount").textContent = `${state.laps.length}`;
+  // Fark cubugu: en iyi tura gore; ortancanin iki kati uzerindeki (tur disi) sapmalar kesilir.
+  const scale = Math.max(1000, Math.min(sum.worst - sum.best.time, (sum.median - sum.best.time) * 2.5));
+  const head = `<div class="lap-row head"><span>${L("Tur", "Lap")}</span><span>${L("Süre", "Time")}</span>
+    <span>${L("Fark", "Gap")}</span><span class="secs"><span>S1</span><span>S2</span><span>S3</span></span>
+    <span style="text-align:right">km/h</span><span class="chev"></span></div>`;
+  const rows = laps.map(l => {
+    const isBest = l === sum.best, gap = l.time - sum.best.time, v = topSpeedOf(l);
+    const secs = [0, 1, 2].map(i => {
+      const s = l.sectors?.[i];
+      return `<span class="${s && s === sum.bestS[i] ? "purple" : ""}">${fmtSec(s)}</span>`;
+    }).join("");
+    const ok = hasTrace(l);
+    return `<button class="lap-row ${isBest ? "best" : ""} ${ok ? "" : "nodata"}" data-lap="${l.lap}" ${ok ? "" : "disabled"}>
+      <span class="no">${l.lap}</span>
+      <span class="time">${fmtLap(l.time)}</span>
+      <span class="gap"><span class="bar"><i style="--w:${isBest ? 0 : Math.min(gap / scale, 1).toFixed(3)}"></i></span>
+        <em>${isBest ? L("EN İYİ", "BEST") : fmtGap(gap)}</em></span>
+      <span class="secs">${secs}</span>
+      <span class="vmax ${v != null && sum.fastest && v === sum.fastest.v ? "top" : ""}">${v != null ? Math.round(v) : "—"}</span>
+      <span class="chev">›</span>
+    </button>`;
+  }).join("");
+  $("lapList").innerHTML = head + rows;
+  $("lapList").querySelectorAll("button.lap-row").forEach(b => b.onclick = () => go(Number(b.dataset.lap)));
+}
+$("sortSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+  state.sort = b.dataset.s;
+  $("sortSeg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+  renderOverview();
+});
+
+// ---------------------------------------------------------------- 2. tur
+let lapRender = 0;
+async function renderLapView(lap) {
+  const token = ++lapRender;
+  const sum = sessionSummary(), info = lapInfo(lap);
+  if (state.lap !== lap) {
+    state.lap = lap; state.cursor = null;
+    state.compare = sum.best.lap !== lap && hasTrace(sum.best) ? sum.best.lap : null;
+  }
+  // baslik hemen, iz gelince grafikler
+  const gap = info.time - sum.best.time;
+  $("lapLabel").textContent = `${L("Tur", "Lap")} ${lap}`;
+  $("lapTime").textContent = fmtLap(info.time);
+  $("lapTag").textContent = gap === 0 ? L("EN İYİ TUR", "BEST LAP") : fmtGap(gap);
+  $("lapTag").classList.toggle("slow", gap !== 0);
+  $("lapSectors").innerHTML = [0, 1, 2].map(i => {
+    const s = info.sectors?.[i];
+    return `<span><b>S${i + 1}</b><span class="${s && s === sum.bestS[i] ? "purple" : ""}">${fmtSec(s)}</span></span>`;
+  }).join("");
+
+  const ordered = state.laps.map(l => l.lap);
+  const idx = ordered.indexOf(lap);
+  const prev = ordered.slice(0, idx).reverse().find(n => hasTrace(lapInfo(n)));
+  const next = ordered.slice(idx + 1).find(n => hasTrace(lapInfo(n)));
+  $("prevLap").disabled = prev == null; $("prevLap").onclick = () => go(prev, true);
+  $("nextLap").disabled = next == null; $("nextLap").onclick = () => go(next, true);
+
+  $("compareSel").innerHTML = `<option value="">${L("Yok", "None")}</option>` + state.laps.slice()
+    .sort((a, b) => a.time - b.time)
+    .filter(l => l.lap !== lap && hasTrace(l))
+    .map(l => `<option value="${l.lap}" ${l.lap === state.compare ? "selected" : ""}>${L("Tur", "Lap")} ${l.lap} · ${fmtLap(l.time)}${l === sum.best ? ` · ${L("en iyi", "best")}` : ""}</option>`)
+    .join("");
+
+  const [tr, cmp] = await Promise.all([loadTrace(lap), state.compare != null ? loadTrace(state.compare) : null]);
+  if (token !== lapRender) return;
+  if (!tr) {
+    $("lapHero").innerHTML = `<div class="card" style="grid-column:1/-1"><span class="sub">${L("Bu turun izi bulunamadı.", "No trace for this lap.")}</span></div>`;
+    return;
+  }
+  if (state.compare != null && !cmp) state.compare = null;
+  state.orient = orientation(tr);
+  state.corners = detectCorners(tr);
+  renderLapHero(tr, cmp);
+  drawMap();
+  renderMapFoot();
+  buildCharts();
+  drawCharts();
+  renderReadout();
+  renderCorners();
+  renderEnergy(tr, cmp);
+}
+$("compareSel").onchange = e => { state.compare = e.target.value ? Number(e.target.value) : null; state.cursor = null; renderLapView(state.lap); };
+
+function lapStats(tr) {
+  const n = tr.n;
+  let full = 0, braking = 0, ov = 0, straight = 0, sumV = 0, k = 0;
+  for (let i = 0; i < n; i++) {
+    if (tr.th[i] > 0.95) full++;
+    if (tr.br[i] > 0.05) braking++;
+    if (tr.ov?.[i]) ov++;
+    if (tr.ae?.[i]) straight++;
+    if (tr.ok[i]) { sumV += tr.v[i]; k++; }
+  }
+  const dt = n > 1 ? (tr.t[n - 1] - tr.t[0]) / (n - 1) / 1000 : 0;
+  return {
+    top: tr.vmax, avg: k ? sumV / k : 0, full: full / n, braking: braking / n,
+    ovSec: ov * dt, straight: straight / n,
+    deployed: tr.dep ? Math.max(...tr.dep) : 0, ersEnd: tr.ers ? tr.ers[n - 1] : 0
+  };
+}
+function diff(a, b, digits, unit, higherIsBetter) {
+  if (b == null) return "";
+  const d = a - b;
+  if (Math.abs(d) < Math.pow(10, -digits) / 2) return `<span>= ${L("aynı", "same")}</span>`;
+  const good = higherIsBetter ? d > 0 : d < 0;
+  return `<span class="${good ? "green" : "yellow"}">${d > 0 ? "+" : "−"}${Math.abs(d).toFixed(digits)}${unit}</span> vs ${L("tur", "lap")} ${state.compare}`;
+}
+function renderLapHero(tr, cmp) {
+  const a = lapStats(tr), b = cmp ? lapStats(cmp) : null;
+  $("lapHero").innerHTML = [
+    card({ key: true, label: L("En yüksek hız", "Top speed"), value: `${Math.round(a.top)}<small>km/h</small>`, sub: b ? diff(a.top, b.top, 0, " km/h", true) : "&nbsp;" }),
+    card({ label: L("Ortalama hız", "Average speed"), value: `${Math.round(a.avg)}<small>km/h</small>`, sub: b ? diff(a.avg, b.avg, 1, " km/h", true) : "&nbsp;" }),
+    card({ label: L("Tam gaz", "Full throttle"), value: `${Math.round(a.full * 100)}<small>%</small>`, sub: b ? diff(a.full * 100, b.full * 100, 0, "%", true) : L("turun", "of the lap") }),
+    card({ label: L("Frende", "Braking"), value: `${Math.round(a.braking * 100)}<small>%</small>`, sub: b ? diff(a.braking * 100, b.braking * 100, 0, "%", false) : L("turun", "of the lap") })
+  ].join("");
+}
+function renderEnergy(tr, cmp) {
+  const a = lapStats(tr), b = cmp ? lapStats(cmp) : null;
+  const items = [
+    [L("Overtake kullanımı", "Overtake used"), `${a.ovSec.toFixed(1)} s`, b && `${L("Tur", "Lap")} ${state.compare}: ${b.ovSec.toFixed(1)} s`],
+    [L("Düz mod (aktif aero)", "Straight mode (active aero)"), `${Math.round(a.straight * 100)}%`, b && `${L("Tur", "Lap")} ${state.compare}: ${Math.round(b.straight * 100)}%`],
+    [L("Harcanan ERS", "ERS deployed"), `${(a.deployed / 1000).toFixed(2)} MJ`, b && `${L("Tur", "Lap")} ${state.compare}: ${(b.deployed / 1000).toFixed(2)} MJ`],
+    [L("Tur sonu batarya", "Battery at lap end"), `${(a.ersEnd / 1000).toFixed(2)} MJ`, b && `${L("Tur", "Lap")} ${state.compare}: ${(b.ersEnd / 1000).toFixed(2)} MJ`]
+  ];
+  $("energy").innerHTML = items.map(([k, v, s]) => `<div><span class="label">${k}</span><strong>${v}</strong><small>${s || "&nbsp;"}</small></div>`).join("");
+}
+
+// ---------------------------------------------------------------- analiz
+function interp(arr, dArr, d) {
+  let lo = 0, hi = dArr.length - 1;
+  if (d <= dArr[0]) return arr[0];
+  if (d >= dArr[hi]) return arr[hi];
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (dArr[mid] <= d) lo = mid; else hi = mid; }
+  const f = (d - dArr[lo]) / Math.max(dArr[hi] - dArr[lo], 1e-6);
+  return arr[lo] + (arr[hi] - arr[lo]) * f;
+}
+function nearestIndex(dArr, d) {
+  let lo = 0, hi = dArr.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (dArr[mid] <= d) lo = mid; else hi = mid; }
+  return d - dArr[lo] < dArr[hi] - d ? lo : hi;
+}
+
+/** Pist yonu: en uzun duz yatay, govde ustte. Yalnizca dondurme; ayna yok. */
 function orientation(tr) {
-  const vmax = Math.max(...tr.v);
+  const vmax = tr.vmax;
   let best = [0, 0];
   for (let i = 0; i < tr.n;) {
     if (tr.ok[i] && tr.v[i] >= 0.85 * vmax) {
@@ -336,76 +769,31 @@ function orientation(tr) {
   const [i, j] = best;
   if (j - i < 5) return { cos: 1, sin: 0 };
   const heading = Math.atan2(tr.z[j - 1] - tr.z[i], tr.x[j - 1] - tr.x[i]);
-  const candidates = [Math.PI - heading, -heading];   // duz sola ya da saga aksin
+  const candidates = [Math.PI - heading, -heading];
   let cx = 0, cz = 0, k = 0;
   for (let q = 0; q < tr.n; q++) if (tr.ok[q]) { cx += tr.x[q]; cz += tr.z[q]; k++; }
   cx /= k; cz /= k;
   const mx = (tr.x[i] + tr.x[j - 1]) / 2, mz = (tr.z[i] + tr.z[j - 1]) / 2;
   for (const a of candidates) {
     const rz = (cx - mx) * Math.sin(a) + (cz - mz) * Math.cos(a);
-    if (rz < 0) return { cos: Math.cos(a), sin: Math.sin(a) };   // govde ustte (ekranda -y)
+    if (rz < 0) return { cos: Math.cos(a), sin: Math.sin(a) };
   }
   return { cos: Math.cos(candidates[0]), sin: Math.sin(candidates[0]) };
-}
-function mapXY(tr, i) {
-  const o = state.orient || { cos: 1, sin: 0 };
-  return [tr.x[i] * o.cos - tr.z[i] * o.sin, tr.x[i] * o.sin + tr.z[i] * o.cos];
 }
 function mapPoint(x, z) {
   const o = state.orient || { cos: 1, sin: 0 };
   return [x * o.cos - z * o.sin, x * o.sin + z * o.cos];
 }
 
-// ---------------------------------------------------------------- tur listesi
-function renderLaps() {
-  const laps = state.laps;
-  $("lapCount").textContent = laps.length ? `${laps.length} tur` : "";
-  if (!laps.length) { $("laps").innerHTML = `<div class="empty">Telefondan tur bekleniyor.</div>`; return; }
-  const best = Math.min(...laps.map(l => l.time));
-  const bestS = [0, 1, 2].map(i => Math.min(...laps.map(l => l.sectors?.[i] || Infinity)));
-  const rows = laps.slice().reverse().map(l => {
-    const idx = state.selected.indexOf(l.lap);
-    const sw = `<span class="sw ${idx >= 0 ? "on" : ""}" style="${idx >= 0 ? `background:${COLOURS[idx]}` : ""}"></span>`;
-    const sectors = (l.sectors || []).map((v, i) => `<td class="mono ${v && v === bestS[i] ? "purple" : ""}">${fmtSec(v)}</td>`).join("");
-    const gap = l.time === best ? "" : `+${((l.time - best) / 1000).toFixed(3)}`;
-    return `<tr class="lap ${l.time === best ? "best" : ""}" data-lap="${l.lap}" title="${l.trace ? "Karşılaştırmaya ekle" : "İz henüz yüklenmedi"}">
-      <td>${sw}</td><td class="mono">${l.lap}</td><td class="mono">${fmtLap(l.time)}</td>${sectors}<td class="gap mono">${gap}</td></tr>`;
-  }).join("");
-  $("laps").innerHTML = `<table><tr><th></th><th>Tur</th><th>Süre</th><th>S1</th><th>S2</th><th>S3</th><th>Fark</th></tr>${rows}</table>`;
-  $("laps").querySelectorAll("tr.lap").forEach(tr => tr.onclick = () => toggleLap(Number(tr.dataset.lap)));
-}
-async function toggleLap(lap) {
-  const info = state.laps.find(l => l.lap === lap);
-  if (!info?.trace) return;
-  const i = state.selected.indexOf(lap);
-  if (i >= 0) state.selected.splice(i, 1);
-  else { if (state.selected.length >= 3) state.selected.shift(); state.selected.push(lap); }
-  renderLaps();
-  await ensureTraces();
-  renderAll();
-}
-
-// ---------------------------------------------------------------- analiz
-function interp(arr, dArr, d) {
-  // dArr artan; d icin dogrusal arama yerine ikili arama
-  let lo = 0, hi = dArr.length - 1;
-  if (d <= dArr[0]) return arr[0];
-  if (d >= dArr[hi]) return arr[hi];
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (dArr[mid] <= d) lo = mid; else hi = mid; }
-  const f = (d - dArr[lo]) / Math.max(dArr[hi] - dArr[lo], 1e-6);
-  return arr[lo] + (arr[hi] - arr[lo]) * f;
-}
-
-/** Referans turda virajlar: hiz yerel minimumlari + belirgin yanal G / direksiyon. */
+/** Virajlar: hizin yerel minimumlari + belirgin yanal G ya da direksiyon. */
 function detectCorners(tr) {
-  if (!tr) return [];
   const n = tr.n, corners = [];
   let i = 5;
   while (i < n - 5) {
     const v = tr.v[i];
     let isMin = true;
     for (let k = i - 5; k <= i + 5; k++) if (tr.v[k] < v) { isMin = false; break; }
-    const turning = Math.abs(tr.gl[i]) > 0.6 || Math.abs(tr.st[i]) > 0.12;
+    const turning = Math.abs(tr.gl?.[i] ?? 0) > 0.6 || Math.abs(tr.st?.[i] ?? 0) > 0.12;
     if (isMin && turning && v < 300 && tr.ok[i]) {
       const last = corners[corners.length - 1];
       if (!last || tr.d[i] - last.d > 90) {
@@ -417,8 +805,6 @@ function detectCorners(tr) {
   }
   return corners.map((c, k) => ({ ...c, n: k + 1 }));
 }
-
-/** Bir virajin bir turdaki ozetleri: fren noktasi, giris/apex/cikis hizi, vites. */
 function cornerStats(tr, corner) {
   const apexIdx = nearestIndex(tr.d, corner.d);
   let brakeIdx = -1;
@@ -426,323 +812,309 @@ function cornerStats(tr, corner) {
   const exitIdx = nearestIndex(tr.d, corner.d + 100);
   let minV = Infinity, minK = apexIdx;
   for (let k = Math.max(0, apexIdx - 15); k <= Math.min(tr.n - 1, apexIdx + 15); k++) if (tr.v[k] < minV) { minV = tr.v[k]; minK = k; }
+  let gLat = 0;
+  for (let k = Math.max(0, apexIdx - 10); k < Math.min(tr.n, apexIdx + 10); k++) gLat = Math.max(gLat, Math.abs(tr.gl?.[k] ?? 0));
   return {
-    brake: brakeIdx >= 0 ? tr.d[brakeIdx] : null,
+    brake: brakeIdx >= 0 ? corner.d - tr.d[brakeIdx] : null,
     entry: brakeIdx >= 0 ? tr.v[brakeIdx] : tr.v[Math.max(0, apexIdx - 20)],
-    apex: minV, exit: tr.v[exitIdx], gear: tr.g[minK],
-    gLat: Math.max(...Array.from(tr.gl.subarray(Math.max(0, apexIdx - 10), apexIdx + 10)).map(Math.abs))
-  };
-}
-function nearestIndex(dArr, d) {
-  let lo = 0, hi = dArr.length - 1;
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (dArr[mid] <= d) lo = mid; else hi = mid; }
-  return d - dArr[lo] < dArr[hi] - d ? lo : hi;
-}
-
-function lapStats(tr) {
-  if (!tr) return null;
-  const n = tr.n;
-  let full = 0, braking = 0, ov = 0, straight = 0, sumV = 0;
-  for (let i = 0; i < n; i++) {
-    if (tr.th[i] > 0.95) full++;
-    if (tr.br[i] > 0.05) braking++;
-    if (tr.ov[i]) ov++;
-    if (tr.ae[i]) straight++;
-    sumV += tr.v[i];
-  }
-  const dt = n > 1 ? (tr.t[n - 1] - tr.t[0]) / (n - 1) / 1000 : 0;
-  return {
-    top: Math.max(...tr.v), avg: sumV / n, full: full / n, braking: braking / n,
-    ovSec: ov * dt, straight: straight / n,
-    deployed: Math.max(...tr.dep), ersEnd: tr.ers[n - 1]
+    apex: minV, exit: tr.v[exitIdx], gear: tr.g[minK], gLat
   };
 }
 
-// ---------------------------------------------------------------- cizim
-function renderAll() {
-  const ref = state.traces.get(state.selected[0]);
-  state.orient = ref ? orientation(ref) : null;
-  state.corners = detectCorners(ref);
-  $("refLap").textContent = state.selected[0] ?? "—";
-  renderStats();
-  renderLegend();
-  drawMap();
-  buildCharts();
-  drawCharts();
-  renderCorners();
-  renderReadout();
-}
-
-function renderStats() {
-  const lap = state.selected[0], tr = state.traces.get(lap), st = lapStats(tr);
-  if (!st) { $("stats").innerHTML = ""; return; }
-  const info = state.laps.find(l => l.lap === lap) || {};
-  const cards = [
-    ["Tur " + lap, fmtLap(info.time), "süre"],
-    ["En yüksek hız", `${Math.round(st.top)}`, "km/h"],
-    ["Ortalama hız", `${Math.round(st.avg)}`, "km/h"],
-    ["Tam gaz", `${Math.round(st.full * 100)}%`, "tur boyunca"],
-    ["Fren", `${Math.round(st.braking * 100)}%`, "tur boyunca"],
-    ["Overtake", `${st.ovSec.toFixed(1)} s`, "kullanım"],
-    ["Düz mod", `${Math.round(st.straight * 100)}%`, "aktif aero"],
-    ["ERS harcanan", `${(st.deployed / 1000).toFixed(2)} MJ`, `kalan ${(st.ersEnd / 1000).toFixed(2)} MJ`]
-  ];
-  $("stats").innerHTML = cards.map(([b, u, s]) => `<div class="stat"><b>${b}</b><u class="mono">${u}</u><small>${s}</small></div>`).join("");
-}
-function renderLegend() {
-  $("legend").innerHTML = state.selected.map((lap, i) => `<span><i style="background:${COLOURS[i]}"></i>Tur ${lap}</span>`).join("");
-}
-
-function speedColour(f) {   // 0..1 -> mavi, yesil, sari, kirmizi
+// ---------------------------------------------------------------- harita
+function speedColour(f) {
   const stops = [[74, 163, 255], [60, 232, 90], [245, 217, 43], [255, 68, 56]];
   const p = Math.min(Math.max(f, 0), .999) * (stops.length - 1), k = Math.floor(p), t = p - k;
-  const c = stops[k].map((v, j) => Math.round(v + (stops[k + 1][j] - v) * t));
-  return `rgb(${c.join(",")})`;
+  return `rgb(${stops[k].map((v, j) => Math.round(v + (stops[k + 1][j] - v) * t)).join(",")})`;
 }
-
+const SECTOR_COLOURS = ["#ff4438", "#4aa3ff", "#f5d92b"];
 const map = { canvas: $("map"), fit: null };
-function fitMap(tr) {
-  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  for (let i = 0; i < tr.n; i++) {
-    if (!tr.ok[i]) continue;
-    const [x, z] = mapXY(tr, i);
-    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-    minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
-  }
-  const w = map.canvas.width, h = map.canvas.height, pad = 40;
-  const s = Math.min((w - pad * 2) / Math.max(maxX - minX, 1), (h - pad * 2) / Math.max(maxZ - minZ, 1));
-  return { s, ox: (w - (maxX - minX) * s) / 2 - minX * s, oz: (h - (maxZ - minZ) * s) / 2 - minZ * s,
-           px: x => x * s + (w - (maxX - minX) * s) / 2 - minX * s,
-           pz: z => z * s + (h - (maxZ - minZ) * s) / 2 - minZ * s };
-}
+
 function drawMap() {
   const c = map.canvas, dpr = window.devicePixelRatio || 1;
-  const size = c.clientWidth;
-  c.width = size * dpr; c.height = size * dpr;
+  const w = c.clientWidth;
+  if (!w) return;
+  const tr = state.traces.get(state.lap);
+  if (!tr) { map.fit = null; c.getContext("2d").clearRect(0, 0, c.width, c.height); return; }
+
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  const P = new Float64Array(tr.n * 2);
+  for (let i = 0; i < tr.n; i++) {
+    const [x, z] = mapPoint(tr.x[i], tr.z[i]);
+    P[i * 2] = x; P[i * 2 + 1] = z;
+    if (!tr.ok[i]) continue;
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x); minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+  }
+  const pad = Math.max(22, w * 0.06);
+  // Yukseklik pistin en-boy oranina uyar: genis pistte bos alan kalmaz.
+  const aspect = (maxZ - minZ) / Math.max(maxX - minX, 1);
+  const h = Math.round(Math.min(Math.max((w - pad * 2) * aspect + pad * 2, w * 0.6), w * 1.1, 620));
+  if (c.style.height !== `${h}px`) c.style.height = `${h}px`;
+  c.width = w * dpr; c.height = h * dpr;
   const ctx = c.getContext("2d");
-  ctx.clearRect(0, 0, c.width, c.height);
-  const tr = state.traces.get(state.selected[0]);
-  if (!tr) { map.fit = null; return; }
-  map.fit = fitMap(tr);
-  const { px, pz } = map.fit;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const s = Math.min((w - pad * 2) / Math.max(maxX - minX, 1), (h - pad * 2) / Math.max(maxZ - minZ, 1));
+  const ox = (w - (maxX - minX) * s) / 2 - minX * s, oz = (h - (maxZ - minZ) * s) / 2 - minZ * s;
+  map.fit = { px: x => x * s + ox, pz: z => z * s + oz };
+  const at = i => [P[i * 2] * s + ox, P[i * 2 + 1] * s + oz];
+  const line = Math.max(3, Math.min(7, w / 80));
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
-  const at = i => { const [x, z] = mapXY(tr, i); return [px(x), pz(z)]; };
-  // Pist govdesi (koyu); kopmalarda kalem kaldirilir
   ctx.beginPath();
   for (let i = 0; i < tr.n; i++) {
     if (!tr.ok[i]) continue;
     const [x, y] = at(i);
     if (tr.brk[i]) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
-  ctx.strokeStyle = "#1c2430"; ctx.lineWidth = 16 * dpr; ctx.stroke();
+  ctx.strokeStyle = "#2a2a36"; ctx.lineWidth = line * 2.4; ctx.stroke();
 
-  // Veri ile renkli cizgi
-  const SECTOR = ["#ff4438", "#4aa3ff", "#f5d92b"];
-  const maxV = Math.max(...tr.v), minV = Math.min(...tr.v);
+  const minV = Math.min(...tr.v), range = Math.max(tr.vmax - minV, 1);
   for (let i = 1; i < tr.n; i++) {
     if (!tr.ok[i] || !tr.ok[i - 1] || tr.brk[i]) continue;
     let col;
-    if (state.mapMode === "speed") col = speedColour((tr.v[i] - minV) / Math.max(maxV - minV, 1));
-    else if (state.mapMode === "pedal") col = tr.br[i] > 0.1 ? "#ff4438" : tr.th[i] > 0.9 ? "#3ce85a" : tr.th[i] > 0.1 ? "#9fd36a" : "#5b6472";
-    else if (state.mapMode === "sector") col = SECTOR[tr.sec[i]];
-    else col = tr.ov[i] ? "#4aa3ff" : tr.dep[i] > (tr.dep[i - 1] ?? 0) + 0.5 ? "#f5d92b" : tr.ers[i] > (tr.ers[i - 1] ?? 0) ? "#3fd9c9" : "#5b6472";
+    if (state.mapMode === "speed") col = speedColour((tr.v[i] - minV) / range);
+    else if (state.mapMode === "pedal") col = tr.br[i] > 0.1 ? "#ff4438" : tr.th[i] > 0.9 ? "#3ce85a" : tr.th[i] > 0.1 ? "#9fd36a" : "#5d5d6e";
+    else col = SECTOR_COLOURS[tr.sec[i]];
     const [x0, y0] = at(i - 1), [x1, y1] = at(i);
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
-    ctx.strokeStyle = col; ctx.lineWidth = 7 * dpr; ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = line; ctx.stroke();
   }
 
-  // Start / finis: turun ilk gecerli noktasi
   let first = 0; while (first < tr.n - 1 && !tr.ok[first]) first++;
   { const [x, y] = at(first);
-    ctx.beginPath(); ctx.arc(x, y, 6 * dpr, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(x, y, line * 0.9, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); }
 
-  // Viraj numaralari
-  ctx.font = `${11 * dpr}px ui-monospace, Menlo, monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const r = Math.max(8, Math.min(11, w / 44));
+  ctx.font = `700 ${Math.round(r * 1.05)}px Saira, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   state.corners.forEach(k => {
-    const [kx, kz] = mapPoint(k.x, k.z);
-    const x = px(kx), z = pz(kz);
-    ctx.beginPath(); ctx.arc(x, z, 10 * dpr, 0, Math.PI * 2);
-    ctx.fillStyle = "#0b0f14"; ctx.fill(); ctx.strokeStyle = "#3fd9c9"; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
-    ctx.fillStyle = "#e8fbf9"; ctx.fillText(String(k.n), x, z + dpr * 0.5);
+    const [kx, kz] = mapPoint(k.x, k.z), x = kx * s + ox, y = kz * s + oz;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = "#121219"; ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = "#f1f2f5"; ctx.fillText(String(k.n), x, y + 0.5);
   });
 
-  // Imlec noktalari
-  if (state.cursor != null) state.selected.forEach((lap, i) => {
-    const t = state.traces.get(lap); if (!t) return;
+  if (state.cursor != null) shownLaps().forEach(({ tr: t, colour }) => {
     const [x, z] = mapPoint(interp(t.x, t.d, state.cursor), interp(t.z, t.d, state.cursor));
-    ctx.beginPath(); ctx.arc(px(x), pz(z), 7 * dpr, 0, Math.PI * 2);
-    ctx.fillStyle = COLOURS[i]; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2 * dpr; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x * s + ox, z * s + oz, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = colour; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
   });
 }
-map.canvas.addEventListener("mousemove", e => {
-  const tr = state.traces.get(state.selected[0]);
+function renderMapFoot() {
+  const foot = {
+    speed: `<span><i style="background:linear-gradient(90deg,#4aa3ff,#3ce85a,#f5d92b,#ff4438)"></i>${L("Yavaş → hızlı", "Slow → fast")}</span>`,
+    pedal: `<span><i style="background:#3ce85a"></i>${L("Tam gaz", "Full throttle")}</span><span><i style="background:#9fd36a"></i>${L("Kısmi gaz", "Part throttle")}</span><span><i style="background:#ff4438"></i>${L("Fren", "Brake")}</span><span><i style="background:#5d5d6e"></i>${L("Boşta", "Coasting")}</span>`,
+    sector: SECTOR_COLOURS.map((c, i) => `<span><i style="background:${c}"></i>S${i + 1}</span>`).join("")
+  };
+  $("mapFoot").innerHTML = foot[state.mapMode];
+}
+map.canvas.addEventListener("pointermove", e => {
+  const tr = state.traces.get(state.lap);
   if (!tr || !map.fit) return;
-  const r = map.canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  const mx = (e.clientX - r.left) * dpr, mz = (e.clientY - r.top) * dpr;
+  const r = map.canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
   let best = -1, bd = Infinity;
   for (let i = 0; i < tr.n; i += 2) {
     if (!tr.ok[i]) continue;
-    const [x, z] = mapXY(tr, i);
-    const dx = map.fit.px(x) - mx, dz = map.fit.pz(z) - mz, dd = dx * dx + dz * dz;
+    const [x, z] = mapPoint(tr.x[i], tr.z[i]);
+    const dx = map.fit.px(x) - mx, dz = map.fit.pz(z) - my, dd = dx * dx + dz * dz;
     if (dd < bd) { bd = dd; best = i; }
   }
-  if (best >= 0 && bd < (30 * dpr) ** 2) setCursor(tr.d[best]);
+  if (best >= 0 && bd < 900) setCursor(tr.d[best]);
 });
-map.canvas.addEventListener("mouseleave", () => setCursor(null));
+map.canvas.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") setCursor(null); });
 $("mapMode").querySelectorAll("button").forEach(b => b.onclick = () => {
   state.mapMode = b.dataset.m;
   $("mapMode").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-  drawMap();
+  drawMap(); renderMapFoot();
 });
 
-// Grafik tanimlari: her biri mesafeye karsi bir ya da iki seri
+// ---------------------------------------------------------------- grafikler
+/** Once uc temel kanal; digerleri "Tum kanallar" ile acilir. */
 const CHARTS = [
-  { key: "delta", name: "Fark (s)", h: 70, series: [{ get: (tr, ref) => deltaSeries(tr, ref), unit: "s", fmt: v => (v > 0 ? "+" : "") + v.toFixed(3) }], zero: true },
-  { key: "v", name: "Hız (km/h)", h: 120, series: [{ col: "v", unit: "km/h", fmt: v => Math.round(v) }] },
-  { key: "pedal", name: "Gaz / Fren", h: 80, min: 0, max: 1, series: [{ col: "th", tint: "#3ce85a", unit: "", fmt: v => Math.round(v * 100) + "%" }, { col: "br", tint: "#ff4438", unit: "", fmt: v => Math.round(v * 100) + "%", dashed: false }] },
-  { key: "st", name: "Direksiyon", h: 70, min: -1, max: 1, zero: true, series: [{ col: "st", unit: "", fmt: v => (v * 100).toFixed(0) + "%" }] },
-  { key: "g", name: "Vites", h: 60, min: 0, max: 8, step: true, series: [{ col: "g", unit: "", fmt: v => String(Math.round(v)) }] },
-  { key: "rpm", name: "Devir", h: 70, series: [{ col: "rpm", unit: "rpm", fmt: v => Math.round(v) }] },
-  { key: "gl", name: "Yanal G", h: 70, zero: true, series: [{ col: "gl", unit: "g", fmt: v => v.toFixed(2) }] },
-  { key: "ers", name: "ERS depo (kJ)", h: 70, min: 0, max: 4000, series: [{ col: "ers", unit: "kJ", fmt: v => Math.round(v) }, { col: "ov", tint: "#4aa3ff", scale: 4000, unit: "", fmt: v => v ? "OVERTAKE" : "" }] }
+  { key: "delta", name: L("Fark", "Delta"), h: 72, zero: true, needsCompare: true,
+    get: (tr, cmp) => deltaSeries(tr, cmp), fmt: v => (v > 0 ? "+" : "") + v.toFixed(3) + " s" },
+  { key: "v", name: L("Hız", "Speed"), h: 130, col: "v", fmt: v => Math.round(v) + " km/h" },
+  { key: "th", name: L("Gaz", "Throttle"), h: 64, min: 0, max: 1, col: "th", fmt: v => Math.round(v * 100) + "%" },
+  { key: "br", name: L("Fren", "Brake"), h: 64, min: 0, max: 1, col: "br", fmt: v => Math.round(v * 100) + "%" },
+  { key: "g", name: L("Vites", "Gear"), h: 64, min: 0, max: 8, step: true, col: "g", fmt: v => String(Math.round(v)), more: true },
+  { key: "st", name: L("Direksiyon", "Steering"), h: 64, min: -1, max: 1, zero: true, col: "st", fmt: v => Math.round(v * 100) + "%", more: true },
+  { key: "rpm", name: L("Devir", "RPM"), h: 64, col: "rpm", fmt: v => Math.round(v) + "", more: true },
+  { key: "gl", name: L("Yanal G", "Lateral G"), h: 64, zero: true, col: "gl", fmt: v => v.toFixed(2) + " g", more: true },
+  { key: "ers", name: L("Batarya", "Battery"), h: 64, min: 0, col: "ers", fmt: v => (v / 1000).toFixed(2) + " MJ", more: true }
 ];
-
-/** Referansa gore zaman farki: ayni mesafede gecen sure farki. */
-function deltaSeries(tr, ref) {
-  if (!ref || tr === ref) return tr.t.map(() => 0);
+function deltaSeries(tr, cmp) {
   const out = new Float64Array(tr.n);
-  for (let i = 0; i < tr.n; i++) out[i] = (tr.t[i] - interp(ref.t, ref.d, tr.d[i])) / 1000;
+  if (!cmp) return out;
+  for (let i = 0; i < tr.n; i++) out[i] = (tr.t[i] - interp(cmp.t, cmp.d, tr.d[i])) / 1000;
   return out;
 }
+function shownLaps() {
+  const list = [];
+  const a = state.traces.get(state.lap); if (a) list.push({ lap: state.lap, tr: a, colour: LAP_COLOURS[0] });
+  const b = state.compare != null ? state.traces.get(state.compare) : null;
+  if (b) list.push({ lap: state.compare, tr: b, colour: LAP_COLOURS[1] });
+  return list;
+}
+const activeCharts = () => CHARTS.filter(ch => (!ch.more || state.showAll) && (!ch.needsCompare || shownLaps().length > 1)
+  && (ch.get || state.traces.get(state.lap)?.[ch.col]));
 
 const chartEls = new Map();
+const PADL = 42, PADR = 8;
 function buildCharts() {
-  const host = $("charts");
-  if (!chartEls.size) {
-    host.innerHTML = "";
-    CHARTS.forEach(ch => {
-      const wrap = document.createElement("div");
-      wrap.className = "chart";
-      wrap.innerHTML = `<span class="name label">${ch.name}</span><span class="val mono" data-k="${ch.key}"></span><canvas height="${ch.h}"></canvas>`;
-      host.appendChild(wrap);
-      const canvas = wrap.querySelector("canvas");
-      canvas.addEventListener("mousemove", e => {
-        const r = canvas.getBoundingClientRect();
-        const f = (e.clientX - r.left - PADL) / (r.width - PADL - PADR);
-        const ref = state.traces.get(state.selected[0]);
-        if (ref) setCursor(Math.min(Math.max(f, 0), 1) * ref.d[ref.n - 1]);
-      });
-      canvas.addEventListener("mouseleave", () => setCursor(null));
-      chartEls.set(ch.key, { canvas, wrap, val: wrap.querySelector(".val") });
+  const host = $("charts"), list = activeCharts();
+  const signature = list.map(c => c.key).join();
+  $("moreBtn").textContent = state.showAll ? L("Daha az kanal", "Fewer channels") : L("Tüm kanallar", "All channels");
+  if (host.dataset.sig === signature) return;
+  host.dataset.sig = signature;
+  host.innerHTML = ""; chartEls.clear();
+  list.forEach(ch => {
+    const wrap = document.createElement("div");
+    wrap.className = "chart";
+    wrap.innerHTML = `<span class="name">${ch.name}</span><span class="val"></span><canvas style="height:${ch.h}px"></canvas>`;
+    host.appendChild(wrap);
+    const canvas = wrap.querySelector("canvas");
+    canvas.addEventListener("pointermove", e => {
+      const tr = state.traces.get(state.lap); if (!tr) return;
+      const r = canvas.getBoundingClientRect();
+      const f = (e.clientX - r.left - PADL) / (r.width - PADL - PADR);
+      setCursor(Math.min(Math.max(f, 0), 1) * tr.d[tr.n - 1]);
     });
-  }
+    canvas.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") setCursor(null); });
+    chartEls.set(ch.key, { canvas, val: wrap.querySelector(".val") });
+  });
 }
-const PADL = 44, PADR = 10;
+$("moreBtn").onclick = () => { state.showAll = !state.showAll; buildCharts(); drawCharts(); renderReadout(); };
+
+function seriesOf(ch, tr, cmp) { return ch.get ? ch.get(tr, cmp) : tr[ch.col]; }
+
 function drawCharts() {
-  const ref = state.traces.get(state.selected[0]);
-  CHARTS.forEach(ch => {
-    const { canvas } = chartEls.get(ch.key);
-    const dpr = window.devicePixelRatio || 1, W = canvas.clientWidth, H = ch.h;
+  const laps = shownLaps(), main = laps[0]?.tr, cmp = laps[1]?.tr;
+  activeCharts().forEach(ch => {
+    const el = chartEls.get(ch.key); if (!el) return;
+    const { canvas } = el, dpr = window.devicePixelRatio || 1, W = canvas.clientWidth, H = ch.h;
+    if (!W) return;
     canvas.width = W * dpr; canvas.height = H * dpr;
-    const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
+    const ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    if (!ref) return;
-    const maxD = ref.d[ref.n - 1];
-    const xs = d => PADL + d / maxD * (W - PADL - PADR);
-    // seriler
-    const drawn = [];
+    if (!main) return;
+    const maxD = main.d[main.n - 1], xs = d => PADL + d / maxD * (W - PADL - PADR);
+    // Fark grafigi tek cizgi: ana tur karsilastirmaya gore.
+    const drawn = ch.needsCompare ? [{ tr: main, arr: seriesOf(ch, main, cmp), colour: "#f1f2f5" }]
+      : laps.slice().reverse().map(l => ({ tr: l.tr, arr: seriesOf(ch, l.tr), colour: l.colour }));
     let lo = ch.min ?? Infinity, hi = ch.max ?? -Infinity;
-    state.selected.forEach((lap, li) => {
-      const tr = state.traces.get(lap); if (!tr) return;
-      ch.series.forEach((s, si) => {
-        const raw = s.get ? s.get(tr, ref) : tr[s.col];
-        const arr = s.scale ? Float64Array.from(raw, v => v * s.scale) : raw;
-        drawn.push({ tr, arr, colour: s.tint && state.selected.length === 1 ? s.tint : (s.tint ? mix(COLOURS[li], s.tint) : COLOURS[li]), si });
-        if (ch.min == null || ch.max == null) for (let i = 0; i < arr.length; i++) { if (arr[i] < lo) lo = arr[i]; if (arr[i] > hi) hi = arr[i]; }
-      });
+    if (ch.min == null || ch.max == null) drawn.forEach(({ arr, tr }) => {
+      for (let i = 0; i < arr.length; i++) if (tr.ok[i]) { if (ch.min == null && arr[i] < lo) lo = arr[i]; if (ch.max == null && arr[i] > hi) hi = arr[i]; }
     });
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
-    if (hi - lo < 1e-6) { hi = lo + 1; }
+    if (hi - lo < 1e-6) hi = lo + 1;
     if (ch.zero && ch.min == null) { const m = Math.max(Math.abs(lo), Math.abs(hi)); lo = -m; hi = m; }
-    const ys = v => 8 + (hi - v) / (hi - lo) * (H - 16);
-    // izgara
-    ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
-    [lo, (lo + hi) / 2, hi].forEach(v => { ctx.beginPath(); ctx.moveTo(PADL, ys(v)); ctx.lineTo(W - PADR, ys(v)); ctx.stroke(); });
-    ctx.fillStyle = "#7f8797"; ctx.font = "9px ui-monospace, Menlo, monospace"; ctx.textAlign = "right";
-    ctx.fillText(ch.series[0].fmt(hi), PADL - 6, ys(hi) + 3); ctx.fillText(ch.series[0].fmt(lo), PADL - 6, ys(lo) + 3);
-    if (ch.zero) { ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.beginPath(); ctx.moveTo(PADL, ys(0)); ctx.lineTo(W - PADR, ys(0)); ctx.stroke(); }
-    // viraj isaretleri
-    ctx.strokeStyle = "rgba(63,217,201,.15)";
-    state.corners.forEach(k => { ctx.beginPath(); ctx.moveTo(xs(k.d), 0); ctx.lineTo(xs(k.d), H); ctx.stroke(); });
-    // cizgiler
+    const top = 22, bottom = 6, ys = v => top + (hi - v) / (hi - lo) * (H - top - bottom);
+
+    ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 1;
+    state.corners.forEach(k => { ctx.beginPath(); ctx.moveTo(xs(k.d) + .5, top); ctx.lineTo(xs(k.d) + .5, H - bottom); ctx.stroke(); });
+    ctx.fillStyle = "#5d5d6e"; ctx.font = "600 9.5px Saira, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(ch.fmt(hi).replace(/ .*/, ""), PADL - 6, ys(hi)); ctx.fillText(ch.fmt(lo).replace(/ .*/, ""), PADL - 6, ys(lo));
+    if (ch.zero) { ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.beginPath(); ctx.moveTo(PADL, ys(0)); ctx.lineTo(W - PADR, ys(0)); ctx.stroke(); }
+
+    if (ch.needsCompare) {
+      // Onde olunan yer yesil, geride kalinan sari dolgu.
+      const z = ys(0), arr = drawn[0].arr;
+      ["#3ce85a", "#f5d92b"].forEach((fill, side) => {
+        ctx.beginPath(); ctx.moveTo(xs(main.d[0]), z);
+        for (let i = 0; i < main.n; i++) {
+          const v = side === 0 ? Math.min(arr[i], 0) : Math.max(arr[i], 0);
+          ctx.lineTo(xs(main.d[i]), ys(Math.min(Math.max(v, lo), hi)));
+        }
+        ctx.lineTo(xs(main.d[main.n - 1]), z); ctx.closePath();
+        ctx.fillStyle = fill + "33"; ctx.fill();
+      });
+    }
     drawn.forEach(({ tr, arr, colour }) => {
-      ctx.beginPath(); ctx.strokeStyle = colour; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.strokeStyle = colour; ctx.lineWidth = 1.6; ctx.lineJoin = "round";
+      let pen = false;
       for (let i = 0; i < tr.n; i++) {
+        if (!tr.ok[i]) { pen = false; continue; }
         const x = xs(tr.d[i]), y = ys(Math.min(Math.max(arr[i], lo), hi));
-        if (!i) ctx.moveTo(x, y); else if (ch.step) { ctx.lineTo(x, ys(arr[i - 1])); ctx.lineTo(x, y); } else ctx.lineTo(x, y);
+        if (!pen) { ctx.moveTo(x, y); pen = true; }
+        else if (ch.step) { ctx.lineTo(x, ys(Math.min(Math.max(arr[i - 1], lo), hi))); ctx.lineTo(x, y); }
+        else ctx.lineTo(x, y);
       }
       ctx.stroke();
     });
-    // imlec
     if (state.cursor != null) {
-      ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.moveTo(xs(state.cursor), 0); ctx.lineTo(xs(state.cursor), H); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.6)"; ctx.beginPath();
+      ctx.moveTo(xs(state.cursor) + .5, top - 4); ctx.lineTo(xs(state.cursor) + .5, H); ctx.stroke();
     }
   });
 }
-function mix(a, b) { return b; }
 
+let frame = 0;
 function setCursor(d) {
   state.cursor = d;
-  drawCharts();
-  drawMap();
-  renderReadout();
+  if (frame) return;
+  frame = requestAnimationFrame(() => { frame = 0; drawCharts(); drawMap(); renderReadout(); });
 }
 function renderReadout() {
-  const ref = state.traces.get(state.selected[0]);
-  const d = state.cursor;
-  // grafik basliklarindaki anlik degerler
-  CHARTS.forEach(ch => {
+  const laps = shownLaps(), d = state.cursor;
+  activeCharts().forEach(ch => {
     const el = chartEls.get(ch.key)?.val; if (!el) return;
-    if (d == null || !ref) { el.innerHTML = ""; return; }
-    el.innerHTML = state.selected.map((lap, li) => {
-      const tr = state.traces.get(lap); if (!tr) return "";
-      const s = ch.series[0];
-      const arr = s.get ? s.get(tr, ref) : tr[s.col];
-      return `<span style="color:${COLOURS[li]}">${s.fmt(interp(arr, tr.d, d))}</span>`;
-    }).join("");
+    if (d == null || !laps.length) { el.innerHTML = ""; return; }
+    if (ch.needsCompare) {
+      const v = interp(seriesOf(ch, laps[0].tr, laps[1].tr), laps[0].tr.d, d);
+      el.innerHTML = `<span class="${v <= 0 ? "green" : "yellow"}">${ch.fmt(v)}</span>`;
+    } else el.innerHTML = laps.map(l => `<span style="color:${l.colour}">${ch.fmt(interp(seriesOf(ch, l.tr), l.tr.d, d))}</span>`).join("");
   });
-  if (d == null || !ref) { $("readout").innerHTML = ""; return; }
-  const near = state.corners.filter(k => Math.abs(k.d - d) < 60)[0];
-  $("readout").innerHTML = [
-    ["Mesafe", `${Math.round(d)} m`], ["Viraj", near ? `T${near.n}` : "—"],
-    ...state.selected.map((lap, li) => {
-      const tr = state.traces.get(lap); if (!tr) return null;
-      return [`Tur ${lap} süre`, `<span style="color:${COLOURS[li]}">${fmtLap(Math.round(interp(tr.t, tr.d, d)))}</span>`];
-    }).filter(Boolean)
-  ].map(([b, u]) => `<div><b>${b}</b><u class="mono">${u}</u></div>`).join("");
+  if (d == null || !laps.length) {
+    $("readout").innerHTML = laps.map(l => `<span><i class="key-dot" style="background:${l.colour}"></i> ${L("Tur", "Lap")} ${l.lap}</span>`).join("");
+    return;
+  }
+  const near = state.corners.find(k => Math.abs(k.d - d) < 60);
+  $("readout").innerHTML = `<span>${Math.round(d)} m</span>${near ? `<span>T${near.n}</span>` : ""}` +
+    laps.map(l => `<span style="color:${l.colour}">${fmtLap(interp(l.tr.t, l.tr.d, d))}</span>`).join("");
 }
 
+// ---------------------------------------------------------------- virajlar
 function renderCorners() {
-  const table = $("corners");
-  if (!state.corners.length) { table.innerHTML = `<tr><td class="empty">Referans turda viraj bulunamadı.</td></tr>`; return; }
-  const laps = state.selected.filter(l => state.traces.has(l));
-  const head = `<tr><th>Viraj</th><th>Mesafe</th>${laps.map((l, i) => `<th style="color:${COLOURS[i]}">Tur ${l} fren</th><th>Giriş</th><th>Apex</th><th>Çıkış</th><th>Vites</th><th>Yanal G</th>`).join("")}</tr>`;
+  const laps = shownLaps(), table = $("corners");
+  $("cornerCount").textContent = state.corners.length ? String(state.corners.length) : "";
+  if (!state.corners.length) { table.innerHTML = `<tr><td class="empty">${L("Bu turda viraj bulunamadı.", "No corners found on this lap.")}</td></tr>`; return; }
+  const cmp = laps[1];
+  const head = `<tr><th>${L("Viraj", "Turn")}</th><th>${L("Mesafe", "Distance")}</th><th>${L("Fren noktası", "Brake point")}</th>
+    <th>${L("Giriş", "Entry")}</th><th>Apex</th><th>${L("Çıkış", "Exit")}</th><th>${L("Vites", "Gear")}</th><th>${L("Yanal G", "Lat G")}</th></tr>`;
+  const cell = (a, b, fmt, higherIsBetter) => {
+    if (a == null) return `<td>—</td>`;
+    if (b === undefined) return `<td>${fmt(a)}</td>`;
+    const good = higherIsBetter == null ? null : higherIsBetter ? a > b : a < b;
+    const cls = good == null || Math.round(a) === Math.round(b) ? "" : good ? "green" : "yellow";
+    if (b == null) return `<td>${fmt(a)}<span class="vs" style="color:${cmp.colour}">—</span></td>`;
+    return `<td><span class="${cls}">${fmt(a)}</span><span class="vs" style="color:${cmp.colour}">${b == null ? "—" : fmt(b)}</span></td>`;
+  };
   const rows = state.corners.map(k => {
-    const cells = laps.map(l => {
-      const s = cornerStats(state.traces.get(l), k);
-      const brakeTxt = s.brake != null ? `${Math.round(k.d - s.brake)} m önce` : "—";
-      return `<td class="mono">${brakeTxt}</td><td class="mono">${Math.round(s.entry)}</td><td class="mono">${Math.round(s.apex)}</td><td class="mono">${Math.round(s.exit)}</td><td class="mono">${s.gear}</td><td class="mono">${s.gLat.toFixed(2)}</td>`;
-    }).join("");
-    return `<tr><td>T${k.n}</td><td class="mono">${Math.round(k.d)} m</td>${cells}</tr>`;
+    const a = cornerStats(laps[0].tr, k), b = cmp ? cornerStats(cmp.tr, k) : null;
+    const pick = key => b ? b[key] ?? null : undefined;
+    return `<tr><td class="turn">T${k.n}</td><td>${Math.round(k.d)} m</td>
+      ${cell(a.brake, pick("brake"), v => `${Math.round(v)} m`, false)}
+      ${cell(a.entry, pick("entry"), v => Math.round(v), true)}
+      ${cell(a.apex, pick("apex"), v => Math.round(v), true)}
+      ${cell(a.exit, pick("exit"), v => Math.round(v), true)}
+      ${cell(a.gear, pick("gear"), v => v, null)}
+      ${cell(a.gLat, pick("gLat"), v => v.toFixed(2), null)}</tr>`;
   }).join("");
   table.innerHTML = head + rows;
 }
 
-window.addEventListener("resize", () => { drawMap(); drawCharts(); });
-renderPair(false);
+// ---------------------------------------------------------------- baslat
+let resizeFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => { if (route() != null) { drawMap(); drawCharts(); } });
+});
+document.fonts?.ready.then(() => { if (route() != null) { drawMap(); drawCharts(); } });
+render();
+renderStatus();
 poll();
 setInterval(poll, 3000);
+setInterval(renderStatus, 30000);
 </script>
 </body>
 </html>

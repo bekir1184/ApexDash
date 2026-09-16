@@ -67,9 +67,15 @@ final class SessionUploader: ObservableObject {
     private func upload(_ payload: Payload, sessionID: String) async {
         guard !payload.laps.isEmpty else { return }
         let laps = payload.laps.suffix(200).map { lap -> [String: Any] in
-            ["lap": lap.number, "time": lap.timeMS,
-             "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS],
-             "trace": payload.traces.contains { $0.number == lap.number }]
+            let trace = payload.traces.first { $0.number == lap.number }
+            var entry: [String: Any] = [
+                "lap": lap.number, "time": lap.timeMS,
+                "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS],
+                "trace": trace != nil
+            ]
+            // Sitedeki tur listesi en yuksek hizi izi indirmeden gosterir.
+            if let top = trace?.samples.map(\.speedKPH).max() { entry["vmax"] = top }
+            return entry
         }
         let session = payload.session
         var index: [String: Any] = [
