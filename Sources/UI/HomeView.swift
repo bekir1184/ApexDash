@@ -151,6 +151,8 @@ struct HomeView: View {
                             content
                                 .scaleEffect(1 - abs(phase.value) * 0.26)
                                 .opacity(1 - abs(phase.value) * 0.45)
+                                // Alan derinligi: yandaki kartlar bulaniklasir, secili net kalir.
+                                .blur(radius: abs(phase.value) * unit * 0.08)
                         }
                         .frame(width: cardW, height: cardH)
                         .onTapGesture {
