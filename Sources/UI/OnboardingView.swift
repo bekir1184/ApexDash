@@ -364,7 +364,7 @@ private struct IgnitionScene: View {
     let onDone: () -> Void
 
     var body: some View {
-        SplashLogo(unit: unit, onDone: onDone)
+        SplashLogo(strings: strings, unit: unit, onDone: onDone)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

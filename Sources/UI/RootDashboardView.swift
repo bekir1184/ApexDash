@@ -367,7 +367,7 @@ struct RootDashboardView: View {
                 .zIndex(20)
             }
             if showsSplash && !showsOnboarding {
-                SplashView(unit: unit) { showsSplash = false }
+                SplashView(strings: strings, unit: unit) { showsSplash = false }
                     .zIndex(30)
             }
         }
