@@ -292,7 +292,14 @@ struct DashboardCard: View {
     var halo = false
 
     var body: some View {
+        let feather = halo ? cornerRadius * 0.45 : 0
         screen
+            // Secili kartin kenari zemine yumusakca karisir.
+            .mask {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .padding(feather)
+                    .blur(radius: feather)
+            }
             .background {
                 if halo {
                     screen
@@ -304,7 +311,8 @@ struct DashboardCard: View {
                 }
             }
             .animation(.easeOut(duration: 0.35), value: halo)
-            .shadow(color: .black.opacity(0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
+            // Secili kartta gecisi yalnizca isima yapar; digerleri golgeyle ayrilir.
+            .shadow(color: .black.opacity(halo ? 0 : 0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
     }
 
     private var screen: some View {
@@ -321,10 +329,6 @@ struct DashboardCard: View {
         .scaleEffect(scale)
         .frame(width: width, height: fullSize.height * scale)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
-        }
     }
 }
 
