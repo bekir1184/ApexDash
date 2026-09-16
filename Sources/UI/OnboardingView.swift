@@ -394,7 +394,7 @@ private struct DashCarousel: View {
     let unit: CGFloat
 
     @State private var index = 0
-    private let themes: [DashTheme] = [.cluster, .broadcast, .dotMatrix, .modern, .realistic, .game]
+    private let themes: [DashTheme] = [.broadcast, .dotMatrix, .modern, .realistic, .game, .cluster]
 
     private var screen: CGSize {
         let b = UIScreen.main.bounds.size
