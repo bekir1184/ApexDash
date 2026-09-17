@@ -1,36 +1,35 @@
 import SwiftUI
 
-/// Uygulama arayuzunun rengi. Panolarin kendi renkleri (sicaklik olcekleri,
-/// bayraklar, sektor renkleri) bunun disinda kalir; oralarda renk bilgi
-/// tasir, burada kimlik tasir.
+/// The colours of the app's interface. The dashboards' own colours (temperature scales,
+/// flags, sector colours) are separate: there colour carries information, here it carries
+/// identity.
 enum Palette {
-    /// Neredeyse siyah lacivert zemin.
+    /// Near-black navy background.
     static let ground = Color(red: 0.082, green: 0.082, blue: 0.118)
-    /// Zeminden bir ton acik; kart, rozet ve panel arkasi.
+    /// One step lighter than the background; behind cards, badges and panels.
     static let deep = Color(red: 0.137, green: 0.137, blue: 0.180)
-    /// Kirmizi: vurgu, secili durum, birincil dugme.
+    /// Red: accent, selection, primary button.
     static let accent = Color(red: 0.882, green: 0.024, blue: 0.0)
-    /// Uyari da ayni kirmizi; paletin tek vurgu rengi var.
+    /// Warnings use the same red; the palette has a single accent.
     static let alert = Color(red: 0.882, green: 0.024, blue: 0.0)
-    /// Vurgunun uzerindeki yazi.
+    /// Text on the accent colour.
     static let onAccent = Color.white
-    /// Bagliyken yanan yesil nokta; kirmiziyla karismasin diye korunur.
+    /// The green dot shown while connected; kept distinct from red.
     static let live = Color(red: 0.24, green: 0.92, blue: 0.35)
     static let ink = Color.white
-    /// Zemindeki egik seritler: iki komsu gri, birbirinden bir tik farkli.
+    /// The slanted background stripes: two neighbouring greys, a touch apart.
     static let stripeNear = Color(red: 0.160, green: 0.160, blue: 0.200)
     static let stripeFar = Color(red: 0.192, green: 0.192, blue: 0.231)
 }
 
-/// Uygulamanin zemini: koyu lacivert ve uzerinde iki egik gri serit.
-/// Seritler ekranin tamamini kat eder, ustunde duran icerigi bolmemesi icin
-/// kontrasti dusuk tutulur.
+/// The app background: dark navy with two slanted grey stripes. The stripes cross the whole
+/// screen, with low contrast so they never break up the content above them.
 struct StripedBackground: View {
-    /// Seritlerin dikeyden sapmasi.
+    /// How far the stripes lean from vertical.
     var lean: CGFloat = 0.42
-    /// Serit genisligi, ekran genisliginin orani olarak.
+    /// Stripe width as a fraction of the screen width.
     var width: CGFloat = 0.17
-    /// Ilk seridin sol kenarinin ekrandaki yeri.
+    /// Where the first stripe's left edge sits on screen.
     var start: CGFloat = 0.22
 
     var body: some View {
@@ -51,7 +50,7 @@ struct StripedBackground: View {
         .ignoresSafeArea()
     }
 
-    /// Tepesi saga kaymis paralelkenar; asagi indikce sola yatar.
+    /// A parallelogram whose top is shifted right, leaning left as it goes down.
     private func stripe(x: CGFloat, band: CGFloat, height: CGFloat, lean: CGFloat) -> Path {
         let shift = height * lean
         var path = Path()

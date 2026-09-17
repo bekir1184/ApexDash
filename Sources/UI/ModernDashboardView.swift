@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Bosch DDU tarzi, temiz ve yuksek kontrastli duzen.
+/// A clean, high contrast layout in the style of a Bosch DDU.
 struct ModernDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat

@@ -1,13 +1,13 @@
 import XCTest
 @testable import ApexDash
 
-/// Paketleri bayt bayt kurup ayristiriciya veren testler. Iki oyunun
-/// duzeni farkli oldugu icin her sey iki bicimde de dogrulanir.
+/// Builds packets byte by byte and feeds them to the parsers. The two games' layouts
+/// differ, so everything is checked in both formats.
 final class PacketParsingTests: XCTestCase {
 
-    // MARK: - Bayt kurucu
+    // MARK: - Byte builder
 
-    /// Kucuk endian, hizalamasiz paket kurar; spesifikasyondaki duzenin aynisi.
+    /// Builds packed little-endian packets, exactly as laid out in the specification.
     struct PacketBuilder {
         var bytes: [UInt8] = []
 
@@ -48,7 +48,7 @@ final class PacketParsingTests: XCTestCase {
         return b
     }
 
-    // MARK: - Baslik
+    // MARK: - Header
 
     func testHeaderReadsBothSupportedFormats() throws {
         let f125 = try XCTUnwrap(PacketHeader(header(format: 2025, packetID: 6, playerIndex: 3).data))
@@ -75,10 +75,10 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertNil(PacketHeader(Data(short)))
     }
 
-    // MARK: - Telemetri
+    // MARK: - Telemetry
 
-    /// Tek bir aracin telemetri kaydini kurar. F1 25'te motor sicakligi iki
-    /// bayt, F1 26'da tek bayt; geri kalan alanlar ayni.
+    /// Builds one car's telemetry record. Engine temperature is two bytes in F1 25 and one
+    /// in F1 26; the other fields are the same.
     private func telemetryCar(format: PacketFormat, speed: UInt16, gear: Int8, rpm: UInt16,
                               drs: Bool, engineTemp: Int, brake: Float) -> PacketBuilder {
         var b = PacketBuilder()
@@ -122,7 +122,7 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertEqual(t.throttle, 1.0)
         XCTAssertEqual(t.brakeTemps, [420, 415, 480, 470])
         XCTAssertEqual(t.tyreSurfaceTemps, [96, 98, 92, 94])
-        // 2026 kurallarinda DRS yok: bayt okunsa da gorunume tasinmaz.
+        // No DRS under the 2026 regulations: the byte is read but never reaches the model.
         XCTAssertFalse(t.drsActive)
     }
 
@@ -133,12 +133,12 @@ final class PacketParsingTests: XCTestCase {
         let t = try XCTUnwrap(CarTelemetry(data: b.data, carIndex: 0, format: .f125))
         XCTAssertEqual(t.speedKPH, 312)
         XCTAssertEqual(t.gear, 8)
-        // Tek bayt okunsaydi 300 sigmaz, 44 olurdu.
+        // Read as a single byte, 300 would not fit and would come out as 44.
         XCTAssertEqual(t.engineTemp, 300)
         XCTAssertTrue(t.drsActive)
     }
 
-    /// Ikinci aracin dogru okunmasi, adim uzunlugunun dogrulugunu kanitlar.
+    /// Reading the second car correctly proves the stride length is right.
     func testCarTelemetryUsesFormatStrideForSecondCar() throws {
         for format in [PacketFormat.f125, .f126] {
             var b = header(format: format.rawValue, packetID: 6)
@@ -160,7 +160,7 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertNil(CarTelemetry(data: b.data, carIndex: 0, format: .f126))
     }
 
-    // MARK: - Durum
+    // MARK: - Car status
 
     private func statusCar(format: PacketFormat, limiter: Bool, drsAllowed: Bool,
                            maxRPM: UInt16, flag: Int8, store: Float,
@@ -206,7 +206,7 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertEqual(s.ersHarvestedThisLap, 1_600_000)   // MGU-K + MGU-H
         XCTAssertEqual(s.ersHarvestLimitPerLap, 8_000_000)
         XCTAssertEqual(s.ersDeployedThisLap, 900_000)
-        // 2026'da DRS yok.
+        // No DRS in 2026.
         XCTAssertFalse(s.drsAllowed)
     }
 
@@ -219,12 +219,12 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertEqual(s.maxRPM, 13_000)
         XCTAssertEqual(s.ersStoreEnergy, 4_000_000)
         XCTAssertEqual(s.ersDeployedThisLap, 750_000)
-        // Alan yok: sifir kalir, boylece ekranlar depoya gore olcekler.
+        // No such field: it stays zero, so dashboards scale against the store.
         XCTAssertEqual(s.ersHarvestLimitPerLap, 0)
         XCTAssertTrue(s.drsAllowed)
     }
 
-    // MARK: - Tur verisi
+    // MARK: - Lap data
 
     private func lapCar(lastLap: UInt32, currentLap: UInt32, s1: UInt16, s2: UInt16,
                         distance: Float, position: UInt8, lapNumber: UInt8,
@@ -271,12 +271,12 @@ final class PacketParsingTests: XCTestCase {
         XCTAssertEqual(l.lapDistance, 2_450.5)
     }
 
-    /// Sektor sureleri bir dakikayi gecince dakika parcasi ile birlesir.
+    /// Sector times over a minute combine with their minutes part.
     func testLapDataCombinesSectorMinutes() throws {
         var b = header(format: 2026, packetID: 2)
         var car = PacketBuilder()
         car.u32(0); car.u32(0)
-        car.u16(5_000); car.u8(1)             // 1 dakika 5 saniye
+        car.u16(5_000); car.u8(1)             // 1 minute 5 seconds
         car.u16(0); car.u8(0)
         car.pad(6)
         car.f32(0); car.f32(0); car.f32(0)
@@ -304,7 +304,7 @@ final class PacketParsingTests: XCTestCase {
         }
     }
 
-    // MARK: - Katilimcilar
+    // MARK: - Participants
 
     private func participant(format: PacketFormat, raceNumber: UInt8, name: String,
                              colour: (UInt8, UInt8, UInt8)) -> PacketBuilder {
@@ -313,7 +313,7 @@ final class PacketParsingTests: XCTestCase {
         if format == .f126 {
             b.u16(11); b.u16(0); b.u16(2)     // driverId, networkId, teamId (uint16)
         } else {
-            b.u8(11); b.u8(0); b.u8(2)        // ayni alanlar uint8
+            b.u8(11); b.u8(0); b.u8(2)        // the same fields as uint8
         }
         b.u8(0)                               // myTeam
         b.u8(raceNumber)
@@ -324,7 +324,7 @@ final class PacketParsingTests: XCTestCase {
         b.u8(1)                               // platform
         b.u8(1)                               // numColours
         b.u8(colour.0); b.u8(colour.1); b.u8(colour.2)
-        b.pad(9)                              // kalan uc renk
+        b.pad(9)                              // remaining three colours
         return b
     }
 
@@ -344,7 +344,7 @@ final class PacketParsingTests: XCTestCase {
             b.bytes += participant(format: format, raceNumber: 63,
                                    name: "George Russell", colour: (0, 210, 190)).bytes
             let list = ParticipantsPacket.parse(b.data, format: format)
-            // Paket iki kayitla bitiyor: ayristirici veri tukendiginde durur.
+            // The packet ends after two records: the parser stops when the data runs out.
             XCTAssertEqual(list.count, 2, "\(format.label)")
             XCTAssertEqual(list[0].name, "Lewis Hamilton")
             XCTAssertEqual(list[0].raceNumber, 44)
@@ -356,14 +356,14 @@ final class PacketParsingTests: XCTestCase {
         }
     }
 
-    // MARK: - Hareket
+    // MARK: - Motion
 
     private func motionCar(format: PacketFormat, x: Float, z: Float,
                            gLat: Float, gLong: Float, yaw: Float) -> PacketBuilder {
         var b = PacketBuilder()
         b.f32(x); b.f32(0); b.f32(z)          // dunya konumu
-        b.f32(30); b.f32(0); b.f32(40)        // hiz vektoru
-        for _ in 0..<6 { b.i16(0) }           // yon vektorleri
+        b.f32(30); b.f32(0); b.f32(40)        // velocity vector
+        for _ in 0..<6 { b.i16(0) }           // direction vectors
         if format == .f126 {
             b.i16(Int16(gLat * 1000)); b.i16(Int16(gLong * 1000)); b.i16(1000)
         } else {
@@ -391,16 +391,16 @@ final class PacketParsingTests: XCTestCase {
             XCTAssertEqual(m.yaw, 1.25)
             XCTAssertEqual(m.gLateral, 3.25, accuracy: 0.001, "\(format.label) yanal G")
             XCTAssertEqual(m.gLongitudinal, -1.5, accuracy: 0.001)
-            XCTAssertEqual(m.speedMS, 50, accuracy: 0.001)   // 30-40-50 ucgeni
+            XCTAssertEqual(m.speedMS, 50, accuracy: 0.001)   // 30-40-50 triangle
         }
     }
 
-    // MARK: - Seans ve olaylar
+    // MARK: - Session and events
 
     func testSessionInfoReadsTrackAndWeather() throws {
         var b = header(format: 2026, packetID: 1)
-        b.u8(1)                               // weather: az bulutlu
-        b.i8(41); b.i8(27)                    // pist, hava sicakligi
+        b.u8(1)                               // weather: light cloud
+        b.i8(41); b.i8(27)                    // track, air temperature
         b.u8(20)                              // totalLaps
         b.u16(5_793)                          // trackLength
         b.u8(10)                              // sessionType
@@ -432,9 +432,9 @@ final class PacketParsingTests: XCTestCase {
         }
     }
 
-    // MARK: - Bicim tablosu
+    // MARK: - Format table
 
-    /// Resmi spesifikasyondaki paket boyutlari: baslik + arac sayisi * adim.
+    /// Packet sizes from the official specification: header + cars * stride.
     func testPacketSizesMatchPublishedSpec() {
         // F1 25: motion 1349, lap 1285, telemetry 1352, status 1239, participants 1284
         XCTAssertEqual(29 + 22 * PacketFormat.f125.motionStride, 1349)

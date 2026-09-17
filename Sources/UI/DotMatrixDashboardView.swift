@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Gercek F1 direksiyon LCD'sini taklit eden nokta-matris duzen.
-/// Ustte overtake ve aktif aero ayri gostergeler, altinda devir merdiveni,
-/// ortada dev vites ve dort kosesinde lastik sicakliklari, sagda batarya
-/// (boost) kolonu, altta tur suresi.
+/// A dot matrix layout imitating a real F1 wheel LCD. Overtake and active aero indicators
+/// at the top, a rev ladder below, a giant gear in the middle with tyre temperatures at its
+/// four corners, the battery (boost) column on the right and lap time at the bottom.
 struct DotMatrixDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
@@ -33,9 +32,9 @@ struct DotMatrixDashboardView: View {
         .dotMatrix(pitch: max(2, unit * 0.055))
     }
 
-    // MARK: - Ust gostergeler
+    // MARK: - Top indicators
 
-    /// Batarya: overtake icin kullanilabilir enerji. Depo dolunca yanip soner.
+    /// Battery: energy available for overtake. Flashes when full.
     private var batteryBanner: some View {
         let full = dash.ersFraction >= 0.99
         return TimelineView(.periodic(from: .now, by: 0.35)) { context in
@@ -49,8 +48,8 @@ struct DotMatrixDashboardView: View {
         }
     }
 
-    /// Aktif aero: 2026'da DRS'in yerini alan X (viraj) / Z (duz) modu.
-    /// Kullanilabilir hale gelip de gecilmediyse yanip soner.
+    /// Active aero: the X (corner) / Z (straight) mode that replaces DRS in 2026. Flashes
+    /// when available but not engaged.
     private var straightModeBanner: some View {
         let engaged = dash.aeroEngaged
         let waiting = dash.aeroReady && !engaged
@@ -65,7 +64,7 @@ struct DotMatrixDashboardView: View {
         }
     }
 
-    /// `fillFraction` verilirse rozetin arkasi o oranda dolar (batarya seviyesi).
+    /// With `fillFraction`, the badge background fills to that level (battery level).
     private func banner(text: String, detail: String, color: Color,
                         filled: Bool, dimmed: Bool, fillFraction: Double) -> some View {
         let foreground: Color = filled ? .black : (dimmed ? .white.opacity(0.3) : color)
@@ -101,7 +100,7 @@ struct DotMatrixDashboardView: View {
         )
     }
 
-    /// Yatay devir merdiveni: yesil, sari, kirmizi; shift noktasinda tamami yanar.
+    /// Horizontal rev ladder: green, yellow, red; fully lit at the shift point.
     private var revLadder: some View {
         GeometryReader { geo in
             let count = 24
@@ -130,7 +129,7 @@ struct DotMatrixDashboardView: View {
         }
     }
 
-    // MARK: - Sol sutun
+    // MARK: - Left column
 
     private var leftStack: some View {
         VStack(spacing: unit * 0.14) {
@@ -161,10 +160,10 @@ struct DotMatrixDashboardView: View {
         )
     }
 
-    // MARK: - Vites ve cevresindeki lastikler
+    // MARK: - Gear and the tyres around it
 
-    /// Dort tekerlek, gercek arac yerlesimiyle vitesin kosesinde:
-    /// ust satir FL / FR, alt satir RL / RR.
+    /// The four wheels at the gear's corners, laid out as on the car: FL / FR on top, RL /
+    /// RR below.
     private var gearWithTyres: some View {
         HStack(spacing: unit * 0.25) {
             VStack(spacing: unit * 0.4) {
@@ -210,7 +209,7 @@ struct DotMatrixDashboardView: View {
         )
     }
 
-    // MARK: - Sag sutun: batarya
+    // MARK: - Right column: battery
 
     private var rightStack: some View {
         HStack(spacing: unit * 0.18) {
@@ -242,7 +241,7 @@ struct DotMatrixDashboardView: View {
         )
     }
 
-    /// ERS deposunun doluluk kolonu - overtake icin kullanilabilir enerji.
+    /// ERS store column: energy available for overtake.
     private var batteryColumn: some View {
         let segments = 14
         let lit = Int((dash.ersFraction * Double(segments)).rounded())
@@ -266,7 +265,7 @@ struct DotMatrixDashboardView: View {
         }
     }
 
-    /// En iyi tura gore: onundeysen yesil, gerideysen kirmizi.
+    /// Against the best lap: green when ahead, red when behind.
     private var bestDeltaColor: Color {
         guard let delta = dash.deltaToBestMS else { return .white.opacity(0.75) }
         if delta < -20 { return green }
@@ -274,7 +273,7 @@ struct DotMatrixDashboardView: View {
         return .white.opacity(0.85)
     }
 
-    /// Yaklasiyorsak yesil, uzaklasiyorsak kirmizi, sabitse notr.
+    /// Green when closing, red when dropping back, neutral when steady.
     private var deltaColor: Color {
         switch dash.deltaTrend {
         case ..<0: return green
@@ -283,7 +282,7 @@ struct DotMatrixDashboardView: View {
         }
     }
 
-    // MARK: - Alt satir
+    // MARK: - Bottom row
 
     private var bottomRow: some View {
         HStack(spacing: unit * 0.16) {

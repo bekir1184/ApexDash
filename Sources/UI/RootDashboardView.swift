@@ -1,56 +1,56 @@
 import SwiftUI
 import StoreKit
 
-/// Kok gorunum. Tam ekran pano bir "sahne" olarak tek bir gorunumdur ve
-/// tek bir animasyonlu degerle (`stage`, 0 = tam ekran, 1 = karuseldeki
-/// kartin yerinde) surulur. Menuye gecis, SEC ve asagi cekme hep bu degeri
-/// hareket ettirir; iki durum arasinda gorunum degistirilmez, boylece gecis
-/// hicbir karede kopmaz. Sahne kartin yerine tam oturdugunda (1.0) kartla
-/// piksel piksel ayni oldugu icin yerini karta sessizce birakir.
+/// The root view. The full-screen dashboard is a single "stage" view driven by one animated
+/// value (`stage`: 0 = full screen, 1 = in place of the carousel card). Opening, SELECT and
+/// pulling down all move this value; the view is never swapped between the two states, so
+/// no frame of the transition breaks. When the stage settles exactly on the card (1.0) it
+/// matches the card pixel for pixel and quietly hands over to it.
 struct RootDashboardView: View {
     @EnvironmentObject private var client: TelemetryClient
     @AppStorage("dashTheme") private var themeID: String = DashTheme.realistic.rawValue
-    /// Bos deger "otomatik" demek: telefonun dili kullanilir.
+    /// An empty value means automatic: follow the phone's language.
     @AppStorage("appLanguage") private var languageID: String = ""
-    /// Dil ayari once iki durumluydu ve ilk dokunusta bir dile kilitliyordu.
-    /// Eski kayit bir kez temizlenir, boylece uygulama otomatige doner.
+    /// The language setting used to have two states and locked to a language on first tap.
+    /// The old value is cleared once so the app returns to automatic.
     @AppStorage("languagePreferenceReset") private var didResetLanguage = false
     @AppStorage("udpPort") private var udpPort: Int = 20777
-    /// Varsayilan F1 26; F1 25 icin 2025 secilir.
+    /// F1 26 by default; 2025 selects F1 25.
     @AppStorage("udpFormat") private var udpFormat: Int = 2026
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
     @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
-    /// Tanitim bir kez gosterilir; `-forceOnboarding YES` ile yeniden acilir.
+    /// Shown once; `-forceOnboarding YES` shows it again.
     @State private var showsOnboarding = !UserDefaults.standard.bool(forKey: "didCompleteOnboarding")
         || UserDefaults.standard.bool(forKey: "forceOnboarding")
     @State private var showsSetup = false
-    /// Her acilista kisa acilis ekrani; tanitim varsa onun kendi acilisi yeter.
+    /// The short splash on every launch; the onboarding has its own.
     @State private var showsSplash = true
     @State private var warnsAfterOnboarding = false
-    /// Tam ekranda dokununca sol ustte beliren geri dugmesi.
+    /// Back button that appears at the top left when the full-screen dashboard is tapped.
     @State private var showsBack = false
     @State private var backHide: Task<Void, Never>?
     @State private var showsSettings = false
-    /// Baslatma argumaniyla dogrudan acilabilir; ekran goruntusu almak icin.
+    /// Can be opened directly with a launch argument, for screenshots.
     @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
     @State private var showsLaps = false
     @State private var showsConnection = false
 
-    /// Sahne takili mi (tam ekran ya da gecis halinde). Takili degilse menu.
+    /// Whether the stage is mounted (full screen or in transition). If not, the menu is
+    /// showing.
     @State private var stageMounted = !UserDefaults.standard.bool(forKey: "skipHome") ? false : true
-    /// 0 = tam ekran, 1 = karuseldeki kartin yerinde.
+    /// 0 = full screen, 1 = in place of the carousel card.
     @State private var stage: CGFloat = UserDefaults.standard.bool(forKey: "skipHome") ? 0 : 1
-    /// Parmakla asagi cekme surerken.
+    /// While the finger is pulling down.
     @State private var pulling = false
     @State private var settling = false
     @State private var cardFrame: CGRect = .zero
-    /// Gecis boyunca panoya verilen sabit veri: 60 Hz telemetri yeniden
-    /// cizimi animasyon karelerini bolmesin.
+    /// Frozen data given to the dashboard during a transition, so redrawing 60 Hz telemetry
+    /// does not drop animation frames.
     @State private var frozenDash: DashboardModel?
-    /// Tam ekran sayfalayicinin konumu; tema secimiyle esittir.
+    /// Position of the full-screen pager; mirrors the dashboard selection.
     @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .realistic
 
     @StateObject private var pairing = SitePairing()
@@ -71,21 +71,21 @@ struct RootDashboardView: View {
     }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }
-    /// Ekranda gosterilen veri: baglanti yokken menu onizlemeleriyle ayni
-    /// ornek degerler, boylece buyutup geri donunce goruntu degismez.
+    /// The data on screen: without a connection, the same cold values as the menu previews,
+    /// so nothing jumps when opening or closing a dashboard.
     private var shownDash: DashboardModel { client.status == .receiving ? client.dash : .cold }
     private var inMenu: Bool { !stageMounted }
     private var fullscreen: Bool { stageMounted && stage == 0 }
 
     var body: some View {
         GeometryReader { geo in
-            // Yerlesim ekranin tamamini kullanir; olculer kisa kenara gore olceklenir.
+            // The layout uses the whole screen; sizes scale with the shorter side.
             let unit = min(geo.size.width / 15.2, geo.size.height / 8.2)
             observed(screen(geo: geo, unit: unit))
         }
-        // Dikeyde tam ekran; yatayda Dynamic Island'in altina girilmez.
+        // Full height vertically; horizontally it stays clear of the Dynamic Island.
         .ignoresSafeArea(edges: .vertical)
-        // Gercekci temada yanip sonme ekranin kendi cercevesi icinde kalir.
+        // On the realistic dashboard the flash stays inside the display's own frame.
         .overlay {
             if fullscreen && theme != .realistic && theme != .broadcast && theme != .cluster {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
@@ -95,9 +95,9 @@ struct RootDashboardView: View {
         .statusBarHidden()
     }
 
-    // MARK: - Ekran
+    // MARK: - Screen
 
-    /// Katmanlar ve ust bindirmeler.
+    /// Layers and overlays.
     private func screen(geo: GeometryProxy, unit: CGFloat) -> some View {
         layers(geo: geo, unit: unit)
             .overlay { connectionOverlay(unit: unit) }
@@ -119,7 +119,7 @@ struct RootDashboardView: View {
         .animation(.spring(duration: 0.35, bounce: 0.2), value: dash.sectorFlash)
     }
 
-    /// Yasam dongusu ve veri gozlemcileri.
+    /// Lifecycle and data observers.
     private func observed<V: View>(_ view: V) -> some View {
         view
             .onAppear {
@@ -129,7 +129,8 @@ struct RootDashboardView: View {
                     didResetLanguage = true
                 }
                 page = theme
-                // Analiz sayfasi telefondan sunulur; site yalnizca adresi ogrenir.
+                // The analysis page is served from the phone; the site only learns its
+                // address.
                 server.snapshot = { snapshot }
                 server.start()
                 pairing.localAddress = { server.address(ip: client.localIP) }
@@ -144,7 +145,8 @@ struct RootDashboardView: View {
             .onChange(of: udpFormat) { _, new in
                 client.use(F1Game(format: PacketFormat(rawValue: UInt16(new)) ?? .f126))
             }
-            // Vites uyarisi: ekranla birlikte telefonun flasi (ayarlardan acilir).
+            // Shift warning: the phone's flash blinks with the screen (enabled in
+            // Settings).
             .onChange(of: dash.shiftFlash) { _, on in
                 ShiftTorch.shared.update(active: on && fullscreen && client.status == .receiving,
                                          enabled: shiftTorch)
@@ -176,15 +178,15 @@ struct RootDashboardView: View {
             }
     }
 
-    // MARK: - Katmanlar
+    // MARK: - Layers
 
-    /// Menu ve sahne; sahne tam ekran degilken menu altta durur.
+    /// Menu and stage; the menu stays underneath while the stage is not full screen.
     @ViewBuilder
     private func layers(geo: GeometryProxy, unit: CGFloat) -> some View {
         ZStack {
             if stage > 0 || inMenu { homeLayer(geo: geo, unit: unit) }
             if stageMounted {
-                // Tam ekranda tema zemini guvenli alanin disina da tasar.
+                // In full screen the dashboard background extends past the safe area.
                 DashboardBackground(theme: theme, unit: unit)
                     .ignoresSafeArea()
                     .opacity(1 - stage)
@@ -207,21 +209,21 @@ struct RootDashboardView: View {
             .opacity(min(1, stage * 2))
     }
 
-    // MARK: - Sahne
+    // MARK: - Stage
 
-    /// Tam ekran pano: temalar arasinda sistemin sayfalayicisiyla gecilir.
-    /// Butun sahne `stage` degerine gore kartin cercevesine dogru kuculur.
+    /// The full-screen dashboard: the system pager moves between dashboards. The whole
+    /// stage shrinks towards the card's frame as `stage` grows.
     private func stageView(geo: GeometryProxy, unit: CGFloat) -> some View {
         let t = stageTransform(geo)
         let corner = unit * 0.35
-        // Sayfalar guvenli alan dahil tam ekran genisliginde; icerik kendi
-        // icinde guvenli alana cekilir. Boylece sayfalama ekran kenariyla hizali.
+        // Pages are the full screen width including the safe area; content insets itself.
+        // This keeps paging aligned with the screen edges.
         let lead = geo.safeAreaInsets.leading, trail = geo.safeAreaInsets.trailing
         let fullW = geo.size.width + lead + trail
         let live = frozenDash ?? shownDash
         return ZStack {
             if fullscreen && !settling {
-                // Tam ekranda temalar arasinda sistemin sayfalayicisiyla gecilir.
+                // In full screen the system pager moves between dashboards.
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 0) {
                         ForEach(DashTheme.allCases) { item in
@@ -229,8 +231,8 @@ struct RootDashboardView: View {
                                 DashboardBackground(theme: item, unit: unit)
                                 DashboardContent(theme: item, dash: live, unit: unit, strings: strings)
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    // Kendi govde cercevesi olan temalar ekranin
-                                    // tamamini kullanir; digerleri guvenli alanda kalir.
+                                    // Dashboards with their own housing use the whole
+                                    // screen; the others stay inside the safe area.
                                     .padding(.vertical, item == .cluster ? 0 : unit * 0.16)
                                     .padding(.leading, item == .realistic ? min(lead, unit * 0.34)
                                                      : (item == .cluster ? 0 : lead))
@@ -248,7 +250,7 @@ struct RootDashboardView: View {
                 .frame(width: fullW, height: geo.size.height)
                 .ignoresSafeArea(.container, edges: .horizontal)
             } else {
-                // Gecis halinde tek sayfa: karuseldeki kartla birebir ayni cizim.
+                // A single page during transitions: drawn exactly like the carousel card.
                 ZStack {
                     DashboardBackground(theme: theme, unit: unit)
                     DashboardContent(theme: theme, dash: live, unit: unit, strings: strings)
@@ -271,7 +273,7 @@ struct RootDashboardView: View {
         .simultaneousGesture(TapGesture().onEnded { if fullscreen { revealBack() } })
     }
 
-    /// Geri dugmesini gosterir; birkac saniye dokunulmazsa kendiliginden kaybolur.
+    /// Shows the back button; it hides itself after a few seconds without a touch.
     private func revealBack() {
         withAnimation(.easeOut(duration: 0.25)) { showsBack = true }
         backHide?.cancel()
@@ -301,7 +303,7 @@ struct RootDashboardView: View {
                     .contentShape(Circle())
             }
             .buttonStyle(PressScaleStyle())
-            // Yari saydam: panoyu kapatmaz ama secilebilir kalir.
+            // Translucent: it does not hide the dashboard but stays easy to see.
             .opacity(0.7)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.top, unit * 0.3)
@@ -310,10 +312,10 @@ struct RootDashboardView: View {
         }
     }
 
-    /// Bu kadar cekilince sahne tam olarak kartin yerine oturur.
+    /// Pulling this far places the stage exactly on the card.
     private func pullSpan(_ geo: GeometryProxy) -> CGFloat { geo.size.height * 0.35 }
 
-    /// Sahnenin ekrandaki donusumu: kartin cercevesine dogru olcek ve kayma.
+    /// The stage's transform on screen: scale and offset towards the card's frame.
     private func stageTransform(_ geo: GeometryProxy) -> (scale: CGFloat, offset: CGSize) {
         let p = min(max(stage, 0), 1)
         let origin = geo.frame(in: .global).origin
@@ -327,8 +329,8 @@ struct RootDashboardView: View {
                               height: (target.midY - geo.size.height / 2) * p))
     }
 
-    /// Asagi cekme: sahne parmakla birlikte kartin yerine iner. Yatay
-    /// hareket sayfalayicinin; ilk yon karar verir.
+    /// Pull down: the stage follows the finger back to the card. Horizontal movement
+    /// belongs to the pager; the first direction decides.
     private func pullGesture(_ geo: GeometryProxy) -> some Gesture {
         DragGesture(minimumDistance: 12)
             .onChanged { value in
@@ -350,7 +352,7 @@ struct RootDashboardView: View {
             }
     }
 
-    /// Menuden tam ekrana: sahne kartin ustune biner ve buyur.
+    /// Menu to full screen: the stage takes the card's place and grows.
     private func present(_ geo: GeometryProxy) {
         guard !stageMounted else { return }
         var still = Transaction(); still.disablesAnimations = true
@@ -364,7 +366,7 @@ struct RootDashboardView: View {
         }
     }
 
-    /// Tam ekrandan menuye: sahne kartin yerine oturur, sonra karta birakir.
+    /// Full screen to menu: the stage settles on the card, then hands over to it.
     private func dismiss() {
         settling = true
         withAnimation(.spring(duration: 0.5, bounce: 0.1), completionCriteria: .logicallyComplete) {
@@ -386,9 +388,9 @@ struct RootDashboardView: View {
         }
     }
 
-    // MARK: - Ust katmanlar
+    // MARK: - Overlays
 
-    /// Turlar, ayarlar ve baglanti ekranlari; alttan gelir.
+    /// Laps, settings and connection screens; they slide up from the bottom.
     @ViewBuilder
     private func sheets(unit: CGFloat) -> some View {
         let spring = Animation.spring(duration: 0.35, bounce: 0.1)
@@ -436,14 +438,15 @@ struct RootDashboardView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             if showsOnboarding {
-                // Son sahne isik uyarisini ve baglanti adresini de verir.
+                // The last scene also covers the connection address; the warning follows.
                 OnboardingView(strings: strings, unit: unit, localIP: client.localIP, port: udpPort,
                                format: $udpFormat) {
                     didCompleteOnboarding = true
                     didCompleteSetup = true
-                    // Tanitim kendi acilisiyla basladi; bitince tekrar gosterilmez.
+                    // The onboarding started with its own splash; do not show another.
                     showsSplash = false
-                    // Menuye gecmeden isik uyarisi: tanitimin son adimi.
+                    // The flashing lights warning before the menu: the onboarding's last
+                    // step.
                     warnsAfterOnboarding = true
                     withAnimation(.easeOut(duration: 0.35)) { showsOnboarding = false }
                 }
@@ -484,8 +487,8 @@ struct RootDashboardView: View {
         }
     }
 
-    /// Yaris basi: oyun isik sayisini gonderdikce yanar, sonunce kisa sure
-    /// yesil bir "GO" gorunur.
+    /// Race start: lights come on as the game counts them, and a green "GO" shows briefly
+    /// when they go out.
     @ViewBuilder
     private func startLightsOverlay(unit: CGFloat) -> some View {
         Group {

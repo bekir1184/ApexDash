@@ -1,18 +1,18 @@
 import SwiftUI
 
-/// Gercek direksiyon LCD'lerindeki nokta-matris dokusu: icerigin uzerine
-/// duzenli bir nokta izgarasi delinir, boylece her sekil piksellere ayrilir.
-/// Sonmus noktalar burada cizilmez; onlari `DotGridBackground` ekranin
-/// tamamina serer, boylece panelin ici ile kenarlari ayni parlaklikta kalir.
+/// The dot matrix texture of real wheel LCDs: a regular grid of dots is punched through the
+/// content, so every shape breaks into pixels. Unlit dots are not drawn here;
+/// `DotGridBackground` spreads them across the whole screen, so the panel and its edges
+/// share the same brightness.
 struct DotMatrixEffect: ViewModifier {
     var pitch: CGFloat = 5
-    /// Noktanin hucre icinde kapladigi oran. Yuksek deger = daha parlak panel.
+    /// Share of each cell covered by its dot. Higher values make a brighter panel.
     var dotRatio: CGFloat = 0.8
 
     func body(content: Content) -> some View {
         dotted(content)
-            // Gercek LED panellerdeki hafif tasma: noktali katmanin bulanik bir
-            // kopyasi altina konarak parlaklik artirilir.
+            // The slight bleed of real LED panels: a blurred copy of the dotted layer
+            // underneath adds glow.
             .background {
                 dotted(content)
                     .blur(radius: pitch * 0.9)
@@ -51,8 +51,8 @@ extension View {
     }
 }
 
-/// Sonmus LED'lerden olusan zemin. Icerik guvenli alanda kalsa da doku
-/// ekranin tamamini - Dynamic Island'in altini da - kaplar.
+/// Background of unlit LEDs. The content stays in the safe area, but the texture covers the
+/// whole screen, including under the Dynamic Island.
 struct DotGridBackground: View {
     var pitch: CGFloat = 5
     var dotRatio: CGFloat = 0.8

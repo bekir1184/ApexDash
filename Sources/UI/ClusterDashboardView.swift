@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// Modern bir spor otomobilin dijital gosterge paneli: siyah cam uzerinde uc
-/// yuvarlak kadran. Solda devir, ortada hiz ve enerji, sagda G kuvveti.
+/// A modern sports car's digital instrument cluster: three round dials on black glass. RPM
+/// on the left, speed and energy in the middle, G force on the right.
 struct ClusterDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
 
     var body: some View {
         GeometryReader { geo in
-            // Vites uyarisi disinda zamanlayici durur; pano zaten telemetriyle
-            // yeniden cizilir.
+            // The timer pauses except during the shift warning; telemetry already redraws
+            // the dashboard.
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !dash.shiftFlash)) { timeline in
                 let phase = timeline.date.timeIntervalSinceReferenceDate
                 Canvas(rendersAsynchronously: false) { context, size in
@@ -23,10 +23,10 @@ struct ClusterDashboardView: View {
 struct ClusterHUD {
     let dash: DashboardModel
     let size: CGSize
-    /// Vites uyarisi animasyonunun zaman tabani.
+    /// Time base of the shift warning animation.
     var time: TimeInterval = 0
 
-    /// 0 ile 1 arasinda gidip gelen uyari nabzi.
+    /// Warning pulse moving between 0 and 1.
     private var pulse: Double {
         guard dash.shiftFlash else { return 0 }
         return 0.5 + 0.5 * sin(time * 18)
@@ -35,9 +35,9 @@ struct ClusterHUD {
 
     let ink = Color.white
     let faint = Color.white.opacity(0.45)
-    let accent = Color(red: 1.0, green: 0.42, blue: 0.10)      // turuncu ibre
-    let warm = Color(red: 0.96, green: 0.85, blue: 0.25)       // sari olcek
-    let cool = Color(red: 0.16, green: 0.74, blue: 0.52)       // yesil yakit yayi
+    let accent = Color(red: 1.0, green: 0.42, blue: 0.10)      // orange needle
+    let warm = Color(red: 0.96, green: 0.85, blue: 0.25)       // yellow scale
+    let cool = Color(red: 0.16, green: 0.74, blue: 0.52)       // green energy arc
     let glass = Color(red: 0.05, green: 0.05, blue: 0.055)
 
     func draw(in ctx: inout GraphicsContext) {
@@ -46,8 +46,8 @@ struct ClusterHUD {
         draw(in: &ctx, area: inner)
     }
 
-    /// Panelin metal govdesi: disi firincalanmis gri, ici siyah cam.
-    /// Geriye cizimin yapilacagi ic alani dondurur.
+    /// The cluster's metal housing: brushed grey outside, black glass inside. Returns the
+    /// inner area to draw in.
     private func housing(in ctx: inout GraphicsContext) -> CGRect {
         let full = CGRect(origin: .zero, size: size)
         let thickness = size.height * 0.035
@@ -65,7 +65,7 @@ struct ClusterHUD {
             startPoint: CGPoint(x: size.width / 2, y: 0),
             endPoint: CGPoint(x: size.width / 2, y: size.height)))
 
-        // Metalin ustundeki ince parlak kenar.
+        // Thin bright edge on top of the metal.
         ctx.stroke(Path(roundedRect: full.insetBy(dx: thickness * 0.18, dy: thickness * 0.18),
                         cornerRadius: radius * 0.94),
                    with: .color(.white.opacity(0.22)), lineWidth: max(1, thickness * 0.1))
@@ -73,7 +73,7 @@ struct ClusterHUD {
         let inner = full.insetBy(dx: thickness, dy: thickness)
         let glassShape = Path(roundedRect: inner, cornerRadius: radius - thickness * 0.6)
         ctx.fill(glassShape, with: .color(.black))
-        // Camin kenarindaki koyu golge, govdeye oturmus gibi dursun.
+        // Dark shadow at the glass edge, so it sits inside the housing.
         ctx.stroke(glassShape, with: .color(.black.opacity(0.9)),
                    lineWidth: max(1, thickness * 0.35))
         return inner
@@ -87,7 +87,7 @@ struct ClusterHUD {
 
     private func draw(in ctx: inout GraphicsContext, area: CGRect) {
         let h = area.height
-        // Uc kadran yan yana sigsin: cercevelerle birlikte genislige gore olcek.
+        // Fit three dials side by side: scale to the width, frames included.
         let bigR = min(h * 0.38, area.width * 0.155)
         let smallR = bigR * 0.78
         let centreY = area.minY + h * 0.50
@@ -107,18 +107,18 @@ struct ClusterHUD {
         drawBadges(in: &ctx, centre: mid, radius: bigR)
     }
 
-    // MARK: Kadran govdesi
+    // MARK: Dial body
 
-    /// Kadran govdesi: islenmis metal halka, icine cukur oturmus yuz ve
-    /// ustunden gecen cam yansimasi. Isik sol ustten gelir.
+    /// Dial body: a machined metal ring, a recessed face inside and a glass reflection on
+    /// top. Light comes from the top left.
     private func bezel(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
-        // Govdenin panele dusen golgesi.
+        // The body's shadow on the panel.
         var shadowed = ctx
         shadowed.addFilter(.shadow(color: .black.opacity(0.75), radius: r * 0.14,
                                    x: 0, y: r * 0.05))
         shadowed.fill(circle(centre, r * 1.13), with: .color(Color(white: 0.13)))
 
-        // Torna izli metal halka: acili gradyan iki parlak nokta birakir.
+        // Lathe-turned metal ring: an angular gradient leaves two bright spots.
         let metal = Gradient(stops: [
             .init(color: Color(white: 0.52), location: 0.00),
             .init(color: Color(white: 0.16), location: 0.16),
@@ -130,31 +130,31 @@ struct ClusterHUD {
         ])
         ctx.fill(circle(centre, r * 1.13),
                  with: .conicGradient(metal, center: centre, angle: .degrees(210)))
-        // Halkanin ic pahi: disi aydinlik, ici karanlik.
+        // Inner chamfer of the ring: lit outside, dark inside.
         ctx.stroke(circle(centre, r * 1.04), with: .linearGradient(
             Gradient(colors: [Color(white: 0.58), Color(white: 0.08)]),
             startPoint: CGPoint(x: centre.x - r, y: centre.y - r),
             endPoint: CGPoint(x: centre.x + r, y: centre.y + r)),
                    lineWidth: r * 0.035)
 
-        // Kadran yuzu: ortasi bir tik acik, kenari koyu.
+        // Dial face: slightly lighter in the middle, darker at the edge.
         ctx.fill(circle(centre, r * 1.02), with: .radialGradient(
             Gradient(colors: [Color(white: 0.085), Color(white: 0.028)]),
             center: CGPoint(x: centre.x - r * 0.25, y: centre.y - r * 0.3),
             startRadius: 0, endRadius: r * 1.3))
 
-        // Yuzun kenarindaki ic golge: kadran cukurda dursun.
+        // Inner shadow at the face edge, so the dial sits recessed.
         ctx.stroke(circle(centre, r * 0.995), with: .color(.black.opacity(0.55)),
                    lineWidth: r * 0.06)
     }
 
-    /// Kadranin uzerindeki disbukey cam. Uc katman: sol ustte egik oval
-    /// parlama, cam kenarindaki keskin isik ve alt sagda zayif bir yansima.
+    /// The convex glass over the dial, in three layers: a tilted oval highlight at the top
+    /// left, a sharp light at the glass edge and a faint reflection at the bottom right.
     private func glassSheen(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         var clipped = ctx
         clipped.clip(to: circle(centre, r * 1.02))
 
-        // Egik oval: camin kubbesinden gelen ana parlama.
+        // Tilted oval: the main highlight from the glass dome.
         let ovalRect = CGRect(x: centre.x - r * 0.98, y: centre.y - r * 1.02,
                               width: r * 1.62, height: r * 0.92)
         let tilt = CGAffineTransform(translationX: centre.x, y: centre.y)
@@ -170,7 +170,7 @@ struct ClusterHUD {
             startPoint: CGPoint(x: centre.x - r * 0.7, y: centre.y - r * 0.95),
             endPoint: CGPoint(x: centre.x + r * 0.35, y: centre.y + r * 0.1)))
 
-        // Camin sol ust kenarindaki ince keskin isik.
+        // Thin sharp light along the glass's top left edge.
         var edge = Path()
         edge.addArc(center: centre, radius: r * 0.985, startAngle: .degrees(186),
                     endAngle: .degrees(292), clockwise: false)
@@ -181,7 +181,7 @@ struct ClusterHUD {
             endPoint: CGPoint(x: centre.x + r * 0.3, y: centre.y - r)),
                        lineWidth: r * 0.022)
 
-        // Alt sagda, kadran yuzunden donen zayif yansima.
+        // Faint reflection off the dial face at the bottom right.
         let bounceRect = CGRect(x: centre.x + r * 0.05, y: centre.y + r * 0.42,
                                 width: r * 0.86, height: r * 0.34)
         let bounce = Path(ellipseIn: bounceRect).applying(
@@ -198,7 +198,7 @@ struct ClusterHUD {
         Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
     }
 
-    /// Kadran olcegi. Aci, saat yonunde ve 0 derece saat uc yonu.
+    /// Dial scale. Angles run clockwise, with 0 degrees at three o'clock.
     private func scale(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat,
                        from start: Double, sweep: Double, divisions: Int,
                        labelEvery: Int, values: (Int) -> String, colour: Color,
@@ -224,8 +224,8 @@ struct ClusterHUD {
         }
     }
 
-    /// Ibre: gobekten uca dogru incelir, arkasinda kisa bir karsi agirlik
-    /// ve altinda kadran yuzune dusen golge vardir.
+    /// Needle: tapers from the hub to the tip, with a short counterweight behind it and a
+    /// shadow on the dial face below.
     private func needle(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat,
                         angle degrees: Double) {
         let a = degrees * .pi / 180
@@ -246,7 +246,7 @@ struct ClusterHUD {
         var shadowed = ctx
         shadowed.addFilter(.shadow(color: .black.opacity(0.65), radius: r * 0.045,
                                    x: r * 0.015, y: r * 0.03))
-        // Vites zamani geldiginde ibre turuncudan kirmiziya doner ve isir.
+        // At the shift point the needle turns from orange to red and glows.
         let tint = dash.shiftFlash
             ? accent.mix(with: shiftRed, by: 0.45 + 0.55 * pulse) : accent
         if dash.shiftFlash {
@@ -269,7 +269,7 @@ struct ClusterHUD {
                    lineWidth: max(1, r * 0.008))
     }
 
-    // MARK: Sol kadran - devir
+    // MARK: Left dial - RPM
 
     private func drawTacho(in ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         bezel(&ctx, centre: centre, radius: r)
@@ -282,7 +282,7 @@ struct ClusterHUD {
 
         let fraction = min(max(Double(dash.rpm) / Double(max(dash.maxRPM, 1)), 0), 1)
 
-        // Vites uyarisi: olcegin son diliminde nabiz gibi atan kirmizi yay.
+        // Shift warning: a red arc pulsing over the last part of the scale.
         if dash.shiftFlash {
             var band = Path()
             band.addArc(center: centre, radius: r * 0.88,
@@ -303,13 +303,13 @@ struct ClusterHUD {
              at: CGPoint(x: centre.x, y: centre.y + r * 0.16))
         text(&ctx, "x1000 RPM", size: r * 0.095, colour: faint,
              at: CGPoint(x: centre.x, y: centre.y + r * 0.37))
-        // Kadranin altinda tur sayaci, referanstaki kilometre gostergesi gibi.
+        // Lap counter below the dial, where the reference had the odometer.
         counter(&ctx, "\(dash.currentLapNum)", label: "LAP",
                 centre: CGPoint(x: centre.x, y: centre.y + r * 1.24), radius: r)
     }
 
-    /// Vitesin durdugu yuva. Normalde siyah bir cukur; yalnizca vites zamani
-    /// geldiginde kizarip cevresine isik sizdirir.
+    /// The well that holds the gear. Normally a black recess; it glows red and spills light
+    /// only at the shift point.
     private func gearWell(_ ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         let well = circle(centre, r * 0.44)
         let heat = dash.shiftFlash ? pulse : 0
@@ -341,14 +341,14 @@ struct ClusterHUD {
              at: CGPoint(x: centre.x, y: centre.y + h * 0.95))
     }
 
-    // MARK: Orta kadran - hiz
+    // MARK: Centre dial - speed
 
     private func drawSpeed(in ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         bezel(&ctx, centre: centre, radius: r)
         let start = 145.0, sweep = 250.0
         let top = 360, step = 20
         let divisions = top / step
-        // Olcegin ilk yarisi sari, ikinci yarisi beyaz: referanstaki ayrim.
+        // First half of the scale yellow, second half white, as in the reference.
         scale(&ctx, centre: centre, radius: r, from: start, sweep: sweep,
               divisions: divisions, labelEvery: 3,
               values: { "\($0 * step)" }, colour: warm,
@@ -365,7 +365,7 @@ struct ClusterHUD {
         text(&ctx, "km/h", size: r * 0.10, colour: faint,
              at: CGPoint(x: centre.x, y: centre.y + r * 0.24))
 
-        // Altta ERS yayi: referanstaki yakit gostergesinin yeri.
+        // ERS arc at the bottom, where the reference had the fuel gauge.
         let arcR = r * 0.80
         var track = Path()
         track.addArc(center: centre, radius: arcR, startAngle: .degrees(42),
@@ -383,11 +383,11 @@ struct ClusterHUD {
              at: CGPoint(x: centre.x, y: centre.y + r * 0.46))
     }
 
-    // MARK: Sag kadran - G kuvveti
+    // MARK: Right dial - G force
 
     private func drawGForce(in ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         bezel(&ctx, centre: centre, radius: r)
-        let span = r * 0.62          // 1 g bu uzunluga karsilik gelir
+        let span = r * 0.62          // length of 1 g
         var grid = Path()
         grid.move(to: CGPoint(x: centre.x - span, y: centre.y))
         grid.addLine(to: CGPoint(x: centre.x + span, y: centre.y))
@@ -395,7 +395,7 @@ struct ClusterHUD {
         grid.addLine(to: CGPoint(x: centre.x, y: centre.y + span))
         ctx.stroke(grid, with: .color(warm.opacity(0.55)), lineWidth: max(1, r * 0.012))
 
-        // Yarim ve tam g cizgileri.
+        // Half and full g lines.
         var marks = Path()
         for g in [0.5, 1.0] {
             let d = span * CGFloat(g)
@@ -409,7 +409,7 @@ struct ClusterHUD {
         }
         ctx.stroke(marks, with: .color(warm.opacity(0.8)), lineWidth: max(1, r * 0.014))
 
-        // Eksen degerleri.
+        // Axis values.
         for g in [0.5, 1.0] {
             let d = span * CGFloat(g)
             let name = g == 1.0 ? "1" : "05"
@@ -428,7 +428,7 @@ struct ClusterHUD {
         text(&ctx, "FORCE", size: r * 0.11, colour: faint,
              at: CGPoint(x: centre.x - span * 0.72, y: centre.y - span * 0.42))
 
-        // Anlik nokta: saga pozitif yanal, ileri pozitif boyuna.
+        // Current point: lateral positive to the right, longitudinal positive forward.
         let x = centre.x + span * CGFloat(min(max(dash.gLateral, -1.6), 1.6))
         let y = centre.y - span * CGFloat(min(max(dash.gLongitudinal, -1.6), 1.6))
         ctx.fill(circle(CGPoint(x: x, y: y), r * 0.07), with: .color(accent))
@@ -436,9 +436,9 @@ struct ClusterHUD {
                    lineWidth: max(1, r * 0.012))
     }
 
-    // MARK: Ust satir ve rozetler
+    // MARK: Top row and badges
 
-    /// Panelin camindan gecen egik yansima ve kenarlara dogru karartma.
+    /// A slanted reflection across the panel glass, darkening towards the edges.
     private func drawPanelGlass(in ctx: inout GraphicsContext, area: CGRect) {
         var band = Path()
         let w = area.width, h = area.height
@@ -486,7 +486,7 @@ struct ClusterHUD {
              at: CGPoint(x: centre.x, y: centre.y + h * 0.22))
     }
 
-    // MARK: Yazi
+    // MARK: Text
 
     private func text(_ ctx: inout GraphicsContext, _ string: String, size fontSize: CGFloat,
                       colour: Color, weight: Font.Weight = .semibold,
@@ -500,7 +500,7 @@ struct ClusterHUD {
 }
 
 extension Color {
-    /// Iki rengi oranla karistirir; uyari nabzinda turuncudan kirmiziya gecis icin.
+    /// Mixes two colours by a fraction; used for the orange to red warning pulse.
     func mix(with other: Color, by amount: Double) -> Color {
         let t = min(max(amount, 0), 1)
         let a = UIColor(self), b = UIColor(other)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Tamamlanmis bir tur. CSV disa aktarimi da bu kayitlardan uretilir.
+/// A completed lap. The CSV export is built from these records.
 struct CompletedLap: Identifiable, Equatable {
     let id = UUID()
     let number: Int
@@ -12,13 +12,13 @@ struct CompletedLap: Identifiable, Equatable {
     let date: Date
 }
 
-/// Sektor renkleri. Tek arac takip ettigimiz icin "mor" seansin en iyisi,
-/// "yesil" en iyi turdaki ayni sektore esit ya da ondan hizli demek.
+/// Sector colours. With a single car tracked, purple means the session best and green means
+/// equal to or faster than the same sector of the best lap.
 enum SectorColour {
     case purple, green, yellow, none
 }
 
-/// Sektor gecildikten sonra kisa sure buyuk gosterilen bilgi.
+/// Shown large for a moment after a sector is completed.
 struct SectorFlash: Equatable {
     let index: Int          // 0, 1, 2
     let timeMS: Int
@@ -26,17 +26,17 @@ struct SectorFlash: Equatable {
     let date: Date
 }
 
-/// En iyi tura gore canli delta, sektor sureleri ve tur kaydi.
+/// Live delta to the best lap, sector times and the lap log.
 ///
-/// Delta, en iyi turun "mesafe -> sure" izinden uretilir: su anki mesafede
-/// referans turun ne kadar surede oldugu bulunup aradaki fark alinir.
+/// The delta comes from the best lap's distance-to-time trace: find how long the reference
+/// lap took to reach the current distance and take the difference.
 struct LapTiming {
     private struct Sample {
         let distance: Float
         let timeMS: Int
     }
 
-    /// Iz orneklemesi: bu mesafe araligindan sik ornek alinmaz.
+    /// Trace sampling: no more than one sample per this many metres.
     private static let sampleStep: Float = 8
 
     private var currentSamples: [Sample] = []
@@ -51,7 +51,7 @@ struct LapTiming {
     private(set) var laps: [CompletedLap] = []
     private(set) var lastLap: CompletedLap?
     private(set) var sectorFlash: SectorFlash?
-    /// En iyi tura gore fark (ms). Referans tur yoksa nil.
+    /// Gap to the best lap (ms). nil without a reference lap.
     private(set) var deltaToBestMS: Int?
 
     var hasReference: Bool { !referenceSamples.isEmpty }
@@ -84,7 +84,7 @@ struct LapTiming {
         deltaToBestMS = delta(at: distance, timeMS: currentLapTimeMS)
     }
 
-    /// Yeni tur baslarken kapanan turu kaydeder, gerekiyorsa referansi gunceller.
+    /// Records the lap that just ended and updates the reference if it was faster.
     private mutating func closeLap(previousNumber: Int, lastLapTimeMS: Int) {
         defer { currentSamples.removeAll(keepingCapacity: true) }
 
@@ -105,8 +105,8 @@ struct LapTiming {
             bestSectorMS[index] = value
         }
 
-        // Referans ancak bastan izlenmis bir turdan alinir; uygulama tur
-        // ortasinda acildiysa o turun izi eksiktir.
+        // Only a lap recorded from its start can become the reference; if the app was
+        // opened mid-lap, that lap's trace is incomplete.
         let complete = (currentSamples.first?.distance ?? .greatestFiniteMagnitude) < 200
         if complete, bestLapMS == 0 || lastLapTimeMS < bestLapMS {
             bestLapMS = lastLapTimeMS
@@ -139,7 +139,7 @@ struct LapTiming {
         currentSamples.append(Sample(distance: distance, timeMS: timeMS))
     }
 
-    /// Referans turun verilen mesafedeki suresi ile aradaki fark.
+    /// The difference to the reference lap's time at the given distance.
     private func delta(at distance: Float, timeMS: Int) -> Int? {
         guard !referenceSamples.isEmpty, distance >= 0, timeMS > 0 else { return nil }
         guard distance >= referenceSamples[0].distance,

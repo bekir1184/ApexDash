@@ -1,15 +1,13 @@
 import SwiftUI
 
-/// Uygulama kabugunun yazi tipi: menu, ayarlar, baglanti, turlar ve uyarilar.
-/// Saira (SIL Open Font License 1.1) kullaniliyor; Formula 1'in kendi yazi
-/// tipi tescilli oldugu icin kullanilamaz.
+/// The typeface of the app's chrome: menu, settings, connection, laps and warnings. Saira
+/// (SIL Open Font License 1.1) is used, because Formula 1's own typeface is proprietary.
 ///
-/// Panolar bunu kullanmaz. Oradaki yerlesimler sistem yazi tipinin
-/// olculerine gore ayarlandi: Saira daha genis oldugu icin sayilar ve
-/// etiketler kutularindan tasiyordu. Pano yazilari gercek direksiyon
-/// ekranlarindaki gibi sabit genislikli kalir.
+/// Dashboards do not use it. Their layouts are measured against the system font: Saira is
+/// wider, and numbers and labels overflowed their boxes. Dashboard text stays monospaced,
+/// as on real wheel displays.
 enum Typeface {
-    /// Agirliga karsilik gelen kesit adi; kayitli PostScript adlari.
+    /// The font face for each weight; registered PostScript names.
     private static func name(for weight: Font.Weight) -> String {
         switch weight {
         case .ultraLight, .thin, .light, .regular: return "Saira-Regular"
@@ -22,17 +20,17 @@ enum Typeface {
         }
     }
 
-    /// Duz yazi.
+    /// Plain text.
     static func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         .custom(name(for: weight), fixedSize: size)
     }
 
-    /// Rakamlari sabit genislikte: degisen sayilar yerinden oynamasin.
+    /// Fixed-width digits, so changing numbers do not jitter.
     static func digits(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         font(size, weight).monospacedDigit()
     }
 
-    /// UIKit tarafi (QR tarayici gibi) icin ayni kesitler.
+    /// The same faces for UIKit, such as the QR scanner.
     static func uiFont(_ size: CGFloat, _ weight: Font.Weight = .regular) -> UIFont {
         UIFont(name: name(for: weight), size: size) ?? .systemFont(ofSize: size, weight: .regular)
     }

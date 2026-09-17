@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Pistteki baslangic isiklari. Bekleme ekraninda kendi kendine yanar,
-/// yaris basinda ise oyunun gonderdigi isik sayisiyla surulur.
+/// Race start lights. They cycle on their own while waiting, and follow the game's light
+/// count at a race start.
 struct StartLightsView: View {
-    /// Yanan kolon sayisi (0-5).
+    /// Number of lit columns (0-5).
     let litColumns: Int
     let unit: CGFloat
 
@@ -12,7 +12,7 @@ struct StartLightsView: View {
             ForEach(0..<5, id: \.self) { column in
                 VStack(spacing: unit * 0.1) {
                     ForEach(0..<4, id: \.self) { row in
-                        // Gercek prosedurdeki gibi alt iki lamba kirmizi yanar.
+                        // As in the real procedure, the bottom two lamps light red.
                         lamp(lit: row >= 2 && column < litColumns)
                     }
                 }

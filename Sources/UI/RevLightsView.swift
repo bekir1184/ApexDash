@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Gercek direksiyondaki 15 LED'lik devir seridi.
-/// Renkler soldan saga: 5 yesil, 5 kirmizi, 5 mavi (shift noktasi).
+/// The 15 LED rev strip of a real wheel. Colours from left to right: 5 green, 5 red, 5 blue
+/// (shift point).
 struct RevLightsView: View {
     let bits: UInt16
     let flashing: Bool

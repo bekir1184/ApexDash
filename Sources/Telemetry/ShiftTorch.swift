@@ -1,23 +1,23 @@
 import AVFoundation
 import Foundation
 
-/// Vites uyarisinda telefonun flasini ekranla ayni tempoda yakip sondurur.
-/// Ayarlardan acilip kapatilir; kapaliyken donanima hic dokunulmaz.
+/// Blinks the phone's flash in step with the screen at the shift point. Enabled in
+/// Settings; while off, the hardware is never touched.
 @MainActor
 final class ShiftTorch {
     static let shared = ShiftTorch()
 
-    /// Ekrandaki ShiftFlashOverlay ile ayni periyot.
+    /// Same period as ShiftFlashOverlay on screen.
     private let period: TimeInterval = 0.07
     private var timer: Timer?
     private var lit = false
     private var device: AVCaptureDevice? { AVCaptureDevice.default(for: .video) }
 
-    /// Uyari durumu her degistiginde cagrilir.
+    /// Called whenever the warning state changes.
     func update(active: Bool, enabled: Bool) {
         if active && enabled {
             guard timer == nil else { return }
-            // Ekranla senkron: ayni saat tabanindan faz alinir.
+            // In sync with the screen: the phase comes from the same clock.
             timer = Timer.scheduledTimer(withTimeInterval: period / 2, repeats: true) { [weak self] _ in
                 Task { @MainActor in
                     guard let self else { return }

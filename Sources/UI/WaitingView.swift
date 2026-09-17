@@ -1,19 +1,18 @@
 import SwiftUI
 
-/// Veri gelmeden once gosterilen ekran: pistteki baslangic isiklari gibi
-/// soldan saga yanar, hepsi yandiktan sonra soner ve bastan baslar.
-/// Altinda oyunda yapilmasi gereken ayarlar durur.
+/// Shown before data arrives: lights come on from left to right like start lights, go out
+/// once all are lit and start again. The game settings to enter sit below.
 struct WaitingView: View {
     let title: String
     let strings: Strings
     let localIP: String
     let port: UInt16
     let unit: CGFloat
-    /// Ag degisiminde IP degistiyse eski adres; yoksa nil.
+    /// The old address if the IP changed with the network; otherwise nil.
     let previousIP: String?
     let onOpenSetup: () -> Void
 
-    /// Bes kolon yanar (5 sn), hepsi bir sure yanik kalir, sonra soner.
+    /// Five columns light up (5 s), stay lit for a moment, then go out.
     private let cycle: Double = 7.5
 
     var body: some View {
@@ -48,7 +47,7 @@ struct WaitingView: View {
         )
     }
 
-    /// 0-5 sn arasi her saniye bir kolon; 5-6.5 hepsi yanik; sonrasi sonuk.
+    /// One column per second from 0-5 s; all lit from 5-6.5 s; dark after that.
     private func litColumns(phase: Double) -> Int {
         switch phase {
         case ..<5: return Int(phase) + 1

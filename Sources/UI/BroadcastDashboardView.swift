@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Yayin grafiklerindeki mavi HUD. Geometri, onaylanan SVG prototipinden
-/// (2170 x 1000 tasarim alani, R = 340) birebir tasinmistir: ortada nokta
-/// dokulu hiz gostergesi, iki yanda cemberle ayni merkezli halka dilimleri
-/// (RECHARGE / DEPLOY paneli ve BRAKE / THROTTLE bloklari), altta pil,
-/// koselerde surucu plakalari ve vites / devir / aktif aero paneli.
+/// The blue TV graphics HUD. Geometry is carried over exactly from the approved SVG
+/// prototype (a 2170 x 1000 design space, R = 340): a dotted speed dial in the middle, ring
+/// segments concentric with it on both sides (the RECHARGE / DEPLOY panels and BRAKE /
+/// THROTTLE blocks), the battery below, and the gear, RPM and active aero strip along the
+/// bottom.
 struct BroadcastDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
@@ -17,7 +17,7 @@ struct BroadcastDashboardView: View {
                 BroadcastHUD(dash: dash).draw(in: &ctx, layout: layout)
             }
             .overlay {
-                // Vites uyarisi gostergenin (esnetilmis) elipsi icinde yanip soner.
+                // The shift warning flashes inside the dial's (stretched) ellipse.
                 let frame = layout.centre(BroadcastHUD(dash: dash).dialFrame)
                 ShiftFlashOverlay(active: dash.shiftFlash, color: Color(hex: 0x63d6dd))
                     .clipShape(Ellipse())
@@ -28,19 +28,19 @@ struct BroadcastDashboardView: View {
     }
 }
 
-/// Orta grup (cember, paneller, bloklar, pil) tasarim yuksekligini ekran
-/// yuksekligine oturtur; yan bantlar kalan genislige sigacak sekilde ayri
-/// olceklenir ve alt koselere, blok etiketleriyle ayni tabana hizalanir.
+/// The centre group (dial, panels, blocks, battery) fits its design height to the screen
+/// height; the side bands scale separately to fit the remaining width and align to the
+/// bottom corners, on the same baseline as the block labels.
 struct BroadcastLayout {
     let size: CGSize
     let centreScale: CGFloat
-    /// Yatay olcek: orta grup ekranin sagini solunu dolduracak kadar esnetilir.
+    /// Horizontal scale: the centre group stretches to fill the screen from side to side.
     let centreScaleX: CGFloat
-    /// Ekranin altini kaplayan satir: aktif aero, vites cetveli, devir.
+    /// The row along the bottom of the screen: active aero, gear ruler, RPM.
     let strip: CGRect
 
-    /// Orta grubun tasarim alanindaki dusey araligi: esnetilmis bezel ustu
-    /// ile BRAKE / THROTTLE yazisinin alti.
+    /// Vertical extent of the centre group in design space: from the top of the stretched
+    /// bezel to the bottom of the BRAKE / THROTTLE labels.
     static let designTop: CGFloat = 20
     static let designBottom: CGFloat = 906
     static let designCentreX: CGFloat = 1085
@@ -52,11 +52,12 @@ struct BroadcastLayout {
         strip = CGRect(x: margin, y: size.height - stripH, width: size.width - 2 * margin, height: stripH)
         let areaH = size.height - stripH - gap
         centreScale = min(areaH / (Self.designBottom - Self.designTop), size.width / (R * 4.1))
-        // Bloklarin dis kenari 1.96R'de; genislik buna gore yayilir, en fazla %20 esner.
+        // The blocks' outer edge is at 1.96R; the width spreads accordingly, stretching by
+        // at most 20 %.
         centreScaleX = min((size.width - 2 * margin) / (R * 4.0), centreScale * 1.2)
     }
 
-    /// Tasarim koordinatindaki orta grup dikdortgenini ekrana tasir.
+    /// Maps the centre group rectangle from design coordinates to the screen.
     func centre(_ rect: CGRect) -> CGRect {
         let x = size.width / 2 + (rect.minX - Self.designCentreX) * centreScaleX
         let span = (Self.designBottom - Self.designTop) * centreScale
@@ -72,18 +73,18 @@ struct BroadcastLayout {
     }
 }
 
-// MARK: - Cizim
+// MARK: - Drawing
 
-/// Tasarim alanindaki tum cizim; GraphicsContext uzerine tek gecişte cizer.
+/// Everything in design space, drawn in one pass on a GraphicsContext.
 struct BroadcastHUD {
     let dash: DashboardModel
 
-    // Prototipteki sabitler
+    // Constants from the prototype
     let R: CGFloat = 340
     let CX: CGFloat = 1085
     let CY: CGFloat = 480
     var corner: CGFloat { R * 0.13 }
-    /// Cember, paneller ve bloklar tabandan yukari dogru bu oranda esnetilir.
+    /// The dial, panels and blocks stretch upwards from the base by this factor.
     let stretch: CGFloat = 1.12
     var stretchBase: CGFloat { CY + R * 1.09 }
 
@@ -101,7 +102,7 @@ struct BroadcastHUD {
     let teal = Color(hex: 0x3fd9c9)
     let cyanInk = Color(hex: 0x8fe4f0)
 
-    /// Esnetilmis gostergenin cerceve dikdortgeni (tasarim koordinatlari).
+    /// Bounding rectangle of the stretched dial (design coordinates).
     var dialFrame: CGRect {
         let r = R * 1.03
         let top = stretchBase - (stretchBase - (CY - r)) * stretch
@@ -131,9 +132,9 @@ struct BroadcastHUD {
         drawBattery(in: &ctx)
     }
 
-    /// Bu turda harcanan enerji, pil kapasitesine (4 MJ) gore: tur basinda
-    /// dolu, Overtake acikken pil ile ayni hizda azalir. Tur limitine gore
-    /// olcek (5-9 MJ) kisa hamlelerde gozle gorulmeyecek kadar az oynuyordu.
+    /// Energy deployed this lap, against the battery capacity (4 MJ): full at the start of
+    /// the lap, falling at the same rate as the battery while overtake is on. Scaled to the
+    /// lap limit (5-9 MJ), short bursts barely moved it.
     private var deployLevel: Double {
         1 - min(max(Double(dash.ersDeployedThisLap) / 4_000_000, 0), 1)
     }
@@ -144,11 +145,11 @@ struct BroadcastHUD {
         Int((min(max(fraction, 0), 1) * 10).rounded())
     }
 
-    // MARK: Halka dilimi geometrisi
+    // MARK: Ring segment geometry
 
     enum Side { case left, right }
 
-    /// Prototipteki P(r, a): sol tarafta x ekseni aynalanir.
+    /// P(r, a) from the prototype: the x axis is mirrored on the left side.
     private func point(_ side: Side, _ r: CGFloat, _ a: CGFloat) -> CGPoint {
         CGPoint(x: CX + (side == .left ? -1 : 1) * r * cos(a), y: CY + r * sin(a))
     }
@@ -157,7 +158,7 @@ struct BroadcastHUD {
         .radians(side == .left ? Double(.pi - a) : Double(a))
     }
 
-    /// Ic yay a0 -> a1, dis yay a1 -> a0 olan halka dilimi.
+    /// A ring segment: inner arc from a0 to a1, outer arc from a1 to a0.
     private func ringSlice(_ side: Side, rIn: CGFloat, rOut: CGFloat,
                            a0: CGFloat, a1: CGFloat) -> Path {
         var p = Path()
@@ -173,8 +174,8 @@ struct BroadcastHUD {
         return p
     }
 
-    /// Koseleri yuvarlatilmis dilim: sekil `c` kadar icten cizilir ve ayni
-    /// renkte 2c kalinliginda yuvarlak birlesimli konturla boyutuna doner.
+    /// A segment with rounded corners: the shape is inset by `c` and stroked in the same
+    /// colour with a round-joined 2c line, which brings it back to full size.
     private struct RoundedSegment {
         let path: Path
         let strokeWidth: CGFloat
@@ -201,7 +202,7 @@ struct BroadcastHUD {
                    style: StrokeStyle(lineWidth: seg.strokeWidth + extra, lineJoin: .round))
     }
 
-    // MARK: BRAKE / THROTTLE bloklari
+    // MARK: BRAKE / THROTTLE blocks
 
     private func drawSlatBlock(in ctx: inout GraphicsContext, side: Side, lit: Int,
                                colour: Color, label: String) {
@@ -213,7 +214,7 @@ struct BroadcastHUD {
         strokeRounded(&ctx, seg, blockEdge.opacity(0.8), extra: 2.5)
         fillRounded(&ctx, seg, .color(blockFill), widthDelta: -2.5)
 
-        // Dilimler, blogun padR kadar icten yuvarlatilmis kopyasiyla maskelenir.
+        // Segments are masked by a copy of the block inset by padR with rounded corners.
         let padR = R * 0.05, padA = padR / rMid
         let inner = roundedSegment(side, rIn: rIn + padR, rOut: rOut - padR,
                                    aTop: aTop + padA, aBottom: aBottom - padA, c: corner - padR)
@@ -242,7 +243,7 @@ struct BroadcastHUD {
                  at: CGPoint(x: point(side, rMid, aBottom).x, y: bottom + R * 0.20))
     }
 
-    // MARK: RECHARGE / DEPLOY panelleri
+    // MARK: RECHARGE / DEPLOY panels
 
     private func drawLabelPanel(in ctx: inout GraphicsContext, side: Side, text: String,
                                 level: Double, active: Bool) {
@@ -251,8 +252,8 @@ struct BroadcastHUD {
         let seg = roundedSegment(side, rIn: rIn, rOut: rOut, aTop: aTop, aBottom: aBottom, c: corner)
 
         let top = point(side, rMid, aTop).y, bottom = point(side, rMid, aBottom).y
-        // Sonuk taban; ustune alttan yukari seviye kadar dolgu. Aktifken
-        // panel parlak maviye doner, disina isik sizar ve harfler beyazlasir.
+        // A dim base, filled from the bottom up to the level. While active the panel turns
+        // bright blue, light spills around it and the letters turn white.
         if active {
             var glow = ctx
             glow.addFilter(.blur(radius: R * 0.05))
@@ -274,7 +275,7 @@ struct BroadcastHUD {
             fillRounded(&filled, seg, gradient, widthDelta: -2.5)
         }
 
-        // Harfler orta yaricap boyunca, dik, esit acisal aralikla
+        // Letters along the middle radius, upright, at equal angles
         let letters = Array(text)
         let pad: CGFloat = 0.09
         for (i, ch) in letters.enumerated() {
@@ -286,7 +287,7 @@ struct BroadcastHUD {
         }
     }
 
-    // MARK: Cember
+    // MARK: Dial
 
     private static var dotPattern: Path = {
         var p = Path()
@@ -326,7 +327,7 @@ struct BroadcastHUD {
         dots.translateBy(x: CX, y: CY)
         dots.fill(Self.dotPattern, with: .color(Color(hex: 0x16405c)))
 
-        // Halka konturlari pile yaklastikca solar.
+        // Ring outlines fade as they approach the battery.
         var rings = ctx
         rings.clipToLayer { layer in
             let fade = Gradient(stops: [
@@ -341,7 +342,7 @@ struct BroadcastHUD {
         rings.stroke(circle(R * 1.03), with: .color(ring), lineWidth: R * 0.02)
         rings.stroke(circle(R * 0.96), with: .color(ringInner), lineWidth: 2)
 
-        // Cember ici
+        // Inside the dial
         drawText(&ctx, dash.speedUnitLabel, size: 59, weight: .bold, italic: false, colour: .white,
                  at: CGPoint(x: CX, y: CY - R * 0.66))
         drawText(&ctx, "\(dash.speedKPH)", size: 197, weight: .heavy, italic: false, colour: .white,
@@ -366,13 +367,13 @@ struct BroadcastHUD {
         _ = centre
     }
 
-    // MARK: Pil
+    // MARK: Battery
 
     private func drawBattery(in ctx: inout GraphicsContext) {
         let bw = R * 0.80, bh = R * 0.24, by = CY + R * 0.86
         let rect = CGRect(x: CX - bw / 2, y: by, width: bw, height: bh)
         let body = Path(roundedRect: rect, cornerRadius: bh * 0.30)
-        // Oyundaki gibi: normalde sari, Overtake devredeyken maviye doner.
+        // As in the game: yellow normally, blue while overtake is engaged.
         let blue = dash.boostActive
         let empty = blue ? Color(hex: 0x21497f) : Color(hex: 0x5a4a12)
         let full = blue ? Color(hex: 0x3980d0) : Color(hex: 0xf0c330)
@@ -388,7 +389,7 @@ struct BroadcastHUD {
                                           width: bh * 0.18, height: bh * 0.44), cornerRadius: 3),
                  with: .color(nub))
 
-        // Simsek
+        // Lightning bolt
         let s = bh * 0.9, x = CX, y = by + bh * 0.5 - s / 2
         var bolt = Path()
         bolt.move(to: CGPoint(x: x + s * 0.18, y: y))
@@ -401,12 +402,13 @@ struct BroadcastHUD {
         ctx.fill(bolt, with: .color(blue ? Color(hex: 0xb5e9fa) : Color(hex: 0x2a2205)))
     }
 
-    // MARK: Alt serit
+    // MARK: Bottom strip
 
-    /// Ekranin altini kaplayan satir: solda ACTIVE AERO, ortada vites cetveli,
-    /// sagda devir cubugu. Ekran koordinatinda cizilir; olcu serit yuksekligi.
+    /// The row along the bottom of the screen: ACTIVE AERO on the left, the gear ruler in
+    /// the middle, the RPM bar on the right. Drawn in screen coordinates; the unit is the
+    /// strip height.
     private func drawBottomStrip(in ctx: inout GraphicsContext, rect: CGRect) {
-        let h = rect.height, k = h / 100          // 100 birim = serit yuksekligi
+        let h = rect.height, k = h / 100          // 100 units = strip height
         let path = Path(roundedRect: rect, cornerRadius: h * 0.22)
         ctx.fill(path, with: .color(blockFill))
         ctx.stroke(path, with: .color(blockEdge), lineWidth: max(1.5, k * 2))
@@ -414,7 +416,7 @@ struct BroadcastHUD {
         let pad = h * 0.35, x0 = rect.minX + pad, x1 = rect.maxX - pad
         let midY = rect.midY
 
-        // Sol: ACTIVE AERO + cift cizgi
+        // Left: ACTIVE AERO and a double line
         let aero = dash.aeroEngaged
         drawText(&ctx, dash.aeroTitle, size: k * 24, weight: .heavy, italic: true,
                  colour: aero ? .white : Color(hex: 0x6f8797), anchor: .leading,
@@ -426,8 +428,7 @@ struct BroadcastHUD {
         ctx.stroke(slashes, with: .color(aero ? Color(hex: 0x3fe0f0) : Color(hex: 0x3d5566)),
                    style: StrokeStyle(lineWidth: k * 5, lineCap: .round))
 
-        // Orta: vites cetveli
-        // R, N ve 1...8: oyundaki vites sayisi kadar
+        // Middle: gear ruler R, N and 1...8, up to the game's gear count
         let gears = ["R", "N"] + (1...max(min(dash.maxGears, 8), 1)).map(String.init)
         let gx0 = rect.minX + rect.width * 0.31, gx1 = rect.minX + rect.width * 0.62
         for (i, label) in gears.enumerated() {
@@ -439,7 +440,7 @@ struct BroadcastHUD {
         drawText(&ctx, "GEARS", size: k * 18, weight: .heavy, italic: true, colour: Color(hex: 0x9fb6c4),
                  anchor: .leading, at: CGPoint(x: gx1 + k * 30, y: midY + k * 8))
 
-        // Sag: RPM cubugu
+        // Right: RPM bar
         let bx0 = rect.minX + rect.width * 0.72, bx1 = x1
         let by = midY - k * 4
         let track = Path(roundedRect: CGRect(x: bx0, y: by, width: bx1 - bx0, height: k * 10), cornerRadius: k * 5)
@@ -459,9 +460,9 @@ struct BroadcastHUD {
                  colour: Color(hex: 0xdfe9f0), at: CGPoint(x: (bx0 + bx1) / 2, y: by + k * 32))
     }
 
-    // MARK: Metin
+    // MARK: Text
 
-    /// SVG'deki gibi `at` metnin taban cizgisi; x hizasi `anchor` ile secilir.
+    /// As in SVG, `at` is the text baseline; horizontal alignment comes from `anchor`.
     private func drawText(_ ctx: inout GraphicsContext, _ string: String, size: CGFloat,
                           weight: Font.Weight, italic: Bool, colour: Color, tracking: CGFloat = 0,
                           anchor: HorizontalAlignment = .center, at point: CGPoint) {
@@ -472,7 +473,7 @@ struct BroadcastHUD {
         if italic { text = text.italic() }
         let resolved = ctx.resolve(text)
         let unit: UnitPoint = anchor == .leading ? .bottomLeading : .bottom
-        // Taban cizgisi: alt kenar ile arasinda yaklasik 0.22 em inis payi var.
+        // Baseline: about 0.22 em of descender space above the bottom edge.
         ctx.draw(resolved, at: CGPoint(x: point.x, y: point.y + size * 0.22), anchor: unit)
     }
 }

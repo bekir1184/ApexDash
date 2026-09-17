@@ -1,7 +1,7 @@
 import SwiftUI
 import AVFoundation
 
-/// Laptoptaki sayfada duran QR'i okur. Kod bulununca kapanir.
+/// Scans the pairing QR shown on apexdash.pro. Closes when a code is found.
 struct QRScannerView: UIViewControllerRepresentable {
     let onFound: (String) -> Void
 
@@ -18,8 +18,8 @@ struct QRScannerView: UIViewControllerRepresentable {
         private let session = AVCaptureSession()
         private var preview: AVCaptureVideoPreviewLayer?
         private var handled = false
-        /// Uygulama yalnizca yatay calisir; kamera goruntusu arayuzun yonune
-        /// dondurulmezse yan akar ve telefon hareketi ters yone gider.
+        /// The app runs in landscape only; unless the camera preview is rotated to the
+        /// interface, the image runs sideways and moves against the phone.
         private var rotation: AVCaptureDevice.RotationCoordinator?
         private var rotationObservation: NSKeyValueObservation?
 

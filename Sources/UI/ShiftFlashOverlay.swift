@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Vites degistirme aninda gercek direksiyonlardaki gibi yanip sonen katman.
+/// The layer that flashes at the shift point, as on real steering wheels.
 struct ShiftFlashOverlay: View {
     let active: Bool
     var color = Color(red: 0.45, green: 0.4, blue: 1.0)

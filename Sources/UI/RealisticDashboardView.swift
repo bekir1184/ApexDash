@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Gercek F1 direksiyon ekranlarinin (Bosch / McLaren Applied tipi) paleti.
-/// Pit limiter devredeyken ekranin tamami sariya doner, yazilar koyulasir -
-/// pit lane'de gercek araclarda oldugu gibi.
+/// The palette of real F1 wheel displays (Bosch / McLaren Applied style). With the pit
+/// limiter on, the whole display turns yellow and the text dark, as in real cars in the pit
+/// lane.
 enum RealisticPalette {
     static let ground = Color(red: 0.055, green: 0.06, blue: 0.05)
-    /// Ekrani cevreleyen direksiyon govdesi.
+    /// The wheel body around the display.
     static let bezel = Color(red: 0.075, green: 0.08, blue: 0.09)
     static let limiterGround = Color(red: 0.71, green: 0.75, blue: 0.18)
 
@@ -33,15 +33,15 @@ struct RealisticDashboardView: View {
         VStack(spacing: unit * 0.16) {
             wheelLeds
 
-            // Bayrak isiklari da devir seridi gibi govde cercevesinin uzerinde,
-            // ekranin iki yaninda durur.
+            // The flag lights sit on the housing frame on both sides of the display, like
+            // the rev strip above it.
             HStack(spacing: unit * 0.16) {
                 sideLights
                 screen
                 sideLights
             }
         }
-        // Direksiyon govdesi: ekrani ceviren cerceve, LED seridi de uzerinde.
+        // Wheel body: the frame around the display, carrying the LED strip.
         .padding(.horizontal, unit * 0.18)
         .padding(.vertical, unit * 0.22)
         .background(
@@ -52,7 +52,7 @@ struct RealisticDashboardView: View {
                                             Color(red: 0.04, green: 0.04, blue: 0.05)],
                                    startPoint: .top, endPoint: .bottom)
                 )
-                // Govdenin dis kenari: ustte parlak, altta koyu bir pah.
+                // Outer edge of the body: a chamfer, bright on top and dark below.
                 .overlay(
                     RoundedRectangle(cornerRadius: unit * 0.42, style: .continuous)
                         .stroke(
@@ -89,10 +89,10 @@ struct RealisticDashboardView: View {
         )
     }
 
-    // MARK: - Yan uyari isiklari
+    // MARK: - Side warning lights
 
-    /// Ekranin iki yanindaki dikey kume: FIA bayraklarini gosterir. Tur
-    /// gecersizse (sayilmiyorsa) yesil isik yanip soner.
+    /// The vertical clusters on both sides of the display show FIA flags. The green light
+    /// flashes when the lap is invalid (not counted).
     private var sideLights: some View {
         TimelineView(.periodic(from: .now, by: 0.3)) { context in
             let phase = Int(context.date.timeIntervalSinceReferenceDate / 0.3) % 2 == 0
@@ -107,7 +107,7 @@ struct RealisticDashboardView: View {
                 }
             }
             .frame(width: unit * 0.34)
-            // Isiklar ekranin ust hizasina yakin durur.
+            // The lights sit near the top of the display.
             .frame(maxHeight: .infinity, alignment: .top)
             .padding(.top, unit * 0.5)
         }
@@ -115,7 +115,7 @@ struct RealisticDashboardView: View {
 
     private var off: Color { Color.white.opacity(0.05) }
 
-    /// Oncelik: sari > mavi > gecersiz tur (yesil yanip soner) > yesil > kapali.
+    /// Priority: yellow > blue > invalid lap (flashing green) > green > off.
     private var flagState: (color: Color, blinking: Bool) {
         switch dash.fiaFlag {
         case 3: return (Color(red: 1.0, green: 0.85, blue: 0.1), true)
@@ -128,14 +128,14 @@ struct RealisticDashboardView: View {
         return (off, false)
     }
 
-    // MARK: - Direksiyon govdesindeki LED'ler
+    // MARK: - LEDs on the wheel body
 
-    /// Cerceve uzerindeki devir seridi: diger temalarla ayni renk duzeni
-    /// (yesil - kirmizi - mor), bosluksuz ve ekran genisligince.
+    /// The rev strip on the frame: the same colour order as the other dashboards (green,
+    /// red, purple), gapless and as wide as the display.
     private var wheelLeds: some View {
         HStack(spacing: 0) {
             ForEach(0..<15, id: \.self) { index in
-                // Oyunun kendi LED desenini kullaniyoruz: 15 bit, soldan saga.
+                // Uses the game's own LED pattern: 15 bits, left to right.
                 let lit = dash.revLightsBits & (1 << UInt16(index)) != 0
                 let color = ledColor(index)
                 Circle()
@@ -156,7 +156,7 @@ struct RealisticDashboardView: View {
         }
     }
 
-    // MARK: - Ust satir: delta, durum, tur suresi
+    // MARK: - Top row: delta, status, lap time
 
     private var topRow: some View {
         HStack(spacing: 0) {
@@ -196,7 +196,7 @@ struct RealisticDashboardView: View {
         }
     }
 
-    // MARK: - Ana satir: hiz, vites (altinda batarya), yakit
+    // MARK: - Main row: speed, gear (battery below), fuel
 
     private var mainRow: some View {
         HStack(spacing: 0) {
@@ -239,7 +239,7 @@ struct RealisticDashboardView: View {
         }
     }
 
-    // MARK: - Alt satir: lastikler ve pozisyon
+    // MARK: - Bottom row: tyres and position
 
     private var bottomRow: some View {
         HStack(spacing: 0) {
@@ -260,7 +260,7 @@ struct RealisticDashboardView: View {
         .frame(height: unit * 1.5)
     }
 
-    /// Kucuk sicaklik kumesi: solda on/arka sol, sagda on/arka sag.
+    /// Small temperature cluster: front/rear left on the left, front/rear right on the right.
     private func tyrePair(front: Int, rear: Int) -> some View {
         VStack(spacing: unit * 0.06) {
             tyreLine(index: front, label: front == 2 ? "FL" : "FR")
@@ -285,7 +285,7 @@ struct RealisticDashboardView: View {
         }
     }
 
-    /// En alttaki ince batarya seridi.
+    /// The thin battery strip at the very bottom.
     private var ersBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {

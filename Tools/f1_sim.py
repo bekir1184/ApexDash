@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""F1 26 UDP telemetri simulatoru.
+"""F1 25 / F1 26 UDP telemetry simulator.
 
-Oyun acik olmadan dashboard'u test etmek icin gercek paket duzeninde
-(packetFormat=2026) sahte veri gonderir.
+Sends fake data in the real packet layout, to test Apex Dash without the game.
+The app has the same simulation built in as Settings > Demo drive
+(Sources/Games/F1/F1DemoDrive.swift).
 
-Kullanim:
-    python3 Tools/f1_sim.py 192.168.1.42            # iPhone'un IP'si
-    python3 Tools/f1_sim.py 127.0.0.1               # Simulator icin
-    python3 Tools/f1_sim.py 127.0.0.1 --format=2025 # F1 25 paket duzeni
+Usage:
+    python3 Tools/f1_sim.py 192.168.1.42            # the phone's IP
+    python3 Tools/f1_sim.py 127.0.0.1               # iOS Simulator
+    python3 Tools/f1_sim.py 127.0.0.1 --format=2025 # F1 25 packet layout
 """
 import math
 import socket
@@ -15,7 +16,7 @@ import struct
 import sys
 import time
 
-# Bicim: 2026 (varsayilan) ya da 2025. Paket duzenleri birkac alanda ayrilir.
+# Format: 2026 (default) or 2025. The packet layouts differ in a few fields.
 FORMAT = 2026
 PLAYER = 0
 RATE_HZ = 60
@@ -30,22 +31,22 @@ def cars():
 
 
 HEADER_FMT = "<HBBBBBQfIIBB"          # 29 byte
-# F1 26: motor sicakligi tek bayt (59). F1 25: iki bayt (60).
+# F1 26: one byte engine temperature (59). F1 25: two bytes (60).
 TELEMETRY_FMT_2026 = "<HfffBbHBBH4H4B4BB4f4B"
 TELEMETRY_FMT_2025 = "<HfffBbHBBH4H4B4BH4f4B"
-TELEMETRY2_FMT = "<BBHBBHBB"          # 10 byte, yalnizca F1 26
-# F1 26: surucu/ag/takim kimlikleri uint16 (60). F1 25: uint8 (57).
+TELEMETRY2_FMT = "<BBHBBHBB"          # 10 bytes, F1 26 only
+# F1 26: driver/network/team ids are uint16 (60). F1 25: uint8 (57).
 PARTICIPANT_FMT_2026 = "<BHHHBBB32sBBHBB12B"
 PARTICIPANT_FMT_2025 = "<BBBBBBB32sBBHBB12B"
 NAMES = ["Bekir Ersever", "Lewis Hamilton", "George Russell", "Max Verstappen",
          "Charles Leclerc", "Lando Norris"]
-# oyuncu 4. sirada; onunde 3, arkasinda 5 var
+# the player is 4th, with 3rd ahead and 5th behind
 POSITIONS = [4, 3, 5, 1, 2, 6]
-LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 byte, iki bicimde de ayni
-# F1 26'da tur basina toplama limiti var (59), F1 25'te yok (55).
+LAPDATA_FMT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"  # 57 bytes, the same in both formats
+# F1 26 has a per-lap harvest limit (59); F1 25 does not (55).
 STATUS_FMT_2026 = "<BBBBBfffHHBBHBBBbfffBffffB"
 STATUS_FMT_2025 = "<BBBBBfffHHBBHBBBbfffBfffB"
-# F1 26: G kuvvetleri 1000 ile carpilmis int16 (54). F1 25: float (60).
+# F1 26: G forces as int16 multiplied by 1000 (54). F1 25: float (60).
 MOTION_FMT_2026 = "<ffffffhhhhhhhhhfff"
 MOTION_FMT_2025 = "<ffffffhhhhhhffffff"
 
@@ -57,11 +58,11 @@ SESSION_SIZE = 926 - 29
 
 
 class Track:
-    """Kapali bir pist: duz + viraj parcalarindan olusur; mesafe -> konum,
-    egrilik, hedef hiz. Viraja girerken fren, cikarken gaz uretilir."""
+    """A closed circuit of straights and corners: distance -> position,
+    curvature and target speed. Braking into corners, throttle out of them."""
 
     def __init__(self):
-        # (uzunluk m, egrilik yaricapi m veya None=duz, yon +1 sol / -1 sag)
+        # (length m, corner radius m or None for a straight, direction +1 left / -1 right)
         self.segments = [
             (700, None, 0), (90, 60, 1), (220, None, 0), (140, 120, -1), (380, None, 0),
             (80, 35, 1), (60, 35, 1), (300, None, 0), (200, 200, -1), (520, None, 0),
@@ -69,7 +70,7 @@ class Track:
             (140, 70, -1), (180, None, 0), (130, 55, 1), (150, 110, -1), (390, None, 0),
         ]
         self.length = sum(seg[0] for seg in self.segments)
-        # Konumlari 1 m adimla onceden hesapla (kapanma hatasini yayarak duzelt)
+        # Precompute positions at 1 m steps (spreading the closing error along the lap)
         pts, x, z, heading = [], 0.0, 0.0, 0.0
         curv = []
         for seg_len, radius, sign in self.segments:
@@ -83,12 +84,12 @@ class Track:
             f = i / n
             pts[i] = (px - x * f, pz - z * f)
         self.points, self.curv = pts, curv
-        # Hedef hiz: egrilige gore, ileriye dogru fren mesafesi ile yumusatilmis
+        # Target speed from curvature, smoothed by braking and acceleration distances
         target = [min(330.0, 3.6 * math.sqrt(3.2 * 9.81 / abs(k))) if k else 330.0 for k in curv]
         for i in range(n - 2, -1, -1):
-            target[i] = min(target[i], target[i + 1] + 0.55)      # frenleme (km/h per m)
+            target[i] = min(target[i], target[i + 1] + 0.55)      # braking (km/h per m)
         for i in range(1, n):
-            target[i] = min(target[i], target[i - 1] + 0.22)      # hizlanma
+            target[i] = min(target[i], target[i - 1] + 0.22)      # acceleration
         self.target = target
 
     def at(self, distance):
@@ -110,7 +111,7 @@ def motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long):
         int(math.cos(yaw) * 32767), 0, int(math.sin(yaw) * 32767),
         int(-math.sin(yaw) * 32767), 0, int(math.cos(yaw) * 32767),
     )
-    # F1 26 G kuvvetlerini 1000 ile carpilmis tamsayi olarak tasir.
+    # F1 26 carries G forces as integers multiplied by 1000.
     forces = ((int(g_lat * 1000), int(g_long * 1000), 1000) if is_2026()
               else (g_lat, g_long, 1.0))
     payload = b""
@@ -177,10 +178,10 @@ def lapdata_packet(frame, lap_time_ms, lap_num, delta_ms=340,
             payload += struct.pack(
                 LAPDATA_FMT,
                 last_lap_ms, lap_time_ms,  # lastLapTime, currentLapTime
-                s1_ms % 60_000, s1_ms // 60_000,   # sektor 1
-                s2_ms % 60_000, s2_ms // 60_000,   # sektor 2
-                delta_ms, 0,               # onundeki araca fark
-                1_250, 0,                  # lidere fark
+                s1_ms % 60_000, s1_ms // 60_000,   # sector 1
+                s2_ms % 60_000, s2_ms // 60_000,   # sector 2
+                delta_ms, 0,               # gap to the car ahead
+                1_250, 0,                  # gap to the leader
                 distance, 12000.0, 0.0,    # lapDistance, totalDistance, safetyCarDelta
                 POSITIONS[PLAYER], lap_num, 0, 0, sector, 0,  # position, lap, pit, stops, sector, invalid
                 0, 0, 0, 0, 0,             # penalties, warnings, corner cuts, pens
@@ -267,7 +268,7 @@ def main():
     port = int(args[1]) if len(args) > 1 else 20777
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print(f"F1 {FORMAT % 100} sim -> {target}:{port} @ {RATE_HZ} Hz, "
-          f"{cars()} arac  (Ctrl+C ile durdur)")
+          f"{cars()} cars  (Ctrl+C to stop)")
 
     frame = 0
     distance = 0.0
@@ -281,7 +282,7 @@ def main():
         t = frame / RATE_HZ
         dt = 1 / RATE_HZ
         x, z, yaw, curv, v_target = TRACK.at(distance)
-        # her turun temposu biraz farkli olsun ki karsilastirma anlamli ciksin
+        # vary the pace per lap so comparisons are meaningful
         pace = 1 + 0.03 * math.sin(lap_index * 1.7)
         v_target = v_target / pace
         if speed < v_target:
@@ -316,7 +317,7 @@ def main():
 
         brake_temp = int(260 + 640 * brake + 60 * math.sin(t))
         tyre_temp = int(88 + 26 * phase + 6 * math.sin(t * 0.7))
-        # F1 25'te DRS: duz yolda ve hizliyken acik.
+        # F1 25 DRS: open on straights at speed.
         drs = 1 if (not is_2026() and curv == 0 and speed > 200) else 0
         sock.sendto(
             telemetry_packet(frame, speed, gear, rpm, throttle, brake, brake_temp, tyre_temp,
@@ -324,7 +325,7 @@ def main():
             (target, port),
         )
         sock.sendto(motion_packet(frame, x, z, yaw, v_ms, g_lat, g_long), (target, port))
-        # ilk 6 saniye: bes isik yanar, sonra soner
+        # first 6 seconds: five lights come on, then go out
         if t < 6:
             lights = min(5, int(t / 1.0))
             if lights > 0 and frame % 6 == 0:
@@ -343,9 +344,9 @@ def main():
                 (target, port),
             )
             ers = 4_000_000.0 * (0.15 + 0.85 * abs(math.sin(t * 0.25)))
-            # her 15 saniyede 5 saniyeligine pit limiter
+            # pit limiter for 5 seconds every 15 seconds
             limiter = 1 if (t % 15) < 5 else 0
-            # bayraklar: 10 sn yesil, 5 sn sari, 5 sn mavi
+            # flags: 10 s green, 5 s yellow, 5 s blue
             cycle = t % 20
             flag = 3 if cycle < 5 else (2 if cycle < 10 else 1)
             harvest = 4_000_000.0 * (0.2 + 0.6 * abs(math.sin(t * 0.15)))
@@ -353,7 +354,7 @@ def main():
             sock.sendto(status_packet(frame, ers, limiter, flag, harvest, deployed,
                                       drs_allowed=1 if drs else 0),
                         (target, port))
-            # Aktif aero / overtake paketi yalnizca 2026'da var.
+            # The active aero / overtake packet only exists in 2026.
             if is_2026():
                 sock.sendto(
                     telemetry2_packet(frame, overtake_ready=phase > 0.3,

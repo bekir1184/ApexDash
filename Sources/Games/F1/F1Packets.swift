@@ -1,25 +1,25 @@
 import Foundation
 
-/// Desteklenen UDP bicimleri. Iki oyunun paket duzeni bir kismi disinda
-/// aynidir; farklar burada toplanir, ayristiricilar buradan okur.
+/// UDP formats the app understands. Both games share most of the packet layout; the
+/// differences are collected here and the parsers read them from here.
 ///
-/// F1 25 (2025): 22 arac, telemetride DRS baytı ve uint16 motor sicakligi,
-/// durum paketinde tur basina toplama limiti yok, hareket paketinde G
-/// kuvvetleri float, aktif aero / overtake paketi (16) hic gonderilmez.
-/// F1 26 (2026): 24 arac, DRS kaldirildi, yerine aktif aero ve overtake.
+/// - F1 25 (2025): 22 cars, a DRS byte and a 16-bit engine temperature in telemetry, no
+///   per-lap harvest limit in car status, float G forces in motion, and no active aero /
+///   overtake packet (16).
+/// - F1 26 (2026): 24 cars, DRS removed in favour of active aero and overtake.
 enum PacketFormat: UInt16 {
     case f125 = 2025
     case f126 = 2026
 
-    /// Paketlerdeki arac dizisi uzunlugu.
+    /// Number of cars in each packet's car array.
     var cars: Int { self == .f126 ? 24 : 22 }
     var telemetryStride: Int { self == .f126 ? 59 : 60 }
     var statusStride: Int { self == .f126 ? 59 : 55 }
     var participantStride: Int { self == .f126 ? 60 : 57 }
     var motionStride: Int { self == .f126 ? 54 : 60 }
-    /// Iki bicimde de ayni.
+    /// The same in both formats.
     var lapStride: Int { 57 }
-    /// 2026 kurallari: DRS yok, aktif aero ve overtake var.
+    /// 2026 regulations: no DRS, active aero and overtake instead.
     var hasActiveAero: Bool { self == .f126 }
     var label: String { self == .f126 ? "F1 26" : "F1 25" }
 }
@@ -86,7 +86,7 @@ struct PacketHeader {
     }
 }
 
-/// Packet ID 6 - CarTelemetryData (arac basina F1 26'da 59, F1 25'te 60 byte)
+/// Packet ID 6 - CarTelemetryData (59 bytes per car in F1 26, 60 in F1 25)
 struct CarTelemetry {
 
     var speedKPH: Int = 0
@@ -102,7 +102,7 @@ struct CarTelemetry {
     var tyreInnerTemps: [Int] = [0, 0, 0, 0]
     var engineTemp: Int = 0
     var tyrePressures: [Float] = [0, 0, 0, 0]
-    /// Yalnizca F1 25: DRS acik mi. 2026 kurallarinda bu alan kullanilmaz.
+    /// F1 25 only: whether DRS is open. Unused under the 2026 regulations.
     var drsActive: Bool = false
 
     init() {}
@@ -118,7 +118,7 @@ struct CarTelemetry {
               r.uint8() != nil,             // clutch
               let gear = r.int8(),
               let rpm = r.uint16(),
-              let drs = r.uint8(),          // F1 25'te DRS; F1 26'da kullanilmaz
+              let drs = r.uint8(),          // DRS in F1 25; unused in F1 26
               let revPercent = r.uint8(),
               let revBits = r.uint16()
         else { return nil }
@@ -139,7 +139,7 @@ struct CarTelemetry {
         for _ in 0..<4 { guard let v = r.uint8() else { return nil }; surface.append(Int(v)) }
         var inner: [Int] = []
         for _ in 0..<4 { guard let v = r.uint8() else { return nil }; inner.append(Int(v)) }
-        // Motor sicakligi: F1 26'da tek bayt, F1 25'te iki bayt.
+        // Engine temperature: one byte in F1 26, two bytes in F1 25.
         let engineTemp: Int
         if format.hasActiveAero {
             guard let v = r.uint8() else { return nil }
@@ -159,8 +159,8 @@ struct CarTelemetry {
     }
 }
 
-/// Packet ID 16 - CarTelemetry2Data (arac basina 10 byte, paket 269 byte).
-/// 2026 kurallari: DRS yerine aktif aero (X/Z mode) + Overtake (manual override).
+/// Packet ID 16 - CarTelemetry2Data (10 bytes per car, 269 byte packet). 2026 regulations:
+/// active aero (X/Z mode) and Overtake (manual override) replace DRS.
 struct CarTelemetry2 {
     static let stride = 10
 
@@ -201,8 +201,8 @@ struct CarTelemetry2 {
     }
 }
 
-/// Packet ID 7 - CarStatusData (arac basina 59 byte, paket 1445 byte).
-/// Faz 1 icin sadece rev bar ve limiter isigi gereken alanlari okuyoruz.
+/// Packet ID 7 - CarStatusData (59 bytes per car, 1445 byte packet). Only the fields the
+/// dashboards use are read.
 struct CarStatus {
 
     var pitLimiterOn: Bool = false
@@ -210,16 +210,16 @@ struct CarStatus {
     var maxRPM: Int = 15000
     var idleRPM: Int = 4000
     var maxGears: Int = 8
-    /// ERS deposundaki enerji (Joule). Tam depo 4 MJ.
+    /// Energy in the ERS store (joules). A full store holds 4 MJ.
     var ersStoreEnergy: Float = 0
     var ersDeployMode: Int = 0
-    /// -1 bilinmiyor, 0 yok, 1 yesil, 2 mavi, 3 sari
+    /// -1 unknown, 0 none, 1 green, 2 blue, 3 yellow
     var fiaFlag: Int = -1
-    /// Bu turda toplanan ve harcanan ERS enerjisi (Joule) ile tur basina limit.
+    /// ERS energy harvested and deployed this lap (joules), and the per-lap limit.
     var ersHarvestedThisLap: Float = 0
     var ersHarvestLimitPerLap: Float = 0
     var ersDeployedThisLap: Float = 0
-    /// Yalnizca F1 25: DRS kullanilabilir mi.
+    /// F1 25 only: whether DRS may be used.
     var drsAllowed: Bool = false
 
     init() {}
@@ -237,7 +237,7 @@ struct CarStatus {
               let maxGears = r.uint8()
         else { return nil }
         guard let drsAllowed = r.uint8() else { return nil }
-        r.skip(5)                            // drsActivationDistance, lastik bilgileri
+        r.skip(5)                            // drsActivationDistance, tyre info
         guard let flag = r.int8() else { return nil }
         r.skip(8)                            // enginePowerICE, enginePowerMGUK
         guard let ersStore = r.float(),
@@ -245,7 +245,7 @@ struct CarStatus {
               let harvestMGUK = r.float(),
               let harvestMGUH = r.float()
         else { return nil }
-        // Tur basina toplama limiti yalnizca F1 26'da var.
+        // Only F1 26 has a per-lap harvest limit.
         var harvestLimit: Float = 0
         if format.hasActiveAero {
             guard let limit = r.float() else { return nil }
@@ -268,17 +268,17 @@ struct CarStatus {
     }
 }
 
-/// Packet ID 2 - LapData (arac basina 57 byte, paket 1399 byte)
+/// Packet ID 2 - LapData (57 bytes per car, 1399 byte packet)
 struct LapData {
-    /// Iki bicimde de arac basina 57 byte.
+    /// 57 bytes per car in both formats.
     static let stride = 57
 
     var lastLapTimeMS: Int = 0
     var currentLapTimeMS: Int = 0
-    /// Tamamlanan sektor sureleri (ms). Sektor gecilmeden 0 gelir.
+    /// Completed sector times (ms). Zero until the sector is finished.
     var sector1MS: Int = 0
     var sector2MS: Int = 0
-    /// Turun basindan bu yana kat edilen mesafe (m); cizgiyi gecmeden negatif.
+    /// Distance covered since the start of the lap (m); negative before crossing the line.
     var lapDistance: Float = 0
     var deltaToCarInFrontMS: Int = 0
     var deltaToCarInFrontMinutes: Int = 0
@@ -325,14 +325,14 @@ struct LapData {
     }
 }
 
-/// Packet ID 4 - ParticipantData (arac basina 60 byte, paket 1470 byte).
-/// Bes saniyede bir gelir; isimler ve takim renkleri buradan.
+/// Packet ID 4 - ParticipantData (60 bytes per car, 1470 byte packet). Sent every five
+/// seconds; driver names and team colours come from here.
 struct Participant {
     var name: String = ""
     var raceNumber: Int = 0
     var teamColour: (red: Double, green: Double, blue: Double)?
 
-    /// Soyadi: yayin grafiklerindeki gibi tek kelime gosterilir.
+    /// Surname only, as shown in TV graphics.
     var surname: String {
         name.split(separator: " ").last.map(String.init)?.uppercased() ?? name.uppercased()
     }
@@ -344,7 +344,7 @@ enum ParticipantsPacket {
         guard reader.uint8() != nil else { return [] }      // m_numActiveCars
 
         let stride = format.participantStride
-        // F1 26'da surucu / ag / takim kimlikleri uint16; F1 25'te uint8.
+        // Driver, network and team ids are uint16 in F1 26 and uint8 in F1 25.
         let idBytes = format.hasActiveAero ? 8 : 5
         var result: [Participant] = []
         for index in 0..<format.cars {
@@ -378,7 +378,7 @@ enum ParticipantsPacket {
 }
 
 extension LapData {
-    /// Butun araclarin yaris pozisyonu; onundeki ve arkandakini bulmak icin.
+    /// Race positions of all cars, to find the drivers ahead and behind.
     static func positions(in data: Data, format: PacketFormat) -> [Int] {
         (0..<format.cars).map { index in
             var r = ByteReader(data, offset: PacketHeader.size + index * LapData.stride + 32)
@@ -387,7 +387,7 @@ extension LapData {
     }
 }
 
-/// Packet ID 3 - Event. Dort harflik kod ve ardindan olaya ozel alanlar.
+/// Packet ID 3 - Event. A four letter code followed by event specific fields.
 enum GameEvent {
     case startLights(count: Int)
     case lightsOut
@@ -412,8 +412,8 @@ enum GameEvent {
     }
 }
 
-/// Packet ID 0 - Motion (arac basina 54 byte). Pist haritasi ve G kuvveti
-/// icin oyuncunun dunya konumu ve ivmeleri.
+/// Packet ID 0 - Motion (54 bytes per car). The player's world position and accelerations,
+/// for the track map and G forces.
 struct CarMotion {
 
     var worldX: Float = 0
@@ -421,7 +421,7 @@ struct CarMotion {
     var worldZ: Float = 0
     var speedMS: Float = 0
     var yaw: Float = 0
-    /// G kuvvetleri (g biriminde; paket 1000 ile carpilmis int16 tasir).
+    /// G forces in g (F1 26 sends int16 values multiplied by 1000).
     var gLateral: Float = 0
     var gLongitudinal: Float = 0
 
@@ -434,8 +434,8 @@ struct CarMotion {
         guard let x = r.float(), let y = r.float(), let z = r.float(),
               let vx = r.float(), let vy = r.float(), let vz = r.float()
         else { return nil }
-        r.skip(12)                                  // forward/right yon vektorleri
-        // G kuvvetleri: F1 26'da 1000 ile carpilmis int16, F1 25'te float.
+        r.skip(12)                                  // forward and right direction vectors
+        // G forces: int16 multiplied by 1000 in F1 26, float in F1 25.
         let lateral: Float, longitudinal: Float
         if format.hasActiveAero {
             guard let gLat = r.uint16(), let gLong = r.uint16() else { return nil }
@@ -457,7 +457,7 @@ struct CarMotion {
     }
 }
 
-/// Packet ID 1 - Session. Yalnizca pist ve hava bilgisi okunur.
+/// Packet ID 1 - Session. Only track and weather are read.
 struct SessionInfo: Equatable {
     var weather: Int = 0
     var trackTemperature: Int = 0

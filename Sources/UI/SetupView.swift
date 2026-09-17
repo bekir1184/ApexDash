@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Ilk acilista ve bekleme ekranindaki dugmeyle acilan kurulum ekrani.
-/// Port hem burada dinlenir hem de oyuna ayni deger girilir; telefonun IP
-/// adresi de buradan kopyalanir.
+/// The connection screen, opened on first launch and from the connection badge. The port
+/// set here is both where the app listens and the value to enter in the game; the phone's
+/// IP address can be copied from here.
 struct SetupView: View {
     @Binding var port: Int
-    /// Oyundaki UDP Format ayariyla ayni olmasi gereken yil (2025 / 2026).
+    /// The year that must match the UDP Format in the game (2025 / 2026).
     @Binding var format: Int
     /// The format the game actually sends when it differs, for example "F1 25".
     var mismatch: String? = nil
@@ -62,7 +62,7 @@ struct SetupView: View {
         .onAppear { portText = "\(port)" }
     }
 
-    // MARK: - Telefon tarafi
+    // MARK: - Phone side
 
     private var phonePanel: some View {
         VStack(alignment: .leading, spacing: unit * 0.25) {
@@ -129,7 +129,7 @@ struct SetupView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Oyun tarafi
+    // MARK: - Game side
 
     private var gamePanel: some View {
         VStack(alignment: .leading, spacing: unit * 0.12) {
@@ -158,7 +158,7 @@ struct SetupView: View {
         )
     }
 
-    /// Oyundaki UDP Format secimi: iki yil arasinda gecis.
+    /// UDP Format choice in the game: switches between the two years.
     private var formatRow: some View {
         HStack {
             Text(verbatim: "UDP Format")

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Dort kose lastik ve fren sicakliklari.
-/// Spesifikasyondaki tekerlek dizisi sirasi: 0 = RL, 1 = RR, 2 = FL, 3 = FR.
+/// Tyre and brake temperatures for the four corners. Wheel order in the specification: 0 =
+/// RL, 1 = RR, 2 = FL, 3 = FR.
 struct TyreTempsView: View {
     let tyreSurface: [Int]
     let tyreInner: [Int]

@@ -10,16 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* Tasarim ilkesi: once cevap, sonra ayrinti.
-     1. Oturum  — en iyi tur, teorik en iyi, en yuksek hiz ve tur listesi.
-     2. Tur     — secilen turun haritasi, hiz / pedal / fark grafikleri.
-     3. Ayrinti — diger kanallar, virajlar ve enerji; istenince acilir.
-     Gorunum uygulamayla ayni: lacivert zemin, iki yatik serit, kirmizi vurgu, Saira. */
+  /* Design principle: the answer first, details later.
+     1. Session — best lap, theoretical best, top speed and the lap list.
+     2. Lap     — the selected lap's map, speed / pedal / delta charts.
+     3. Detail  — other channels, corners and energy; opened on demand.
+     Looks like the app: navy background, two slanted stripes, red accent, Saira. */
   :root {
     --bg: #121219; --panel: rgba(26,26,35,.92); --raise: #21212c; --line: rgba(255,255,255,.08);
     --stripe: #292933;
     --ink: #f1f2f5; --dim: #8a8a9c; --faint: #5d5d6e; --accent: #e10600;
-    /* Veri renkleri anlam tasir. */
+    /* Data colours carry meaning. */
     --purple: #b45cff; --green: #3ce85a; --yellow: #f5d92b; --red: #ff4438; --blue: #4aa3ff;
     --lapA: #3fd9c9; --lapB: #ff7a3d;
     --radius: 14px; --gutter: 20px;
@@ -41,7 +41,7 @@
   .label { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
   .purple { color: var(--purple); } .green { color: var(--green); } .yellow { color: var(--yellow); } .red { color: var(--red); }
 
-  /* ---- ust cubuk */
+  /* ---- top bar */
   .top { position: sticky; top: 0; z-index: 10; background: rgba(18,18,25,.9); backdrop-filter: blur(14px);
          -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
   .top .wrap { display: flex; align-items: center; gap: 16px; height: 58px; }
@@ -77,7 +77,7 @@
     background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%), linear-gradient(135deg, var(--dim) 50%, transparent 50%);
     background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 
-  /* ---- eslesme */
+  /* ---- pairing */
   .pair { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: center; padding: 32px;
           max-width: 820px; margin: 6vh auto 0; width: 100%; }
   .pair .qr img { display: block; width: 208px; height: 208px; image-rendering: pixelated; background: #fff;
@@ -91,14 +91,14 @@
     .pair h2 { font-size: 34px; }
   }
 
-  /* ---- baslik alani */
+  /* ---- title area */
   .context { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
   .context h2 { margin: 2px 0 0; font-size: 34px; line-height: 1.05; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; }
   .context p { margin: 4px 0 0; color: var(--dim); }
   .context .end { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   @media (max-width: 600px) { .context h2 { font-size: 26px; } }
 
-  /* ---- ana degerler */
+  /* ---- key values */
   .hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
   @media (max-width: 900px) { .hero { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
@@ -120,7 +120,7 @@
     .hero.compact .card .value { font-size: 20px; }
   }
 
-  /* ---- tur listesi: sabit sutunlar, tasma yok */
+  /* ---- lap list: fixed columns, no overflow */
   .laps { display: flex; flex-direction: column; }
   .lap-row { display: grid; align-items: center; gap: 14px; width: 100%; padding: 10px 18px; background: none;
              border: 0; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer;
@@ -156,7 +156,7 @@
     .lap-row .gap em { min-width: 0; }
   }
 
-  /* ---- tur ayrintisi */
+  /* ---- lap detail */
   .crumbs { display: flex; align-items: center; gap: 10px; }
   .crumbs .end { margin-left: auto; display: flex; gap: 8px; }
   .lap-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
@@ -359,8 +359,8 @@
 <script>
 "use strict";
 
-// ---------------------------------------------------------------- dil
-// Uygulama gibi: tarayici Turkce ise Turkce, degilse Ingilizce.
+// ---------------------------------------------------------------- language
+// Like the app: Turkish if the browser is Turkish, otherwise English.
 const TR = (navigator.language || "").toLowerCase().startsWith("tr");
 document.documentElement.lang = TR ? "tr" : "en";
 const L = (tr, en) => TR ? tr : en;
@@ -387,7 +387,7 @@ const TEXT = {
 document.querySelectorAll("[data-t]").forEach(el => el.innerHTML = TEXT[el.dataset.t]);
 document.title = `Apex Dash · ${L("Telemetri", "Telemetry")}`;
 
-// ---------------------------------------------------------------- yardimcilar
+// ---------------------------------------------------------------- helpers
 const $ = id => document.getElementById(id);
 const fmtLap = ms => {
   if (!ms && ms !== 0) return "—";
@@ -410,7 +410,7 @@ const SESSIONS = {1:"P1",2:"P2",3:"P3",4:L("Kısa antrenman","Short practice"),5
   14:L("Tek tur sprint sıralama","One-shot sprint shootout"),15:L("Yarış","Race"),16:L("Yarış 2","Race 2"),17:L("Yarış 3","Race 3"),
   18:L("Zamana karşı","Time trial")};
 
-// ---------------------------------------------------------------- oturum
+// ---------------------------------------------------------------- session
 function newCode() {
   const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from({ length: 6 }, () => a[Math.floor(Math.random() * a.length)]).join("");
@@ -425,22 +425,22 @@ function sessionId() {
   history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
   return id;
 }
-/** Sayfa telefonun kendisinden mi sunuluyor (yerel ag). O zaman eslestirme
- *  yok; veri ayni adresten gelir. */
+/** Whether the page is served by the phone itself (local network). Then there
+ *  is no pairing; data comes from the same address. */
 const LOCAL = location.port === "8777" || /^\d+\.\d+\.\d+\.\d+$/.test(location.hostname);
 const session = LOCAL ? "LOCAL" : sessionId();
-// Bilgisayarda dosyadan denerken canli API kullanilir.
+// When opened from a file on a computer, the live API is used.
 const API = !LOCAL && (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.protocol === "file:") ? "https://www.apexdash.pro" : "";
 function resetSession() { try { localStorage.removeItem("apexdash-session"); } catch (_) {} location.href = location.pathname; }
 
-// ---------------------------------------------------------------- durum
+// ---------------------------------------------------------------- state
 const state = {
   laps: [], track: null, updatedAt: null, version: null, error: false, loaded: false, handoff: null,
-  traces: new Map(),        // tur -> sutun dizileri
-  loading: new Map(),       // tur -> bekleyen istek
-  missing: new Set(),       // izi sunucuda olmayan turlar
+  traces: new Map(),        // lap -> column arrays
+  loading: new Map(),       // lap -> pending request
+  missing: new Set(),       // laps whose trace the server does not have
   sort: "lap",
-  lap: null, compare: null, // tur ayrintisi
+  lap: null, compare: null, // lap detail
   mapMode: "speed", showAll: false,
   orient: null, cursor: null, corners: []
 };
@@ -454,7 +454,7 @@ async function poll() {
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
     state.error = false;
-    // Telefon yerel adresini bildirdiyse analiz oradan acilir; bulut yoklamasi biter.
+    // If the phone announced its local address, the analysis opens there and cloud polling stops.
     if (!LOCAL && typeof data.local === "string") {
       state.handoff = data.local;
       state.loaded = true;
@@ -496,7 +496,7 @@ function ago(ms) {
   return L(`${d} gün önce`, `${d} days ago`);
 }
 
-/** Izi indirir ve sutunlara cevirir; ayni tur icin tek istek. */
+/** Downloads a trace and splits it into columns; one request per lap. */
 function loadTrace(lap) {
   const info = lapInfo(lap);
   if (!hasTrace(info)) return Promise.resolve(null);
@@ -517,7 +517,7 @@ function loadTrace(lap) {
   return p;
 }
 
-/** Eski oturumlarda tur listesinde en yuksek hiz yok; izlerden ikiser ikiser tamamlanir. */
+/** Older sessions lack top speed in the lap list; it is filled in from traces, two at a time. */
 let filling = false;
 async function fillTopSpeeds() {
   if (filling) return;
@@ -531,14 +531,14 @@ async function fillTopSpeeds() {
   } finally { filling = false; }
 }
 
-/** Satir dizilerini sutun dizilerine cevirir ve mesafeye gore siralar. */
+/** Turns row arrays into column arrays sorted by distance. */
 function columnise(trace, info) {
   const cols = trace.columns, rows = trace.rows.slice().sort((a, b) => a[1] - b[1]);
   const out = { n: rows.length, time: trace.time };
   cols.forEach((c, i) => out[c] = Float64Array.from(rows, r => r[i]));
   const n = out.n;
-  // Isinlanma / geri sarma: 60 m ustu sicrama cizgiyi koparir; iki yani
-  // kopuk tek ornekler (tur oncesi bayat konum) atilir.
+  // Teleports and rewinds: a jump over 60 m breaks the line; isolated samples
+  // cut off on both sides (a stale position before the lap) are dropped.
   const jump = new Float64Array(n);
   for (let i = 1; i < n; i++) jump[i] = Math.hypot(out.x[i] - out.x[i - 1], out.z[i] - out.z[i - 1]);
   out.brk = new Uint8Array(n); out.ok = new Uint8Array(n);
@@ -555,7 +555,7 @@ function columnise(trace, info) {
   return out;
 }
 
-// ---------------------------------------------------------------- yonlendirme
+// ---------------------------------------------------------------- routing
 const route = () => { const m = location.hash.match(/tur\/(\d+)/); return m ? Number(m[1]) : null; };
 function go(lap, replace = false) {
   const url = `${location.pathname}${location.search}${lap == null ? "" : `#tur/${lap}`}`;
@@ -597,7 +597,7 @@ function renderHandoff() {
   const target = state.handoff;
   $("handoffLink").href = target;
   $("handoffAddress").textContent = target.replace(/\/$/, "");
-  // Tarayici izin verirse kendiliginden gecer; vermezse dugme var.
+  // Moves on its own if the browser allows it; otherwise there is a button.
   if (!handoffTimer) handoffTimer = setTimeout(() => { location.href = target; }, 1500);
 }
 
@@ -611,7 +611,7 @@ function renderPair() {
   $("qr").dataset.code = session;
 }
 
-// ---------------------------------------------------------------- 1. oturum
+// ---------------------------------------------------------------- 1. session
 function sessionSummary() {
   const laps = state.laps;
   if (!laps.length) return null;
@@ -641,7 +641,7 @@ function renderOverview() {
   ].filter(Boolean).join("  ·  ") : "";
 
   if (!sum) {
-    // Telefon eslesti ama henuz tur yok.
+    // The phone is paired but there are no laps yet.
     $("sessionType").innerHTML = `<span class="green">● ${L("Telefon bağlandı", "Phone connected")}</span>`;
     if (!t || t.id < 0) $("trackTitle").textContent = L("İlk tur bekleniyor", "Waiting for the first lap");
     $("hero").innerHTML = "";
@@ -679,7 +679,7 @@ function renderLapList(sum) {
   const laps = state.laps.slice();
   if (state.sort === "time") laps.sort((a, b) => a.time - b.time); else laps.reverse();
   $("lapCount").textContent = `${state.laps.length}`;
-  // Fark cubugu: en iyi tura gore; ortancanin iki kati uzerindeki (tur disi) sapmalar kesilir.
+  // Gap bar: against the best lap; outliers beyond two and a half times the median gap (out laps) are capped.
   const scale = Math.max(1000, Math.min(sum.worst - sum.best.time, (sum.median - sum.best.time) * 2.5));
   const head = `<div class="lap-row head"><span>${L("Tur", "Lap")}</span><span>${L("Süre", "Time")}</span>
     <span>${L("Fark", "Gap")}</span><span class="secs"><span>S1</span><span>S2</span><span>S3</span></span>
@@ -710,7 +710,7 @@ $("sortSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
   renderOverview();
 });
 
-// ---------------------------------------------------------------- 2. tur
+// ---------------------------------------------------------------- 2. lap
 let lapRender = 0;
 async function renderLapView(lap) {
   const token = ++lapRender;
@@ -719,7 +719,7 @@ async function renderLapView(lap) {
     state.lap = lap; state.cursor = null;
     state.compare = sum.best.lap !== lap && hasTrace(sum.best) ? sum.best.lap : null;
   }
-  // baslik hemen, iz gelince grafikler
+  // header right away, charts once the trace arrives
   const gap = info.time - sum.best.time;
   $("lapLabel").textContent = `${L("Tur", "Lap")} ${lap}`;
   $("lapTime").textContent = fmtLap(info.time);
@@ -807,7 +807,7 @@ function renderEnergy(tr, cmp) {
   $("energy").innerHTML = items.map(([k, v, s]) => `<div><span class="label">${k}</span><strong>${v}</strong><small>${s || "&nbsp;"}</small></div>`).join("");
 }
 
-// ---------------------------------------------------------------- analiz
+// ---------------------------------------------------------------- analysis
 function interp(arr, dArr, d) {
   let lo = 0, hi = dArr.length - 1;
   if (d <= dArr[0]) return arr[0];
@@ -822,7 +822,7 @@ function nearestIndex(dArr, d) {
   return d - dArr[lo] < dArr[hi] - d ? lo : hi;
 }
 
-/** Pist yonu: en uzun duz yatay, govde ustte. Yalnizca dondurme; ayna yok. */
+/** Track orientation: the longest straight horizontal, the body of the track above it. Rotation only, never mirrored. */
 function orientation(tr) {
   const vmax = tr.vmax;
   let best = [0, 0];
@@ -853,7 +853,7 @@ function mapPoint(x, z) {
   return [x * o.cos - z * o.sin, x * o.sin + z * o.cos];
 }
 
-/** Virajlar: hizin yerel minimumlari + belirgin yanal G ya da direksiyon. */
+/** Corners: local speed minimums with clear lateral G or steering. */
 function detectCorners(tr) {
   const n = tr.n, corners = [];
   let i = 5;
@@ -889,7 +889,7 @@ function cornerStats(tr, corner) {
   };
 }
 
-// ---------------------------------------------------------------- harita
+// ---------------------------------------------------------------- map
 function speedColour(f) {
   const stops = [[74, 163, 255], [60, 232, 90], [245, 217, 43], [255, 68, 56]];
   const p = Math.min(Math.max(f, 0), .999) * (stops.length - 1), k = Math.floor(p), t = p - k;
@@ -914,7 +914,7 @@ function drawMap() {
     minX = Math.min(minX, x); maxX = Math.max(maxX, x); minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
   }
   const pad = Math.max(22, w * 0.06);
-  // Yukseklik pistin en-boy oranina uyar: genis pistte bos alan kalmaz.
+  // Height follows the track's aspect ratio, so wide tracks leave no empty space.
   const aspect = (maxZ - minZ) / Math.max(maxX - minX, 1);
   const h = Math.round(Math.min(Math.max((w - pad * 2) * aspect + pad * 2, w * 0.6), w * 1.1, 620));
   if (c.style.height !== `${h}px`) c.style.height = `${h}px`;
@@ -996,8 +996,8 @@ $("mapMode").querySelectorAll("button").forEach(b => b.onclick = () => {
   drawMap(); renderMapFoot();
 });
 
-// ---------------------------------------------------------------- grafikler
-/** Once uc temel kanal; digerleri "Tum kanallar" ile acilir. */
+// ---------------------------------------------------------------- charts
+/** The core channels first; the rest open with "All channels". */
 const CHARTS = [
   { key: "delta", name: L("Fark", "Delta"), h: 72, zero: true, needsCompare: true,
     get: (tr, cmp) => deltaSeries(tr, cmp), fmt: v => (v > 0 ? "+" : "") + v.toFixed(3) + " s" },
@@ -1066,7 +1066,7 @@ function drawCharts() {
     ctx.clearRect(0, 0, W, H);
     if (!main) return;
     const maxD = main.d[main.n - 1], xs = d => PADL + d / maxD * (W - PADL - PADR);
-    // Fark grafigi tek cizgi: ana tur karsilastirmaya gore.
+    // The delta chart is a single line: the main lap against the comparison.
     const drawn = ch.needsCompare ? [{ tr: main, arr: seriesOf(ch, main, cmp), colour: "#f1f2f5" }]
       : laps.slice().reverse().map(l => ({ tr: l.tr, arr: seriesOf(ch, l.tr), colour: l.colour }));
     let lo = ch.min ?? Infinity, hi = ch.max ?? -Infinity;
@@ -1085,7 +1085,7 @@ function drawCharts() {
     if (ch.zero) { ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.beginPath(); ctx.moveTo(PADL, ys(0)); ctx.lineTo(W - PADR, ys(0)); ctx.stroke(); }
 
     if (ch.needsCompare) {
-      // Onde olunan yer yesil, geride kalinan sari dolgu.
+      // Green fill where ahead, yellow where behind.
       const z = ys(0), arr = drawn[0].arr;
       ["#3ce85a", "#f5d92b"].forEach((fill, side) => {
         ctx.beginPath(); ctx.moveTo(xs(main.d[0]), z);
@@ -1141,7 +1141,7 @@ function renderReadout() {
     laps.map(l => `<span style="color:${l.colour}">${fmtLap(interp(l.tr.t, l.tr.d, d))}</span>`).join("");
 }
 
-// ---------------------------------------------------------------- virajlar
+// ---------------------------------------------------------------- corners
 function renderCorners() {
   const laps = shownLaps(), table = $("corners");
   $("cornerCount").textContent = state.corners.length ? String(state.corners.length) : "";
@@ -1171,18 +1171,18 @@ function renderCorners() {
   table.innerHTML = head + rows;
 }
 
-// ---------------------------------------------------------------- baslat
+// ---------------------------------------------------------------- redraw
 let resizeFrame = 0;
 window.addEventListener("resize", () => {
   cancelAnimationFrame(resizeFrame);
   resizeFrame = requestAnimationFrame(() => { if (route() != null) { drawMap(); drawCharts(); } });
 });
 document.fonts?.ready.then(() => { if (route() != null) { drawMap(); drawCharts(); } });
-// ---------------------------------------------------------------- baslat
-// Yerel: sayfa telefondan sunulur, veri 2 saniyede bir telefona sorulur.
-// Canli site: yalnizca eslestirme. Telefon yerel adresini ntfy.sh uzerindeki
-// bu koda ozel konuya yayinlar; sayfa dinler ve tarayiciyi telefona gecirir.
-// Sunucu ya da depolama kullanilmaz.
+// ---------------------------------------------------------------- start
+// Local: the page is served by the phone and asks it for data every 2 seconds.
+// Live site: pairing only. The phone publishes its local address to an ntfy.sh
+// topic unique to the code; the page listens and moves the browser to the phone.
+// No server or storage is involved.
 let pollTimer = 0;
 function schedulePoll() {
   clearTimeout(pollTimer);
@@ -1202,14 +1202,14 @@ function acceptPairing(message) {
   render(); renderStatus();
 }
 function listenForPhone() {
-  // Sayfa acilmadan once gonderilmis bir eslesme de yakalanir.
+  // Also catches a pairing sent before the page opened.
   const since = "since=15m";
   try {
     const events = new EventSource(`${pairTopic}/sse?${since}`);
     events.onmessage = e => { try { const m = JSON.parse(e.data); if (m.event === "message") acceptPairing(m.message); } catch (_) {} };
     events.onerror = () => { state.error = events.readyState === EventSource.CLOSED; renderStatus(); };
   } catch (_) {}
-  // Yedek: SSE engellenirse ara sira yoklanir.
+  // Fallback: poll now and then if SSE is blocked.
   const check = async () => {
     if (state.handoff) return;
     try {

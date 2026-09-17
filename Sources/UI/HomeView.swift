@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// Acilis ekrani: temalar yatay bir karuselde yan yana durur, secili olan
-/// onde ve buyuk. Kaydirma sistemin ScrollView'i ile yapilir (momentum,
-/// lastik etkisi ve hizlanma sistemin kendi egrileri), gorunum gecisleri
-/// scrollTransition ile parmaga baglidir. Liste, sonsuz donsun diye tema
-/// dizisinin tekrarlarindan olusur ve bos anda ortaya geri alinir.
+/// The menu: dashboards side by side in a horizontal carousel, the selected one in front
+/// and larger. Scrolling uses the system ScrollView (momentum, rubber banding and
+/// deceleration are the system's own curves), and the card transitions follow the finger
+/// through scrollTransition. The list repeats the dashboards so it scrolls endlessly, and
+/// quietly recentres when idle.
 struct HomeView: View {
-    /// Gozlenmez: onizlemeler 10 Hz ile TimelineView icinden okur, boylece
-    /// bes pano birden her paketle yeniden cizilmez.
+    /// Not observed: previews read it from TimelineViews, so six dashboards are not redrawn
+    /// for every packet.
     let client: TelemetryClient
     let strings: Strings
     let unit: CGFloat
@@ -16,22 +16,22 @@ struct HomeView: View {
     let onLaps: () -> Void
     let onSettings: () -> Void
     let onOpenSetup: () -> Void
-    /// Ortadaki kart gizli tutulur: tam ekran panonun sahnesi oraya oturur.
+    /// The centre card is hidden while the full-screen dashboard sits in its place.
     var hidesCentreCard = false
-    /// Gecis sirasinda onizlemeler bu sabit veriyle cizilir.
+    /// During a transition, previews draw this frozen data.
     var frozenDash: DashboardModel? = nil
 
     @State private var position: Int?
-    /// Uzerine gelinen kartin isinma animasyonu: hangi kart, ne zaman basladi.
+    /// Warm-up animation of the card just landed on: which card, and when it started.
     @State private var warmUpIndex: Int?
     @State private var warmUpStart: Date = .distantPast
-    /// Isinma oynarken tam kare hizinda cizilir; diger zamanlarda 10 Hz yeter.
+    /// Redraw at the display rate while warming up; 10 Hz is enough otherwise.
     @State private var warming = false
     @State private var warmUpEnd: Task<Void, Never>?
     @State private var showsConnection = false
 
     private let themes = DashTheme.allCases
-    /// Tekrar sayisi tek: orta blok tam ortada kalir.
+    /// An odd number of repeats keeps the middle block exactly in the middle.
     private let repeats = 9
     private var itemCount: Int { themes.count * repeats }
     private var middleBase: Int { themes.count * (repeats / 2) }
@@ -74,11 +74,12 @@ struct HomeView: View {
             .onChange(of: position) { old, new in
                 guard let new else { return }
                 let theme = themes[new % themes.count]
-                // Sonsuz donus icin ayni temanin baska kopyasina atlamak animasyon baslatmaz.
+                // Jumping to another copy of the same dashboard, for endless scrolling,
+                // does not replay the animation.
                 if old.map({ themes[$0 % themes.count] }) != theme {
                     warmUpIndex = new
-                    // Ilk kart acilis ekraninin arkasinda kalmasin: o bitince oynar.
-                    // Diger kartlarda kaydirma durulana kadar kisa bir bekleme.
+                    // The first card waits for the launch splash to finish; other cards
+                    // wait briefly for the scroll to settle.
                     let delay = old == nil ? 2.3 : 0.45
                     warmUpStart = Date().addingTimeInterval(delay)
                     warming = true
@@ -94,7 +95,8 @@ struct HomeView: View {
                 if theme != selectedTheme { selectedTheme = theme }
             }
             .onChange(of: selectedTheme) { _, new in
-                // Disaridan (tam ekran kaydirmasindan) gelen secim: en yakin tekrara git.
+                // A selection from outside (swiping in full screen): move to the nearest
+                // copy.
                 guard let current = position, themes[current % themes.count] != new else { return }
                 let target = nearestIndex(of: new, to: current)
                 withAnimation(.spring(duration: 0.45, bounce: 0.1)) { position = target }
@@ -102,7 +104,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: Ust cubuk
+    // MARK: Top bar
 
     private var header: some View {
         HStack {
@@ -128,10 +130,10 @@ struct HomeView: View {
         }
     }
 
-    // MARK: Karusel
+    // MARK: Carousel
 
-    /// Kartin o anki verisi. Baglanti yokken panolar soguk durur; yalnizca
-    /// uzerine yeni gelinen kart bir kez canlanir.
+    /// The data a card shows right now. Without a connection the dashboards stay cold; only
+    /// the card just landed on comes alive once.
     private func dash(for index: Int, at date: Date) -> DashboardModel {
         if let frozenDash { return frozenDash }
         if client.status == .receiving { return client.dash }
@@ -147,8 +149,8 @@ struct HomeView: View {
                 ForEach(0..<itemCount, id: \.self) { index in
                     let theme = themes[index % themes.count]
                     let isCentre = index == position
-                    // Her kart kendi saatiyle cizilir: yalnizca isinan kart tam
-                    // kare hizinda, digerleri 10 Hz ile (canli veri icin).
+                    // Each card has its own clock: only the warming card redraws at the
+                    // display rate, the others at 10 Hz (for live data).
                     TimelineView(.animation(minimumInterval: warming && index == warmUpIndex ? nil : 0.1)) { context in
                         DashboardCard(theme: theme, dash: dash(for: index, at: context.date), strings: strings,
                                       fullSize: size, width: cardW, cornerRadius: unit * 0.35,
@@ -184,8 +186,9 @@ struct HomeView: View {
         .modifier(RecentreOnIdle(recentre: recentreIfNearEdge))
     }
 
-    /// Sonsuz donus: kenarlara yaklasinca, kimse bakmazken listenin ortasindaki
-    /// esdeger karta atlanir. Kaydirma konumu ayni kartta kaldigi icin gorunmez.
+    /// Endless scrolling: near either end, while nobody is looking, jump to the equivalent
+    /// card in the middle of the list. The position stays on the same card, so it is
+    /// invisible.
     private func recentreIfNearEdge() {
         guard let current = position else { return }
         let band = themes.count * 2
@@ -210,7 +213,7 @@ struct HomeView: View {
             .animation(.spring(duration: 0.3), value: selectedTheme)
     }
 
-    // MARK: Alt cubuk
+    // MARK: Bottom bar
 
     private var footer: some View {
         ZStack {
@@ -245,8 +248,8 @@ struct HomeView: View {
     }
 }
 
-/// Kaydirma durunca listeyi ortalar. iOS 18'de kaydirma evresi dogrudan
-/// bildirilir; iOS 17'de parmak birakildiktan kisa sure sonra denenir.
+/// Recentres the list when scrolling stops. iOS 18 reports the scroll phase directly; on
+/// iOS 17 it is tried shortly after the finger lifts.
 struct RecentreOnIdle: ViewModifier {
     let recentre: () -> Void
     @State private var pending: Task<Void, Never>?
@@ -261,7 +264,7 @@ struct RecentreOnIdle: ViewModifier {
                 DragGesture(minimumDistance: 4).onEnded { _ in
                     pending?.cancel()
                     pending = Task { @MainActor in
-                        // Momentum bitene kadar bekle, sonra sessizce ortala.
+                        // Wait for momentum to end, then recentre quietly.
                         try? await Task.sleep(for: .milliseconds(700))
                         guard !Task.isCancelled else { return }
                         recentre()
@@ -272,7 +275,7 @@ struct RecentreOnIdle: ViewModifier {
     }
 }
 
-/// Dugmeye basinca hafifce kuculur; sistem dugmelerinin dokunusu gibi.
+/// Shrinks slightly while pressed, like system buttons.
 struct PressScaleStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -282,9 +285,9 @@ struct PressScaleStyle: ButtonStyle {
     }
 }
 
-/// Bir temanin pano karti: pano tam ekran boyutunda cizilip `width`'e
-/// olceklenir. Karusel kartlari ve tam ekran sahne ayni gorunumu kullanir,
-/// boylece ikisi ust uste geldiginde piksel piksel ortusur.
+/// A dashboard card: the dashboard is drawn at full-screen size and scaled to `width`.
+/// Carousel cards and the full-screen stage use the same view, so they match pixel for
+/// pixel when they overlap.
 struct DashboardCard: View {
     let theme: DashTheme
     let dash: DashboardModel
@@ -293,19 +296,19 @@ struct DashboardCard: View {
     let width: CGFloat
     let cornerRadius: CGFloat
     var highlighted = false
-    /// Secili kart: ekranin kendi renkleri kenarindan disari hafifce tasar.
+    /// Selected card: the screen's own colours glow softly past its edges.
     var halo = false
 
     var body: some View {
         let feather = halo ? cornerRadius * 0.22 : 0
         screen
-            // Secili kartin kenari zemine yumusakca karisir.
+            // The selected card's edge blends softly into the background.
             .mask {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .padding(feather)
                     .blur(radius: feather)
             }
-            // Ince cerceve: zemindeki gri seritlerle ayni renk.
+            // Thin frame in the same grey as the background stripes.
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(Palette.stripeFar, lineWidth: 1.5)
@@ -321,7 +324,7 @@ struct DashboardCard: View {
                 }
             }
             .animation(.easeOut(duration: 0.35), value: halo)
-            // Secili kartta gecisi yalnizca isima yapar; digerleri golgeyle ayrilir.
+            // The selected card is set apart by its glow only; the others by a shadow.
             .shadow(color: .black.opacity(halo ? 0 : 0.6), radius: cornerRadius * 1.4, y: cornerRadius * 0.6)
     }
 
@@ -342,7 +345,7 @@ struct DashboardCard: View {
     }
 }
 
-/// Tema zemini.
+/// Dashboard background.
 struct DashboardBackground: View {
     let theme: DashTheme
     let unit: CGFloat
@@ -350,15 +353,15 @@ struct DashboardBackground: View {
     var body: some View {
         switch theme {
         case .dotMatrix: DotGridBackground(pitch: max(2, unit * 0.055))
-        // Ekranin disinda kalan yer direksiyon govdesi; sari uyari sadece
-        // LCD'nin kendisinde yanar, gercek araclardaki gibi.
+        // Outside the display is the wheel body; the yellow warning lights only the LCD
+        // itself, as in real cars.
         case .realistic: RealisticPalette.bezel
         case .modern, .game, .broadcast, .cluster: theme.background
         }
     }
 }
 
-/// Karuseldeki ortadaki kartin global cercevesi.
+/// Global frame of the carousel's centre card.
 struct CardFrameKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
@@ -367,7 +370,7 @@ struct CardFrameKey: PreferenceKey {
     }
 }
 
-/// Tema secimine gore panoyu cizer; kok gorunum ve karusel ortak kullanir.
+/// Draws the selected dashboard; shared by the root view and the carousel.
 struct DashboardContent: View {
     let theme: DashTheme
     let dash: DashboardModel
@@ -386,8 +389,8 @@ struct DashboardContent: View {
     }
 }
 
-/// Sag ustteki baglanti rozeti: bagliyken yesil nokta ve Hz, degilken
-/// dokunulabilir sari uyari ucgeni.
+/// Connection badge at the top right: a green dot and Hz while connected, otherwise a
+/// tappable warning.
 struct ConnectionBadge: View {
     let status: TelemetryClient.ConnectionStatus
     let hz: Int
@@ -431,8 +434,8 @@ struct ConnectionBadge: View {
     }
 }
 
-/// Uyari ucgenine dokununca acilan kucuk kart: bes baslangic isigi,
-/// kisa durum yazisi ve kurulum dugmesi.
+/// The small card opened from the warning badge: five start lights, a short status and the
+/// connection button.
 struct ConnectionCard: View {
     let client: TelemetryClient
     let strings: Strings
@@ -512,7 +515,7 @@ struct ConnectionCard: View {
 }
 
 extension DashboardModel {
-    /// Kontak kapali: sifir hiz, bosta vites, soguk lastik ve frenler.
+    /// Ignition off: zero speed, neutral, cold tyres and brakes.
     static var cold: DashboardModel {
         var m = DashboardModel()
         m.tyreSurfaceTemps = [24, 24, 24, 24]; m.tyreInnerTemps = [24, 24, 24, 24]
@@ -524,23 +527,23 @@ extension DashboardModel {
 
     static let warmUpDuration: TimeInterval = 9.0
 
-    /// Karta gelindiginde oynayan sakin bir tur parcasi, gercek bir aracin
-    /// hizinda: motor rolantiye gelir, birinci vitesle kalkis, vites vites
-    /// hizlanma, gaz kesme, frenleyip vites dusurerek durma ve kontak kapanis.
-    /// Tum gecisler yumusak egrilerle; devir vites oranlarindan hesaplanir.
+    /// A calm stretch of driving played when a card is landed on, at a real car's pace: the
+    /// engine comes to idle, the car pulls away in first, accelerates gear by gear, lifts,
+    /// brakes while downshifting, stops and switches off. Every transition follows a smooth
+    /// curve; RPM comes from the gear ratios.
     static func warmUp(at t: TimeInterval) -> DashboardModel {
         var m = DashboardModel.cold
         guard t > 0 else { return m }
 
         let idle = 4_200.0, shiftRPM = 12_000.0
-        /// Her vitesin 12.000 devirdeki hizi.
+        /// Speed of each gear at 12,000 RPM.
         let gearTop: [Double] = [0, 78, 112, 145, 178, 210, 242, 275, 310]
 
         func ease(_ x: Double) -> Double { let c = min(max(x, 0), 1); return c * c * (3 - 2 * c) }
         func phase(_ from: Double, _ to: Double) -> Double { ease((t - from) / (to - from)) }
 
-        // Zaman cizelgesi (sn): 0-1 rolanti, 1.2 kalkis, 1.2-5.2 hizlanma,
-        // 5.2-5.7 gaz kesme, 5.7-7.3 fren, 7.3-8.0 durma, 8.0-9.0 kapanis.
+        // Timeline (s): 0-1 idle, 1.2 pull away, 1.2-5.2 accelerate, 5.2-5.7 lift, 5.7-7.3
+        // brake, 7.3-8.0 stop, 8.0-9.0 switch off.
         let launch = 1.2, lift = 5.2, brakeOn = 5.7, brakeOff = 7.3, stop = 8.0
         let accelerating = t >= launch && t < lift
         var speed: Double
@@ -570,7 +573,7 @@ extension DashboardModel {
         m.speedKPH = Int(speed.rounded())
         m.gear = gear
         m.rpm = Int(rpm)
-        // Vites isiklari 9.000'den sonra dolar; tam yanip sonme noktasina gelmez.
+        // Rev lights fill from 9,000 RPM and stop short of the flashing shift point.
         let lights = min(max((rpm - 9_000) / (shiftRPM - 9_000), 0), 0.95)
         m.revLightsPercent = Int(lights * 100)
         let leds = Int(lights * 15)
@@ -580,7 +583,7 @@ extension DashboardModel {
         m.brake = Float(0.75 * phase(brakeOn, brakeOn + 0.35) * (1 - phase(brakeOff - 0.5, brakeOff)))
         m.gLongitudinal = accelerating ? Float(1.1 * exp(-(t - launch) / 1.8)) : -Float(m.brake) * 4
 
-        // Isinma: yavas ve olculu; sonda yeniden soguk degerlere iner.
+        // Warming up: slow and moderate, then back to cold values at the end.
         let settle = 1 - phase(stop, warmUpDuration)
         let heat = phase(launch, stop) * settle
         let brakeHeat = phase(brakeOn, brakeOff) * settle
@@ -600,7 +603,7 @@ extension DashboardModel {
         return m
     }
 
-    /// Veri yokken karusel onizlemeleri icin canli gorunen ornek degerler.
+    /// Sample values that look live, used by the onboarding.
     static var demo: DashboardModel {
         var m = DashboardModel()
         m.speedKPH = 274; m.gear = 7; m.rpm = 11_650; m.throttle = 1; m.brake = 0

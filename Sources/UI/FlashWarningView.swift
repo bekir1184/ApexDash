@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Ilk acilista bir kez gorunen uyari: vites ikazi ekrani ve istege bagli
-/// olarak telefonun flasini hizla yakip sondurur. Isiga duyarli epilepsisi
-/// olanlar icin onemli oldugundan kendiliginden kapanmaz; okuyup dugmeye
-/// basmak gerekir.
+/// The warning shown before first use: the shift warning flashes the screen, and optionally
+/// the phone's flash, rapidly. It matters for people with photosensitive epilepsy, so it
+/// never closes by itself; it has to be read and confirmed.
 struct FlashWarningView: View {
     let strings: Strings
     let unit: CGFloat

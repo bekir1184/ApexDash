@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Gaz ve fren uygulamasi - direksiyon ekranlarindaki ince cubuklar.
+/// Throttle and brake input: the thin bars of wheel displays.
 struct PedalBarsView: View {
     let throttle: Float
     let brake: Float

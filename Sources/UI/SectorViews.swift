@@ -11,7 +11,7 @@ extension SectorColour {
     }
 }
 
-/// S1 / S2 / S3 kutulari. Suresi gelmemis sektor cizgili gorunur.
+/// S1 / S2 / S3 boxes. A sector without a time yet shows dashes.
 struct SectorStrip: View {
     let dash: DashboardModel
     let unit: CGFloat
@@ -25,7 +25,8 @@ struct SectorStrip: View {
         }
     }
 
-    /// Ucuncu sektor ancak tur bitince belli olur; o ana kadar son turunki.
+    /// The third sector is only known when the lap ends; until then it shows the last
+    /// lap's.
     private var sector3: Int {
         dash.lastLap?.sector3MS ?? 0
     }
@@ -61,7 +62,7 @@ struct SectorStrip: View {
     }
 }
 
-/// Sektor gecildikten hemen sonra birkac saniye buyuk gosterilen sure.
+/// The sector time shown large for a few seconds right after a sector is completed.
 struct SectorFlashView: View {
     let flash: SectorFlash
     let unit: CGFloat

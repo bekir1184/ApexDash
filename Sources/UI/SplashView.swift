@@ -1,14 +1,14 @@
 import SwiftUI
 import UIKit
 
-/// Acilis animasyonu: bes vites isigi soldan saga hizla yanar, ardindan
-/// APEXDASH harfleri sirayla asagidan gelir. Her acilis ve tanitimin
-/// basi ayni diziyi kullanir. Bitince `onDone` cagrilir.
+/// Launch animation: the five shift lights fill in quickly from left to right, then the
+/// APEXDASH letters rise in one by one. Every launch and the onboarding use the same
+/// sequence. Calls `onDone` when finished.
 ///
-/// Uygulama yalnizca yatay calisir. Telefon dik tutulurken acilirsa arayuz
-/// kullaniciya gore yan durur; logo bu durumda ters yone donerek dik okunur
-/// ve telefonu cevirme ipucu gosterir. Telefon cevrilince logo yumusakca
-/// yerine doner ve ancak o zaman devam edilir.
+/// The app runs in landscape only. Opened while the phone is upright, the interface is
+/// sideways to the user; the logo then counter-rotates to read upright and shows a hint to
+/// turn the phone. Once the phone is turned, the logo rotates into place and only then does
+/// the app continue.
 struct SplashLogo: View {
     let strings: Strings
     let unit: CGFloat
@@ -17,7 +17,7 @@ struct SplashLogo: View {
 
     @State private var lit = 0
     @State private var wordmark = false
-    /// Logonun kullaniciya gore dik durmasi icin gereken donus (derece).
+    /// Rotation (degrees) that keeps the logo upright for the user.
     @State private var angle: Double = 0
     @State private var portrait = false
 
@@ -57,7 +57,7 @@ struct SplashLogo: View {
         .task { await run() }
     }
 
-    /// Telefonu yataya ceviren kucuk telefon simgesi.
+    /// A small phone icon tipping over to landscape.
     private var rotateHint: some View {
         VStack(spacing: unit * 0.18) {
             Image(systemName: "iphone")
@@ -84,7 +84,8 @@ struct SplashLogo: View {
         wordmark = true
         try? await Task.sleep(for: .milliseconds(350))
         try? await Task.sleep(for: hold)
-        // Telefon dikse cevrilmesini bekle; hic cevrilmezse bir sure sonra devam et.
+        // If the phone is upright, wait for it to be turned; continue after a while if it
+        // never is.
         var waited = 0
         while portrait && waited < 80 {
             try? await Task.sleep(for: .milliseconds(100))
@@ -101,12 +102,12 @@ struct SplashLogo: View {
             .first ?? .landscapeRight
         let target: Double
         switch device {
-        // Ev tusu solda (landscapeLeft) arayuzde ekranin ustu telefonun sol
-        // kenarina bakar; dik tutulunca icerigin saga, yani +90 donmesi gerekir.
+        // With the home button on the left (landscapeLeft), the top of the interface faces
+        // the phone's left edge; held upright, content must rotate right, +90 degrees.
         case .portrait: target = interface == .landscapeLeft ? 90 : -90
         case .portraitUpsideDown: target = interface == .landscapeLeft ? -90 : 90
         case .landscapeLeft, .landscapeRight: target = 0
-        // Masada duz ya da bilinmiyor: oldugu gibi kalir.
+        // Flat on a table or unknown: leave as is.
         default: return
         }
         let isPortrait = device.isPortrait
@@ -123,8 +124,8 @@ struct SplashLogo: View {
     }
 }
 
-/// Her acilista kisa acilis ekrani. Sistemin siyah acilis zemininden devam
-/// eder; animasyon bitince hafifce buyuyerek kaybolur.
+/// The short splash on every launch. It continues from the system's black launch screen and
+/// fades out with a slight zoom when done.
 struct SplashView: View {
     let strings: Strings
     let unit: CGFloat

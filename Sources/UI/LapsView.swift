@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Tamamlanan turlarin listesi: sektor renkleriyle tablo, CSV paylasimi ve
-/// ayni turlari sitede acan QR.
+/// Completed laps: a table with sector colours, CSV export and whether a browser is
+/// following along.
 struct LapsView: View {
     let laps: [CompletedLap]
     let bestSectorMS: [Int]

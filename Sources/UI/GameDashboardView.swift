@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// F1 26'nin kokpit icindeki direksiyon ekraninin birebir taklidi:
-/// koyu lacivert zemin, ince ayrac cizgileri, sol ustte hiz, ust ortada tur
-/// suresi ile delta, ortada dev vites, yanlarda tur ve pozisyon, altta dort
-/// kose lastik sicakligi ve segmentli ERS bandi.
+/// A copy of F1 26's in-cockpit wheel display: dark navy background, thin dividers, speed
+/// at the top left, lap time and delta at the top centre, a giant gear in the middle with
+/// lap and position beside it, tyre temperatures in the four corners and a segmented ERS
+/// bar at the bottom.
 struct GameDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
@@ -21,7 +21,7 @@ struct GameDashboardView: View {
         }
     }
 
-    // MARK: - Direksiyon govdesindeki yuvarlak LED seridi
+    // MARK: - Round LED strip on the wheel body
 
     private var revStrip: some View {
         HStack(spacing: unit * 0.13) {
@@ -44,7 +44,7 @@ struct GameDashboardView: View {
         }
     }
 
-    // MARK: - Ekran
+    // MARK: - Display
 
     private var screen: some View {
         GeometryReader { geo in
@@ -54,7 +54,7 @@ struct GameDashboardView: View {
                 Rectangle().fill(panel)
                 GameScreenLines().stroke(line, lineWidth: 1.2)
 
-                // Sol ust: hiz
+                // Top left: speed
                 cell(x: 0, y: 0, w: 0.26, h: 0.30, in: geo) {
                     VStack(spacing: 0) {
                         Text(verbatim: "\(dash.speedKPH)")
@@ -66,7 +66,7 @@ struct GameDashboardView: View {
                     }
                 }
 
-                // Ust orta: tur suresi ve delta
+                // Top centre: lap time and delta
                 cell(x: 0.26, y: 0, w: 0.48, h: 0.30, in: geo) {
                     VStack(spacing: h * 0.01) {
                         Text(verbatim: dash.currentLapTimeText)
@@ -78,7 +78,7 @@ struct GameDashboardView: View {
                     }
                 }
 
-                // Sag ust: lastik yasi ve yakit
+                // Top right: tyre age and fuel
                 cell(x: 0.74, y: 0, w: 0.26, h: 0.30, in: geo) {
                     VStack(spacing: 0) {
                         Text(verbatim: String(format: "%.1f", dash.fuelRemainingLaps))
@@ -90,7 +90,7 @@ struct GameDashboardView: View {
                     }
                 }
 
-                // Orta satir: tur, vites, pozisyon
+                // Middle row: lap, gear, position
                 cell(x: 0, y: 0.30, w: 0.26, h: 0.32, in: geo) {
                     Text(verbatim: "L\(dash.currentLapNum)")
                         .font(.system(size: h * 0.15, weight: .bold, design: .monospaced))
@@ -107,7 +107,7 @@ struct GameDashboardView: View {
                         .foregroundStyle(cyan)
                 }
 
-                // Sol alt: sol taraf lastikleri (FL, RL)
+                // Bottom left: left side tyres (FL, RL)
                 cell(x: 0, y: 0.60, w: 0.26, h: 0.19, in: geo, alignment: .trailing) {
                     VStack(alignment: .trailing, spacing: 0) {
                         tyreLabel(index: 2, height: h)
@@ -115,7 +115,7 @@ struct GameDashboardView: View {
                     }
                 }
 
-                // Sag alt: sag taraf lastikleri (FR, RR)
+                // Bottom right: right side tyres (FR, RR)
                 cell(x: 0.74, y: 0.60, w: 0.26, h: 0.19, in: geo, alignment: .leading) {
                     VStack(alignment: .leading, spacing: 0) {
                         tyreLabel(index: 3, height: h)
@@ -123,11 +123,11 @@ struct GameDashboardView: View {
                     }
                 }
 
-                // Orta: devir bari
+                // Middle: RPM bar
                 revBar(width: w * 0.42, height: h * 0.075)
                     .position(x: w * 0.5, y: h * 0.695)
 
-                // Alt: ERS bandi
+                // Bottom: ERS bar
                 ersBand(width: w * 0.97, height: h * 0.15)
                     .position(x: w * 0.5, y: h * 0.885)
             }
@@ -152,7 +152,8 @@ struct GameDashboardView: View {
         .overlay(Rectangle().stroke(line, lineWidth: 1.2))
     }
 
-    /// Yesil-sari segmentli ERS bandi, ortasinda simsek ve yuzde.
+    /// Green and yellow segmented ERS bar, with a lightning bolt and percentage in the
+    /// middle.
     private func ersBand(width: CGFloat, height: CGFloat) -> some View {
         let segments = 28
         let lit = Int((dash.ersFraction * Double(segments)).rounded())
@@ -179,7 +180,7 @@ struct GameDashboardView: View {
             : Color(red: 0.94, green: 0.92, blue: 0.09)
     }
 
-    /// Oransal yerlesim yardimcisi.
+    /// Proportional layout helper.
     private func cell<Content: View>(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat,
                                      in geo: GeometryProxy,
                                      alignment: Alignment = .center,
@@ -191,22 +192,22 @@ struct GameDashboardView: View {
     }
 }
 
-/// Oyundaki ekrani bolen ince ayrac cizgileri.
+/// The thin dividers that split the in-game display.
 private struct GameScreenLines: Shape {
     func path(in rect: CGRect) -> Path {
         let w = rect.width
         let h = rect.height
         var path = Path()
 
-        // Ust satirin altindaki yatay ayraclar (orta bosluk birakilir)
+        // Horizontal dividers under the top row (leaving a gap in the middle)
         path.move(to: CGPoint(x: 0, y: h * 0.30));      path.addLine(to: CGPoint(x: w * 0.26, y: h * 0.30))
         path.move(to: CGPoint(x: w * 0.74, y: h * 0.30)); path.addLine(to: CGPoint(x: w, y: h * 0.30))
 
-        // Ust kutulari ayiran dikey cizgiler
+        // Vertical lines between the top boxes
         path.move(to: CGPoint(x: w * 0.26, y: 0));      path.addLine(to: CGPoint(x: w * 0.26, y: h * 0.30))
         path.move(to: CGPoint(x: w * 0.74, y: 0));      path.addLine(to: CGPoint(x: w * 0.74, y: h * 0.30))
 
-        // Alt kose kutulari
+        // Bottom corner boxes
         path.move(to: CGPoint(x: 0, y: h * 0.60));      path.addLine(to: CGPoint(x: w * 0.26, y: h * 0.60))
         path.addLine(to: CGPoint(x: w * 0.26, y: h * 0.79))
         path.move(to: CGPoint(x: w, y: h * 0.60));      path.addLine(to: CGPoint(x: w * 0.74, y: h * 0.60))

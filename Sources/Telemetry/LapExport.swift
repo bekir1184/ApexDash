@@ -1,9 +1,9 @@
 import Foundation
 
-/// Tur kayitlarini disari cikarma: CSV dosyasi ve siteye gotururen QR.
+/// Exporting laps: a CSV file and the site address.
 enum LapExport {
     static let siteURL = "https://www.apexdash.pro"
-    /// Rehberde ve ekranlarda gosterilen yalin adres.
+    /// The bare address shown in guides and screens.
     static var siteHost: String {
         siteURL.replacingOccurrences(of: "https://", with: "")
     }
@@ -22,7 +22,7 @@ enum LapExport {
         return lines.joined(separator: "\n")
     }
 
-    /// Paylasim sayfasina verilecek gecici dosya.
+    /// A temporary file handed to the share sheet.
     static func csvFile(_ laps: [CompletedLap]) -> URL? {
         let name = "apexdash-laps-\(Int(Date().timeIntervalSince1970)).csv"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)

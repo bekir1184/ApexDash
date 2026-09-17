@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// Turlarin laptopta nasil izlenecegini anlatan sayfa: hangi adres acilir,
-/// QR nasil okutulur, sonra ne olur. Ayarlardan acilir.
+/// Explains how to follow laps in a browser: which address to open, how to scan the QR and
+/// what happens next. Opened from Settings.
 struct WebGuideView: View {
     let strings: Strings
     let unit: CGFloat
     @Binding var sessionID: String
     @ObservedObject var pairing: SitePairing
-    /// Telefonun yerel analiz adresi; QR'siz dogrudan acmak icin.
+    /// The phone's local analysis address, for opening it without the QR.
     var localAddress: String? = nil
     @ObservedObject var server: LocalAnalysisServer
     let onClose: () -> Void
@@ -32,7 +32,7 @@ struct WebGuideView: View {
                 .buttonStyle(PressScaleStyle())
             }
 
-            // Baslik sabit; icerik kucuk ekranlarda kaydirilir.
+            // The title stays fixed; the content scrolls on small screens.
             ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: unit * 0.3) {
             Text(verbatim: strings.webGuideIntro)
@@ -40,7 +40,7 @@ struct WebGuideView: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .fixedSize(horizontal: false, vertical: true)
 
-            // Adres: bir bakista okunur, yanindan kopyalanir ya da paylasilir.
+            // The address: readable at a glance, with copy and share next to it.
             HStack(spacing: unit * 0.25) {
                 Image(systemName: "safari")
                     .font(Typeface.font(unit * 0.5, .bold))
@@ -92,10 +92,10 @@ struct WebGuideView: View {
                 step(3, strings.webGuideStep3)
             }
 
-            // Eslestirme: QR buradan okutulur.
+            // Pairing: the QR is scanned from here.
             HStack(spacing: unit * 0.3) {
                 if !server.viewers.isEmpty {
-                    // QR'dan bagimsiz: telefona gercekten bir tarayici baglanmis.
+                    // Independent of the QR: a browser is actually reading from the phone.
                     HStack(spacing: unit * 0.16) {
                         Image(systemName: "checkmark.circle.fill")
                         Text(verbatim: strings.browserConnected(server.viewers.joined(separator: ", ")))

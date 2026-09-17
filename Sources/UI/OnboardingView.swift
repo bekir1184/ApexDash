@@ -1,13 +1,12 @@
 import SwiftUI
 import UIKit
 
-/// Ilk acilis tanitimi. Bes sahne: kontak (logo), panolar, oyuna baglanti,
-/// sitede analiz ve isiklarin sonmesi. Her sahnenin ogeleri sirayla, yukari
-/// kayip netlesarek gelir; sahneler arasi gecis yana kayar ve bulaniklasir.
-/// Zemindeki seritler ve kirmizi isima sayfayla birlikte yavasca kayar.
+/// First launch onboarding. Five scenes: splash, dashboards, connecting the game, analysis
+/// on the site and the start lights. Each scene's content arrives in sequence, sliding up
+/// out of a blur; scenes slide and blur into each other. The background stripes and red
+/// glow drift with the page.
 ///
-/// Son sahne ayni zamanda isik uyarisidir; bu yuzden tanitimi goren
-/// kullaniciya ayrica uyari ekrani gosterilmez.
+/// The last scene leads into the flashing lights warning, which is shown before the menu.
 struct OnboardingView: View {
     let strings: Strings
     let unit: CGFloat
@@ -16,10 +15,10 @@ struct OnboardingView: View {
     @Binding var format: Int
     let onFinish: () -> Void
 
-    /// `-onboardingPage N` ile dogrudan bir sahneden baslar; ekran goruntusu icin.
+    /// `-onboardingPage N` starts at a given scene, for screenshots.
     @State private var page = min(max(UserDefaults.standard.integer(forKey: "onboardingPage"), 0), 4)
-    /// Gecis yonu: 1 ileri, -1 geri. Sayfa degismeden once ayri bir
-    /// guncellemede yazilir, boylece cikan sahne de dogru yone kayar.
+    /// Transition direction: 1 forward, -1 back. Written in a separate update before the
+    /// page changes, so the leaving scene also slides the right way.
     @State private var direction: CGFloat = 1
     @State private var introDone = UserDefaults.standard.integer(forKey: "onboardingPage") > 0
     @State private var launching = false
@@ -55,7 +54,7 @@ struct OnboardingView: View {
         .gesture(swipe)
     }
 
-    // MARK: - Sahneler
+    // MARK: - Scenes
 
     @ViewBuilder
     private func scene(_ index: Int) -> some View {
@@ -86,7 +85,7 @@ struct OnboardingView: View {
         )
     }
 
-    // MARK: - Alt cubuk
+    // MARK: - Bottom bar
 
     private var footer: some View {
         HStack {
@@ -128,7 +127,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Gezinme
+    // MARK: - Navigation
 
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 24)
@@ -159,9 +158,9 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Ortak parcalar
+// MARK: - Shared pieces
 
-/// Sahne gecisinde yana kayma, bulaniklik ve saydamlik.
+/// Scene transition: slide, blur and fade.
 private struct SceneShift: ViewModifier {
     let x: CGFloat
     let blur: CGFloat
@@ -172,7 +171,7 @@ private struct SceneShift: ViewModifier {
     }
 }
 
-/// Ogelerin sirayla gelisi: asagidan kayar, bulaniktan netlesir.
+/// Content arriving in sequence: slides up and sharpens out of a blur.
 private struct Reveal: ViewModifier {
     let shown: Bool
     let delay: Double
@@ -201,7 +200,7 @@ enum Haptics {
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
 }
 
-/// Uygulama simgesindeki bes egik vites isigi.
+/// The five slanted shift lights of the app icon.
 struct ShiftBars: View {
     let lit: Int
     let barWidth: CGFloat
@@ -223,7 +222,7 @@ struct ShiftBars: View {
                 bar(index)
             }
         }
-        // Simgedeki gibi saga yatik (skewX -9 derece).
+        // Leaning right as in the icon (skewX -9 degrees).
         .transformEffect(CGAffineTransform(a: 1, b: 0, c: -0.158, d: 1, tx: barHeight * 0.079, ty: 0))
     }
 
@@ -243,7 +242,7 @@ struct ShiftBars: View {
     }
 }
 
-/// Zemin: siyahtan acilan seritler ve sayfayla kayan kirmizi isima.
+/// Background: stripes fading in from black and a red glow that drifts with the page.
 private struct OnboardingBackdrop: View {
     let page: Int
     let visible: Bool
@@ -264,7 +263,7 @@ private struct OnboardingBackdrop: View {
                     .frame(width: w * 0.8, height: w * 0.8)
                     .offset(x: glowX(width: w), y: h * 0.45)
                     .opacity(visible ? 1 : 0)
-                // Kenarlar hafif karanlik: goz ortada kalsin.
+                // Slightly darker edges keep the eye in the middle.
                 RadialGradient(colors: [.clear, .black.opacity(0.55)], center: .center,
                                startRadius: h * 0.3, endRadius: w * 0.7)
             }
@@ -282,7 +281,7 @@ private struct OnboardingBackdrop: View {
     }
 }
 
-/// Bolunmus sahnelerin sol sutunu: numara, baslik, aciklama ve ek icerik.
+/// Left column of split scenes: number, title, description and extra content.
 private struct SceneText<Extra: View>: View {
     let number: Int
     let eyebrow: String
@@ -332,7 +331,7 @@ private struct SceneText<Extra: View>: View {
     }
 }
 
-/// Sol metin, sag gorsel.
+/// Text on the left, visual on the right.
 private struct SplitLayout<Left: View, Right: View>: View {
     let unit: CGFloat
     let left: Left
@@ -355,10 +354,10 @@ private struct SplitLayout<Left: View, Right: View>: View {
     }
 }
 
-// MARK: - 1. Acilis
+// MARK: - 1. Splash
 
-/// Kisa acilis ekrani: logo ve yazi yumusakca belirir, kisa bir an durur,
-/// tanitim kendiliginden ilk sahneye gecer.
+/// Short splash: the logo and wordmark appear, hold for a moment, and the onboarding moves
+/// on to the first scene by itself.
 private struct IgnitionScene: View {
     let strings: Strings
     let unit: CGFloat
@@ -370,7 +369,7 @@ private struct IgnitionScene: View {
     }
 }
 
-// MARK: - 2. Panolar
+// MARK: - 2. Dashboards
 
 private struct DashesScene: View {
     let strings: Strings
@@ -389,7 +388,7 @@ private struct DashesScene: View {
     }
 }
 
-/// Kendi kendine donen uc kart; ondeki pano canli oynar.
+/// Three cards rotating on their own; the front dashboard plays live.
 private struct DashCarousel: View {
     let strings: Strings
     let unit: CGFloat
@@ -433,7 +432,7 @@ private struct DashCarousel: View {
         }
         .task {
             while !Task.isCancelled {
-                // Realistic daha uzun onde kalir.
+                // Realistic stays in front longer.
                 try? await Task.sleep(for: .seconds(themes[index] == .realistic ? 4.2 : 2.4))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(duration: 0.85, bounce: 0.16)) { index = (index + 1) % themes.count }
@@ -459,11 +458,11 @@ private struct DashCarousel: View {
 }
 
 extension DashboardModel {
-    /// Tanitimdaki canli ornek: vitesleri sirayla cikan bir duzluk.
+    /// Live sample for the onboarding: a straight, climbing through the gears.
     static func onboardingDemo(at date: Date) -> DashboardModel {
         var m = DashboardModel.demo
         let t = date.timeIntervalSinceReferenceDate
-        let run = (t / 6).truncatingRemainder(dividingBy: 1)            // 6 sn'lik dongu
+        let run = (t / 6).truncatingRemainder(dividingBy: 1)            // six second loop
         let gears = 4.0
         let inGear = (run * gears).truncatingRemainder(dividingBy: 1)
         m.gear = 5 + Int(run * gears)
@@ -480,7 +479,7 @@ extension DashboardModel {
     }
 }
 
-// MARK: - 3. Baglanti
+// MARK: - 3. Connection
 
 private struct ConnectScene: View {
     let strings: Strings
@@ -531,7 +530,7 @@ private struct ConnectScene: View {
         .reveal(shown, delay, distance: unit * 0.15)
     }
 
-    /// Oyundaki UDP Format ile ayni olmali; varsayilan 2026.
+    /// Must match the UDP Format in the game; 2026 by default.
     private var formatRow: some View {
         HStack {
             Text(verbatim: "UDP FORMAT")
@@ -652,7 +651,7 @@ private struct PacketFlow: View {
     }
 }
 
-// MARK: - 4. Analiz
+// MARK: - 4. Analysis
 
 private struct AnalyseScene: View {
     let strings: Strings
@@ -699,9 +698,9 @@ private struct AnalyseScene: View {
     }
 }
 
-/// Koyu sehir haritasi ustunde kendini cizen beyaz sokak pisti (Monako
-/// duzeni) ve pistte donen arac. Harita tamamen kodla cizilir: yapilar ve
-/// sokaklar sabit tohumlu rastgele uretilir, deniz ve liman siyahtir.
+/// A white street circuit (Monaco layout) drawing itself over a faint city map, with a car
+/// lapping it. The map is drawn entirely in code: buildings and streets are generated from
+/// a fixed seed.
 private struct TrackTrace: View {
     let unit: CGFloat
     let shown: Bool
@@ -711,14 +710,14 @@ private struct TrackTrace: View {
             let height = min(geo.size.height * 0.96, geo.size.width / StreetCircuit.aspect)
             let size = CGSize(width: height * StreetCircuit.aspect, height: height)
             ZStack {
-                // Sehir zemine karisir: kart yok, kenarlar yumusakca kaybolur.
+                // The city blends into the background: no card, and the edges fade out.
                 Canvas { context, canvasSize in
                     StreetCircuit.drawCity(in: &context, size: canvasSize)
                 }
                 .mask(RadialGradient(colors: [.white, .white.opacity(0.6), .clear], center: .center,
                                      startRadius: size.width * 0.2, endRadius: size.height * 0.62))
 
-                // Pistin isimasi, sonra kendisi.
+                // The track's glow, then the track itself.
                 CircuitShape()
                     .trim(from: 0, to: shown ? 1 : 0)
                     .stroke(Color.white.opacity(0.35), style: StrokeStyle(lineWidth: unit * 0.22, lineCap: .round, lineJoin: .round))
@@ -727,7 +726,7 @@ private struct TrackTrace: View {
                     .trim(from: 0, to: shown ? 1 : 0)
                     .stroke(Color.white, style: StrokeStyle(lineWidth: unit * 0.085, lineCap: .round, lineJoin: .round))
 
-                // Tunel: beyaz cizginin ustunde kesik kesik karartma.
+                // Tunnel: dashes darkening the white line.
                 CircuitShape(range: StreetCircuit.tunnel)
                     .stroke(Color.black.opacity(0.75),
                             style: StrokeStyle(lineWidth: unit * 0.1, dash: [unit * 0.035, unit * 0.045]))
@@ -736,7 +735,8 @@ private struct TrackTrace: View {
 
                 TimelineView(.animation) { context in
                     let t = context.date.timeIntervalSinceReferenceDate
-                    // Pist noktalari yaris yonunun tersine dizili; arac geriye dogru okur.
+                    // The track points run against the racing direction, so the car reads
+                    // them backwards.
                     let f = 1 - (t / 9).truncatingRemainder(dividingBy: 1)
                     let p = StreetCircuit.point(at: f)
                     Circle()
@@ -771,7 +771,7 @@ private struct CircuitShape: Shape {
     }
 }
 
-/// Pist ve cevresindeki sehir; koordinatlar 846 x 930'luk bir haritada.
+/// The circuit and the city around it, in coordinates of an 846 x 930 map.
 private enum StreetCircuit {
     static let mapSize = CGSize(width: 846, height: 930)
     static var aspect: CGFloat { mapSize.width / mapSize.height }
@@ -787,12 +787,12 @@ private enum StreetCircuit {
         (190, 760), (182, 735), (190, 710), (178, 660), (160, 630), (152, 590), (150, 540), (160, 500)
     ].map { CGPoint(x: $0.0, y: $0.1) }
 
-    /// 0...1 araliginda pist noktalari.
+    /// Track points in the 0...1 range.
     static let points: [CGPoint] = raw.map { CGPoint(x: $0.x / mapSize.width, y: $0.y / mapSize.height) }
-    /// Limandan yukari cikan tunel.
+    /// The tunnel climbing up from the harbour.
     static let tunnel = 6..<14
 
-    /// Kapali pist boyunca birikimli uzunluk; arac sabit hizla ilerlesin.
+    /// Cumulative length along the closed track, so the car moves at a constant speed.
     private static let lengths: [CGFloat] = {
         var out: [CGFloat] = [0]
         let closed = raw + [raw[0]]
@@ -813,7 +813,7 @@ private enum StreetCircuit {
                        y: closed[i - 1].y + (closed[i].y - closed[i - 1].y) * f)
     }
 
-    /// Liman ve acik deniz.
+    /// Harbour and open sea.
     private static let sea: [CGPoint] = [
         (185, 500), (560, 412), (690, 335), (748, 150), (790, 60), (846, 40), (846, 930),
         (600, 930), (560, 860), (275, 900), (228, 800), (200, 700), (172, 600), (165, 520)
@@ -902,7 +902,7 @@ private enum StreetCircuit {
     }
 }
 
-// MARK: - 5. Isiklar sonsun
+// MARK: - 5. Start lights
 
 private struct LightsOutScene: View {
     let strings: Strings
@@ -943,7 +943,7 @@ private struct LightsOutScene: View {
         .task { shown = true }
     }
 
-    /// Gercek start prosedurü: bes kolon birer birer yanar, bekler, soner.
+    /// The real start procedure: five columns light one by one, hold, and go out.
     private func start() {
         guard !running else { return }
         running = true
@@ -963,7 +963,7 @@ private struct LightsOutScene: View {
     }
 }
 
-// MARK: - Metinler
+// MARK: - Text
 
 extension Strings {
     var obNext: String { text("obNext") }
