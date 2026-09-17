@@ -52,6 +52,8 @@ Useful launch arguments (Scheme › Run › Arguments):
 | `-dashTheme cluster` | Picks a dashboard |
 | `-forceOnboarding YES` | Shows the onboarding again |
 | `-onboardingPage 2` | Opens the onboarding at a given scene |
+| `-showSettings YES`, `-showLaps YES`, `-showWebGuide YES` | Opens a screen |
+| `-menuTour YES` | Walks through the menu on its own, for recordings |
 | `-appLanguage tr` | Forces a language |
 
 ## Working with an AI assistant
