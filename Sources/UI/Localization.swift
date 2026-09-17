@@ -14,9 +14,11 @@ struct AppLanguage: Hashable, Identifiable {
 
     static let english = AppLanguage(code: "en")
 
-    /// Languages with a translation in the app bundle, English first.
+    /// Languages with a translation in the app bundle, English first. The bundle
+    /// lists a language once per source (folder and Info.plist), so duplicates
+    /// are removed here.
     static var available: [AppLanguage] {
-        let codes = Bundle.main.localizations.filter { $0 != "Base" }
+        let codes = Set(Bundle.main.localizations.filter { $0 != "Base" })
         return codes.sorted { $0 == "en" ? true : ($1 == "en" ? false : $0 < $1) }.map(AppLanguage.init)
     }
 

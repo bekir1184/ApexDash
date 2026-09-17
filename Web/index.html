@@ -361,7 +361,9 @@
 
 // ---------------------------------------------------------------- language
 // Like the app: Turkish if the browser is Turkish, otherwise English.
-const TR = (navigator.language || "").toLowerCase().startsWith("tr");
+// `?lang=tr` or `?lang=en` overrides the browser's language.
+const forcedLanguage = new URLSearchParams(location.search).get("lang");
+const TR = (forcedLanguage || navigator.language || "").toLowerCase().startsWith("tr");
 document.documentElement.lang = TR ? "tr" : "en";
 const L = (tr, en) => TR ? tr : en;
 const TEXT = {

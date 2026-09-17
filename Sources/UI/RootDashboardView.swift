@@ -32,10 +32,11 @@ struct RootDashboardView: View {
     /// Back button that appears at the top left when the full-screen dashboard is tapped.
     @State private var showsBack = false
     @State private var backHide: Task<Void, Never>?
-    @State private var showsSettings = false
+    /// `-showSettings YES` and `-showLaps YES` open a screen at launch, for screenshots.
+    @State private var showsSettings = UserDefaults.standard.bool(forKey: "showSettings")
     /// Can be opened directly with a launch argument, for screenshots.
     @State private var showsWebGuide = UserDefaults.standard.bool(forKey: "showWebGuide")
-    @State private var showsLaps = false
+    @State private var showsLaps = UserDefaults.standard.bool(forKey: "showLaps")
     @State private var showsConnection = false
 
     /// Whether the stage is mounted (full screen or in transition). If not, the menu is
