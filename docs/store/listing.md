@@ -196,6 +196,10 @@ Formula One, FIA, Electronic Arts ya da Codemasters ile bağlantılı, onlar tar
 
 ## App Review notes
 
+Apple asked a new-account 2.1 information request on the first submission; the
+full answer, and the screen recording script, are in `review-response.md`. The
+short version below stays in the Notes field as well.
+
 ```
 Apex Dash shows live telemetry from racing games (EA SPORTS F1 25 / F1 26) over
 the local network, so a game is normally needed to see data.
