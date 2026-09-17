@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/dashboard.gif" width="720" alt="A dashboard running live telemetry">
+  <img src="docs/images/dashboard.gif" width="720" alt="The realistic dashboard running live telemetry">
 </p>
 
 ---
