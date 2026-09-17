@@ -4,3 +4,6 @@ DerivedData/
 .DS_Store
 F1Dash.xcodeproj/
 Web/.vercel/
+
+# Generated App Store screenshots (rebuild with Tools/store_screenshots.py)
+docs/store/*.png
