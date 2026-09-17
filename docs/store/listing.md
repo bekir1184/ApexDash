@@ -3,6 +3,7 @@
 Everything to paste into App Store Connect for version 1.0. English is the
 primary language; Turkish is a second localisation.
 
+- **Name on the App Store:** Apex Dash: Wheel Display (the app itself is named Apex Dash)
 - **Category:** Sports (secondary: Utilities)
 - **Age rating:** 4+
 - **Price:** Free, no in-app purchases
@@ -14,16 +15,18 @@ primary language; Turkish is a second localisation.
 
 ## English (primary)
 
-**Name (30):**
+**Name (30):** the plain name is taken on the App Store by another developer's
+sim racing dashboards, so the store name carries a suffix. The home screen name
+stays "Apex Dash".
 
 ```
-Apex Dash
+Apex Dash: Wheel Display
 ```
 
 **Subtitle (30):**
 
 ```
-Sim racing wheel display
+Live sim racing telemetry
 ```
 
 **Promotional text (170):**
@@ -106,13 +109,13 @@ First release.
 **Name (30):**
 
 ```
-Apex Dash
+Apex Dash: Wheel Display
 ```
 
 **Subtitle (30):**
 
 ```
-Yarış direksiyon ekranı
+Canlı yarış telemetrisi
 ```
 
 **Promotional text (170):**
@@ -219,6 +222,17 @@ Permissions:
 
 No account, no login and no purchases. The app collects no data.
 ```
+
+## EU Digital Services Act
+
+App Store Connect asks every developer to declare a trader status before a new
+app can be submitted. A trader distributes apps as a commercial activity: paid
+apps, in-app purchases, subscriptions or advertising. Apex Dash is free, has no
+purchases and no ads, so an individual publishing it can declare **not a
+trader**; apps stay available in the EU, and buyers are told that consumer
+rights for contracts with traders do not apply. Declaring trader status instead
+would publish the developer's address, phone number and email on the EU product
+page.
 
 ## Checklist before submitting
 
