@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Resources/AppIcon.svg" width="112" alt="Apex Dash icon">
+  <img src="docs/images/icon.png" width="112" alt="Apex Dash icon">
 </p>
 
 <h1 align="center">Apex Dash</h1>
