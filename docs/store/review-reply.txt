@@ -1,0 +1,21 @@
+Thank you for reviewing Apex Dash. There is no account, no user-generated content and no paid content, so the recording shows the normal flow.
+
+1. SCREEN RECORDING
+Attached: a recording captured on a physical iPhone running the latest iOS. It begins with launching the app and shows the typical flow: onboarding, the dashboard menu, the built-in demo drive, a dashboard in full screen, the lap list and the connection details. The app has no registration, login or account deletion, no user-generated content, and no paid content or features.
+
+2. PURPOSE AND AUDIENCE
+Apex Dash turns an iPhone or iPad into the steering wheel display of a racing game. Games such as EA SPORTS F1 25 and F1 26 broadcast the car's telemetry over the local network sixty times a second; the app draws it the way a real wheel display would: shift lights, gear, speed, tyre and brake temperatures, sector times and the live delta to the player's best lap. Every completed lap is recorded at 20 Hz for later study. The audience is people who play racing games at home. Hardware wheel displays cost hundreds of dollars, and existing phone apps need companion software running on a PC, which console players cannot use. Apex Dash needs none: the game sends its data straight to the phone, so it also works on PlayStation and Xbox. It is free, with no ads, no accounts, no analytics and no purchases.
+
+3. SETUP AND ACCESS
+No credentials or sample files are needed, and a game is not needed to review the app: open Settings (bottom right of the menu), turn on "Demo drive", then tap any dashboard. A simulated car laps a circuit and every screen works. With a real game: in F1 25/26 open Settings > Telemetry, turn UDP Telemetry on, leave Broadcast Mode off, and enter the IP address and port shown on the app's connection card. After a lap the app shows a local address such as http://192.168.1.20:8777; opening it in a browser on the same Wi-Fi shows the track map and traces. That page is served by the phone itself. Permissions: Local Network (required, to receive the telemetry and serve that page) and Camera (optional, only to scan the pairing QR code shown on apexdash.pro; the address can also be typed). The app is landscape only by design, as it imitates a wheel display.
+
+4. EXTERNAL SERVICES
+None for the core functionality. Parsing, lap recording and analysis all happen on the device. There is no backend, data provider, authentication service, payment processor, advertising, analytics or AI service; only Apple frameworks are used. One optional convenience: if the user scans the QR code on apexdash.pro, the app publishes the phone's local IP address once to the public relay ntfy.sh so that the browser can redirect itself to the phone. Only that local address is sent, never telemetry, lap data or personal information, and the step is skipped if the address is typed manually.
+
+5. REGIONAL DIFFERENCES
+None. The app behaves identically in every region. It is localised in English and Turkish, following the device language.
+
+6. REGULATED INDUSTRY OR PROTECTED MATERIAL
+Neither applies. All artwork, code and fonts are original or openly licensed, and no game assets, liveries, logos or track imagery are reproduced. The app only reads the UDP telemetry stream the F1 titles publish for third-party developers. Trademarks are used nominatively, to say which games are supported: the app is not affiliated with or endorsed by Formula One, the FIA, Electronic Arts or Codemasters, and the App Store description says so. The app name and icon contain no third-party trademark.
+
+Please let me know if anything else would help.

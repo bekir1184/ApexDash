@@ -33,6 +33,10 @@ put the link in the reply as well as in the Notes field.
 
 ## 2. The written reply (paste as is)
 
+The Reply box and the Notes field hold 4000 characters, so paste
+`review-reply.txt` (3,616 characters) — the same answers, tightened. The longer
+version below is kept for reference only.
+
 ```
 Thank you for reviewing Apex Dash. There is no account, no user-generated
 content and no paid content in the app, so the recording shows the normal
