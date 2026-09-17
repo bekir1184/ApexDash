@@ -4,6 +4,7 @@ Everything to paste into App Store Connect for version 1.0. English is the
 primary language; Turkish is a second localisation.
 
 - **Name on the App Store:** Apex Dash: Wheel Display (the app itself is named Apex Dash)
+- **Apple ID:** 6813199957 · **SKU:** apexdash · **Bundle ID:** com.bekirersever.apexdash
 - **Category:** Sports (secondary: Utilities)
 - **Age rating:** 4+
 - **Price:** Free, no in-app purchases
@@ -239,6 +240,6 @@ page.
 - [ ] Screenshots: 6.9" iPhone (2868 x 1320, landscape). Files in `docs/store/`.
 - [ ] iPad 13" screenshots (2752 x 2064, landscape) if iPad stays supported.
 - [ ] App icon 1024 x 1024 (from `Resources/Assets.xcassets`).
-- [ ] Set `AppLinks.appStoreID` once App Store Connect gives the id, so the
-      "Rate" button appears in Settings.
+- [x] `AppLinks.appStoreID` set to 6813199957, so the "Rate" button appears in
+      Settings.
 - [ ] Build number and version 1.0 in `project.yml`.
