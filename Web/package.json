@@ -1,9 +1,0 @@
-{
-  "name": "apexdash-web",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@vercel/blob": "^2.0.0",
-    "qrcode-generator": "^1.4.4"
-  }
-}

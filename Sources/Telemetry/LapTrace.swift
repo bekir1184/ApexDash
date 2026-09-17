@@ -1,6 +1,7 @@
 import Foundation
 
-/// Tur boyunca 20 Hz ile alinan tek bir telemetri ornegi.
+/// One telemetry sample, recorded at 20 Hz during a lap. Games fill in what
+/// they have; missing channels stay zero.
 struct TraceSample {
     var timeMS: Int
     var distance: Float
@@ -20,14 +21,14 @@ struct TraceSample {
     var gLong: Float
 }
 
-/// Tamamlanmis bir turun tum izi. Siteye bir kez gonderilir.
+/// The full trace of a completed lap, served to the analysis page.
 struct LapTrace: Identifiable {
     var id: Int { number }
     let number: Int
     let timeMS: Int
     let samples: [TraceSample]
 
-    /// Kompakt JSON: sutun adlari + sayi dizileri. 90 saniyelik tur ~90 KB.
+    /// Compact JSON: column names plus rows of numbers. A 90 second lap is about 90 KB.
     func payload() -> [String: Any] {
         [
             "lap": number,
@@ -44,49 +45,4 @@ struct LapTrace: Identifiable {
 
     private func round1(_ v: Float) -> Double { (Double(v) * 10).rounded() / 10 }
     private func round2(_ v: Float) -> Double { (Double(v) * 100).rounded() / 100 }
-}
-
-/// Paketlerden gelen son degerleri birlestirip LapData hizinda ornekler;
-/// tur numarasi degisince biten turun izini kapatir.
-struct TraceRecorder {
-    private(set) var traces: [LapTrace] = []
-    private var current: [TraceSample] = []
-    private var currentLap = 0
-    private var lastSampleMS = -1_000
-    private let intervalMS = 50
-
-    // Son bilinen degerler
-    var motion = CarMotion()
-    var telemetry = CarTelemetry()
-    var status = CarStatus()
-    var telemetry2 = CarTelemetry2()
-
-    mutating func ingest(_ lap: LapData) {
-        if lap.currentLapNum != currentLap {
-            close(lapNumber: currentLap, timeMS: lap.lastLapTimeMS)
-            currentLap = lap.currentLapNum
-            current.removeAll(keepingCapacity: true)
-            lastSampleMS = -1_000
-        }
-        guard lap.currentLapTimeMS - lastSampleMS >= intervalMS,
-              motion.worldX != 0 || motion.worldZ != 0     // konum gelmeden kayit yok
-        else { return }
-        lastSampleMS = lap.currentLapTimeMS
-        current.append(TraceSample(
-            timeMS: lap.currentLapTimeMS, distance: lap.lapDistance,
-            x: motion.worldX, z: motion.worldZ,
-            speedKPH: telemetry.speedKPH, throttle: telemetry.throttle,
-            brake: telemetry.brake, steer: telemetry.steer,
-            gear: telemetry.gear, rpm: telemetry.engineRPM,
-            ersStore: status.ersStoreEnergy, ersDeployed: status.ersDeployedThisLap,
-            overtake: telemetry2.overtakeActive, straightMode: telemetry2.aeroMode == .straight,
-            gLat: motion.gLateral, gLong: motion.gLongitudinal))
-        if current.count > 6_000 { current.removeFirst(1_000) }   // 5 dk ustu turlarda bellek siniri
-    }
-
-    private mutating func close(lapNumber: Int, timeMS: Int) {
-        guard lapNumber > 0, timeMS > 0, current.count > 20 else { return }
-        traces.append(LapTrace(number: lapNumber, timeMS: timeMS, samples: current))
-        if traces.count > 60 { traces.removeFirst() }
-    }
 }

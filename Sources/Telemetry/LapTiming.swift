@@ -56,23 +56,32 @@ struct LapTiming {
 
     var hasReference: Bool { !referenceSamples.isEmpty }
 
-    mutating func ingest(_ lap: LapData) {
-        if lap.currentLapNum != lastLapNumber {
-            closeLap(previousNumber: lastLapNumber, lastLapTimeMS: lap.lastLapTimeMS)
-            lastLapNumber = lap.currentLapNum
+    /// Feeds the current lap state. Call it every time the game reports lap progress.
+    /// - Parameters:
+    ///   - lapNumber: the lap being driven now; a change closes the previous lap.
+    ///   - lastLapTimeMS: time of the lap that just finished.
+    ///   - sector: zero based sector being driven now.
+    ///   - sector1MS, sector2MS: sector times of the current lap so far.
+    ///   - distance: metres from the start line.
+    ///   - currentLapTimeMS: time into the current lap.
+    mutating func ingest(lapNumber: Int, lastLapTimeMS: Int, sector: Int,
+                         sector1MS: Int, sector2MS: Int, distance: Float, currentLapTimeMS: Int) {
+        if lapNumber != lastLapNumber {
+            closeLap(previousNumber: lastLapNumber, lastLapTimeMS: lastLapTimeMS)
+            lastLapNumber = lapNumber
             lastSector = 0
         }
 
-        if lap.sector != lastSector {
-            flashSector(finished: lastSector, lap: lap)
-            lastSector = lap.sector
+        if sector != lastSector {
+            flashSector(finished: lastSector, times: [sector1MS, sector2MS])
+            lastSector = sector
         }
 
-        lastSeenSector1MS = lap.sector1MS
-        lastSeenSector2MS = lap.sector2MS
+        lastSeenSector1MS = sector1MS
+        lastSeenSector2MS = sector2MS
 
-        record(distance: lap.lapDistance, timeMS: lap.currentLapTimeMS)
-        deltaToBestMS = delta(at: lap.lapDistance, timeMS: lap.currentLapTimeMS)
+        record(distance: distance, timeMS: currentLapTimeMS)
+        deltaToBestMS = delta(at: distance, timeMS: currentLapTimeMS)
     }
 
     /// Yeni tur baslarken kapanan turu kaydeder, gerekiyorsa referansi gunceller.
@@ -105,8 +114,7 @@ struct LapTiming {
         }
     }
 
-    private mutating func flashSector(finished sector: Int, lap: LapData) {
-        let times = [lap.sector1MS, lap.sector2MS]
+    private mutating func flashSector(finished sector: Int, times: [Int]) {
         guard sector < times.count, times[sector] > 0 else { return }
         let value = times[sector]
         sectorFlash = SectorFlash(index: sector,

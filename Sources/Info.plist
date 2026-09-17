@@ -25,10 +25,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor.</string>
+	<string>The camera scans the QR code on apexdash.pro to pair the phone with your browser.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>F1 oyunundan gelen telemetri paketlerini dinlemek ve tur analizini ayni agdaki tarayiciya sunmak icin gerekli.</string>
+	<string>Apex Dash receives telemetry from your game and serves lap analysis to browsers on the same network.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Saira-Regular.ttf</string>

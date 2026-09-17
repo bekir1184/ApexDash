@@ -1,34 +1,64 @@
 import Foundation
 import Network
 
-/// Telefonun ayni Wi-Fi'daki tarayicilara analiz sayfasini ve tur verisini
-/// sundugu kucuk HTTP sunucusu. Bulut yalnizca eslestirme icin kullanilir;
-/// turlar, izler ve canli yoklama dogrudan telefondan gelir.
+/// Everything the analysis page shows: completed laps, their 20 Hz traces and
+/// the session (track, weather).
+struct SessionSnapshot {
+    var laps: [CompletedLap]
+    var traces: [LapTrace]
+    var session: SessionInfo
+
+    static let empty = SessionSnapshot(laps: [], traces: [], session: SessionInfo())
+
+    /// The lap list returned by `/api/session`.
+    func index() -> [String: Any] {
+        let laps = self.laps.suffix(200).map { lap -> [String: Any] in
+            let trace = traces.first { $0.number == lap.number }
+            var entry: [String: Any] = [
+                "lap": lap.number, "time": lap.timeMS,
+                "sectors": [lap.sector1MS, lap.sector2MS, lap.sector3MS],
+                "trace": trace != nil
+            ]
+            if let top = trace?.samples.map(\.speedKPH).max() { entry["vmax"] = top }
+            return entry
+        }
+        return [
+            "best": self.laps.map(\.timeMS).min() ?? 0,
+            "laps": laps,
+            "track": ["id": session.trackID, "length": session.trackLength,
+                      "weather": session.weather, "trackTemp": session.trackTemperature,
+                      "airTemp": session.airTemperature, "sessionType": session.sessionType]
+        ]
+    }
+}
+
+/// A small HTTP server that lets any browser on the same Wi-Fi open the lap
+/// analysis straight from the phone. The page and its data never touch the
+/// internet; apexdash.pro is only used to find the phone (see `SitePairing`).
 ///
-/// Yollar:
-/// - `/`, `/logo.svg`, `/qrcode.js`, `/apple-touch-icon.png`: uygulamaya gomulu site
-/// - `/api/session`: tur listesi ve pist bilgisi
-/// - `/api/session?lap=N`: bir turun 20 Hz izi
+/// Routes:
+/// - `/`, `/logo.svg`, `/qrcode.js`, `/apple-touch-icon.png`: the bundled site
+/// - `/api/session`: lap list and session info
+/// - `/api/session?lap=N`: the 20 Hz trace of one lap
 @MainActor
 final class LocalAnalysisServer: ObservableObject {
     static let port: UInt16 = 8777
 
     @Published private(set) var isRunning = false
-    /// Son birkac saniyede veri isteyen tarayicilarin adresleri; uygulamada
-    /// "bagli" durumunu gosterir. Sayfa 2 saniyede bir yokladigi icin kisa
-    /// bir sessizlik baglantinin koptugu anlamina gelir.
+    /// Addresses of browsers that requested data in the last few seconds. The
+    /// page polls every two seconds, so a short silence means it has gone.
     @Published private(set) var viewers: [String] = []
     private var lastSeen: [String: Date] = [:]
     private var pruning: Task<Void, Never>?
 
-    /// Sunulan veri; kok gorunum baglar.
-    var snapshot: () -> SessionUploader.Payload = { .init(laps: [], traces: [], session: SessionInfo()) }
+    /// The data to serve; wired up by the root view.
+    var snapshot: () -> SessionSnapshot = { .empty }
 
     private var listener: NWListener?
     private var version = ""
     private var updatedAt = Date()
 
-    /// Tarayicida acilacak adres.
+    /// The address to open in a browser.
     func address(ip: String) -> String? {
         guard isRunning, ip != "-", !ip.isEmpty else { return nil }
         return "http://\(ip):\(Self.port)/"
@@ -45,7 +75,7 @@ final class LocalAnalysisServer: ObservableObject {
                     switch state {
                     case .ready: self?.isRunning = true
                     case .failed, .cancelled:
-                        // Arka plandan donuste yeniden kurulabilsin.
+                        // Allow a restart when the app returns from the background.
                         self?.isRunning = false
                         self?.listener = nil
                     default: break
@@ -75,7 +105,7 @@ final class LocalAnalysisServer: ObservableObject {
         isRunning = false
     }
 
-    // MARK: - Istekler
+    // MARK: - Requests
 
     private func accept(_ connection: NWConnection) {
         connection.start(queue: .main)
@@ -147,11 +177,11 @@ final class LocalAnalysisServer: ObservableObject {
 
     private func index(on connection: NWConnection) {
         let payload = snapshot()
-        // Sayfa yalnizca surum degisince yeniden cizer; canli durum yoklamanin
-        // basarisindan anlasilir.
+        // The page only redraws when the version changes; being live is
+        // implied by the poll succeeding.
         let current = "\(payload.laps.count)-\(payload.traces.count)-\(payload.session.trackID)-\(payload.laps.last?.timeMS ?? 0)"
         if current != version { version = current; updatedAt = Date() }
-        var body = SessionUploader.index(payload, id: "LOCAL")
+        var body = payload.index()
         body["local"] = true
         body["version"] = version
         body["updatedAt"] = ISO8601DateFormatter().string(from: updatedAt)

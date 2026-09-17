@@ -7,9 +7,7 @@ struct LapsView: View {
     let bestSectorMS: [Int]
     let strings: Strings
     let unit: CGFloat
-    @Binding var sessionID: String
-    @ObservedObject var uploader: SessionUploader
-    let payload: () -> SessionUploader.Payload
+    @ObservedObject var server: LocalAnalysisServer
     let onClose: () -> Void
 
 
@@ -105,44 +103,20 @@ struct LapsView: View {
 
     private var sidebar: some View {
         VStack(spacing: unit * 0.24) {
-            // Eslestirme ayarlardaki TELEMETRI SITESI sayfasinda; burada
-            // yalnizca durum ve disari aktarma kalir.
-            if sessionID.isEmpty {
+            // Pairing lives on the telemetry site screen in Settings; this
+            // sidebar only shows whether a browser is reading and offers export.
+            if server.viewers.isEmpty {
                 Text(verbatim: strings.pairInSettings)
                     .font(Typeface.digits(unit * 0.2, .semibold))
                     .foregroundStyle(.white.opacity(0.45))
                     .multilineTextAlignment(.center)
                     .frame(width: unit * 3.8)
             } else {
-                VStack(spacing: unit * 0.06) {
-                    Text(verbatim: strings.connectedTo(sessionID))
-                        .font(Typeface.digits(unit * 0.24, .black))
-                        .foregroundStyle(Palette.live)
-                    if let date = uploader.lastUploadDate {
-                        Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
-                            .font(Typeface.digits(unit * 0.19, .semibold))
-                            .foregroundStyle(.white.opacity(0.4))
-                    }
-                    if let error = uploader.lastError {
-                        Text(verbatim: error)
-                            .font(Typeface.digits(unit * 0.19, .semibold))
-                            .foregroundStyle(Color(red: 1, green: 0.4, blue: 0.35))
-                            .lineLimit(2)
-                    }
-                }
-                .frame(width: unit * 3.8)
-
-                Button {
-                    uploader.send(payload(), sessionID: sessionID)
-                } label: {
-                    Text(strings.sendNow)
-                        .font(Typeface.digits(unit * 0.26, .black))
-                        .foregroundStyle(Palette.onAccent)
-                        .frame(width: unit * 3.6)
-                        .padding(.vertical, unit * 0.14)
-                        .background(Capsule().fill(Palette.accent))
-                }
-                .buttonStyle(.plain)
+                Text(verbatim: strings.browserConnected(server.viewers.joined(separator: ", ")))
+                    .font(Typeface.digits(unit * 0.22, .black))
+                    .foregroundStyle(Palette.live)
+                    .multilineTextAlignment(.center)
+                    .frame(width: unit * 3.8)
             }
 
             if let file = LapExport.csvFile(laps) {

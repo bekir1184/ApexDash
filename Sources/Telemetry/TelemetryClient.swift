@@ -1,20 +1,25 @@
 import Foundation
 import Network
 
-/// UDP 20777'yi dinler, gelen paketleri cozer ve ekrandaki modeli gunceller.
+/// Listens for UDP telemetry, passes each datagram to the active game and
+/// publishes the result to the dashboards.
 ///
-/// Not: iOS 14+ broadcast/multicast trafigini almak icin Apple'dan onayli
-/// `com.apple.developer.networking.multicast` yetkisi ister. Bu yuzden oyunda
-/// "UDP Broadcast Mode = Off" birakip "UDP IP Address" alanina iPhone'un IP
-/// adresini yazmak gerekiyor (unicast). Uygulama kendi IP'sini ekranda gosterir.
+/// iOS only delivers broadcast and multicast traffic to apps with Apple's
+/// `com.apple.developer.networking.multicast` entitlement. Games therefore send
+/// straight to the phone's address (unicast), which the app shows on screen.
 @MainActor
-final class TelemetryClient: ObservableObject {
-    @Published private(set) var dash = DashboardModel()
+final class TelemetryClient: ObservableObject, TelemetrySink {
+    @Published var dash = DashboardModel()
     @Published private(set) var status: ConnectionStatus = .idle
     @Published private(set) var localIP: String = "-"
-    /// Ag degisince IP degistiyse dolar: oyundaki adresin guncellenmesi gerekir.
+    /// Set when the Wi-Fi address changed, so the address in the game needs updating.
     @Published private(set) var previousIP: String?
     @Published private(set) var packetsPerSecond: Int = 0
+    /// Completed lap traces for the analysis page.
+    @Published private(set) var lapTraces: [LapTrace] = []
+    @Published private(set) var sessionInfo = SessionInfo()
+    /// Set when the game sends a format the player did not select, for example "F1 25".
+    @Published private(set) var formatWarning: String?
 
     enum ConnectionStatus: Equatable {
         case idle
@@ -24,36 +29,33 @@ final class TelemetryClient: ObservableObject {
     }
 
     private(set) var port: NWEndpoint.Port
+    /// The game whose telemetry is decoded.
+    private(set) var game: TelemetryGame
 
     private var listener: NWListener?
     private var connections: [NWConnection] = []
     private var lastPacketDate: Date?
-    private var deltaSample: (value: Int, date: Date)?
-    private var timing = LapTiming()
-    private var participants: [Participant] = []
-    private var recorder = TraceRecorder()
-    /// Tamamlanan turlarin ayrintili izleri (siteye gonderim icin).
-    @Published private(set) var lapTraces: [LapTrace] = []
-    @Published private(set) var sessionInfo = SessionInfo()
-    /// Son paketin bicimi; ekranlar DRS mi aktif aero mu gosterecegini buna sorar.
-    @Published private(set) var packetFormat: PacketFormat = .f126
-    /// Kullanicinin sectigi UDP bicimi. Yalnizca bu bicimdeki paketler islenir.
-    @Published var selectedFormat: PacketFormat = .f126 {
-        didSet { if selectedFormat != oldValue { mismatchedFormat = nil } }
-    }
-    /// Oyun secilenden farkli bir bicim gonderiyorsa o bicim; ekranda uyari icin.
-    @Published private(set) var mismatchedFormat: PacketFormat?
     private let pathMonitor = NWPathMonitor()
     private var monitoring = false
     private var packetCounter = 0
     private var tickTimer: Timer?
 
-    init(port: UInt16 = 20777) {
+    init(port: UInt16 = 20777, game: TelemetryGame? = nil) {
         self.port = NWEndpoint.Port(rawValue: port)!
+        self.game = game ?? F1Game()
         self.localIP = Self.currentWiFiAddress() ?? "-"
     }
 
-    /// Port degisince dinleyici yeniden kurulur.
+    /// Switches to another game or game setting and starts from a clean state.
+    func use(_ game: TelemetryGame) {
+        self.game = game
+        dash = DashboardModel()
+        lapTraces = []
+        sessionInfo = SessionInfo()
+        formatWarning = nil
+    }
+
+    /// Rebuilds the listener when the port changes.
     func update(port newPort: UInt16) {
         guard newPort != port.rawValue, let endpoint = NWEndpoint.Port(rawValue: newPort) else { return }
         let wasRunning = listener != nil
@@ -103,7 +105,28 @@ final class TelemetryClient: ObservableObject {
         status = .idle
     }
 
-    /// Wi-Fi degisiminde dinleyici yeniden kurulur; IP degistiyse uyari verilir.
+    /// Feeds a datagram as if it came from the network. Used by the demo drive.
+    func receive(_ data: Data) {
+        handle(data)
+    }
+
+    // MARK: - TelemetrySink
+
+    func publish(lapTraces: [LapTrace]) {
+        self.lapTraces = lapTraces
+    }
+
+    func publish(session: SessionInfo) {
+        if session != sessionInfo { sessionInfo = session }
+    }
+
+    func reportUnexpectedFormat(_ description: String?) {
+        if formatWarning != description { formatWarning = description }
+    }
+
+    // MARK: - Network
+
+    /// Rebuilds the listener when Wi-Fi changes, and remembers the old address.
     private func startPathMonitor() {
         guard !monitoring else { return }
         monitoring = true
@@ -118,7 +141,7 @@ final class TelemetryClient: ObservableObject {
         if localIP != "-" && localIP != address { previousIP = localIP }
         localIP = address
 
-        // Adres degistiyse eski sokete paket gelmez; dinleyiciyi yeniden kur.
+        // A socket bound to the old address receives nothing; start over.
         guard listener != nil else { return }
         connections.forEach { $0.cancel() }
         connections.removeAll()
@@ -141,104 +164,10 @@ final class TelemetryClient: ObservableObject {
     }
 
     private func handle(_ data: Data) {
-        guard let header = PacketHeader(data) else { return }
-        let format = header.format
-        // Secilmeyen bicimdeki paketler farkli yerlesimde oldugundan okunmaz.
-        guard format == selectedFormat else {
-            if mismatchedFormat != format { mismatchedFormat = format }
-            return
-        }
-        if mismatchedFormat != nil { mismatchedFormat = nil }
-        if format != packetFormat { packetFormat = format }
+        guard game.consume(data, sink: self) else { return }
         packetCounter += 1
         lastPacketDate = Date()
-        status = .receiving
-
-        let idx = header.playerCarIndex
-        switch header.packetID {
-        case .carTelemetry:
-            guard let t = CarTelemetry(data: data, carIndex: idx, format: format) else { return }
-            dash.apply(t, format: format)
-            recorder.telemetry = t
-        case .carTelemetry2:
-            guard format.hasActiveAero,
-                  let t = CarTelemetry2(data: data, carIndex: idx) else { return }
-            dash.apply(t)
-            recorder.telemetry2 = t
-        case .motion:
-            guard let m = CarMotion(data: data, carIndex: idx, format: format) else { return }
-            recorder.motion = m
-            dash.apply(m)
-        case .session:
-            guard let info = SessionInfo(data: data) else { return }
-            if info != sessionInfo { sessionInfo = info }
-        case .lapData:
-            guard let l = LapData(data: data, carIndex: idx, format: format) else { return }
-            dash.apply(l)
-            recorder.ingest(l)
-            if recorder.traces.count != lapTraces.count { lapTraces = recorder.traces }
-            updateDeltaTrend(l.deltaToCarInFrontMS)
-            timing.ingest(l)
-            dash.applyTiming(timing)
-            updateRivals(positions: LapData.positions(in: data, format: format),
-                         playerPosition: l.carPosition)
-        case .carStatus:
-            guard let s = CarStatus(data: data, carIndex: idx, format: format) else { return }
-            dash.apply(s)
-            recorder.status = s
-        case .event:
-            switch GameEvent(data: data) {
-            case .startLights(let count):
-                dash.startLights = count
-                dash.lightsOutDate = nil
-            case .lightsOut:
-                dash.startLights = 0
-                dash.lightsOutDate = Date()
-            default:
-                break
-            }
-        case .participants:
-            let list = ParticipantsPacket.parse(data, format: format)
-            if !list.isEmpty { participants = list }
-        default:
-            break
-        }
-    }
-
-    /// Farki saniyede bir orneklyip yonunu cikarir; 50 ms'lik oynamalar sayilmaz.
-    private func updateDeltaTrend(_ current: Int) {
-        guard current > 0 else {
-            dash.deltaTrend = 0
-            deltaSample = nil
-            return
-        }
-        guard let sample = deltaSample else {
-            deltaSample = (current, Date())
-            return
-        }
-        guard Date().timeIntervalSince(sample.date) >= 1 else { return }
-        let change = current - sample.value
-        dash.deltaTrend = abs(change) < 50 ? 0 : (change < 0 ? -1 : 1)
-        deltaSample = (current, Date())
-    }
-
-    /// Pozisyon siralamasindan onundeki ve arkandaki araci bulur.
-    private func updateRivals(positions: [Int], playerPosition: Int) {
-        guard playerPosition > 0, !participants.isEmpty else { return }
-        dash.driverAhead = rival(at: playerPosition - 1, positions: positions)
-        dash.player = rival(at: playerPosition, positions: positions)
-        dash.driverBehind = rival(at: playerPosition + 1, positions: positions)
-    }
-
-    private func rival(at position: Int, positions: [Int]) -> Rival? {
-        guard position > 0, let index = positions.firstIndex(of: position),
-              participants.indices.contains(index)
-        else { return nil }
-        let participant = participants[index]
-        guard !participant.name.isEmpty else { return nil }
-        let colour = participant.teamColour ?? (0.35, 0.78, 0.95)
-        return Rival(position: position, name: participant.surname,
-                     red: colour.red, green: colour.green, blue: colour.blue)
+        if status != .receiving { status = .receiving }
     }
 
     private func startTicker() {
@@ -248,11 +177,7 @@ final class TelemetryClient: ObservableObject {
                 guard let self else { return }
                 self.packetsPerSecond = self.packetCounter
                 self.packetCounter = 0
-                if let date = self.dash.lightsOutDate, Date().timeIntervalSince(date) > 3 {
-                    self.dash.lightsOutDate = nil
-                }
-                self.timing.clearFlashIfStale(after: 4)
-                self.dash.applyTiming(self.timing)
+                self.game.tick(sink: self)
                 if let last = self.lastPacketDate, Date().timeIntervalSince(last) > 2, self.status == .receiving {
                     self.status = .listening
                     self.dash = DashboardModel()
@@ -261,7 +186,7 @@ final class TelemetryClient: ObservableObject {
         }
     }
 
-    /// Oyunun "UDP IP Address" alanina yazilacak adres.
+    /// The address to enter as "UDP IP Address" in the game.
     static func currentWiFiAddress() -> String? {
         var address: String?
         var ifaddr: UnsafeMutablePointer<ifaddrs>?

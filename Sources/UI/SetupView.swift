@@ -7,7 +7,8 @@ struct SetupView: View {
     @Binding var port: Int
     /// Oyundaki UDP Format ayariyla ayni olmasi gereken yil (2025 / 2026).
     @Binding var format: Int
-    var mismatch: PacketFormat? = nil
+    /// The format the game actually sends when it differs, for example "F1 25".
+    var mismatch: String? = nil
     let strings: Strings
     let localIP: String
     let unit: CGFloat
@@ -145,7 +146,7 @@ struct SetupView: View {
         .padding(unit * 0.3)
         .overlay(alignment: .bottomLeading) {
             if let mismatch {
-                Label(strings.formatMismatch(mismatch.label), systemImage: "exclamationmark.triangle.fill")
+                Label(strings.formatMismatch(mismatch), systemImage: "exclamationmark.triangle.fill")
                     .font(Typeface.digits(unit * 0.22, .heavy))
                     .foregroundStyle(accent)
                     .offset(y: unit * 0.45)

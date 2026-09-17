@@ -6,8 +6,7 @@ struct WebGuideView: View {
     let strings: Strings
     let unit: CGFloat
     @Binding var sessionID: String
-    @ObservedObject var uploader: SessionUploader
-    let payload: () -> SessionUploader.Payload
+    @ObservedObject var pairing: SitePairing
     /// Telefonun yerel analiz adresi; QR'siz dogrudan acmak icin.
     var localAddress: String? = nil
     @ObservedObject var server: LocalAnalysisServer
@@ -126,16 +125,6 @@ struct WebGuideView: View {
                     .font(Typeface.font(unit * 0.28, .heavy))
                     .foregroundStyle(Palette.live)
 
-                    Button { uploader.send(payload(), sessionID: sessionID) } label: {
-                        Text(strings.sendNow)
-                            .font(Typeface.font(unit * 0.26, .black))
-                            .foregroundStyle(Palette.onAccent)
-                            .padding(.horizontal, unit * 0.4)
-                            .padding(.vertical, unit * 0.14)
-                            .background(Capsule().fill(Palette.accent))
-                    }
-                    .buttonStyle(PressScaleStyle())
-
                     Button { sessionID = "" } label: {
                         Text(strings.disconnect)
                             .font(Typeface.font(unit * 0.24, .heavy))
@@ -144,7 +133,7 @@ struct WebGuideView: View {
                     .buttonStyle(PressScaleStyle())
                 }
                 Spacer(minLength: 0)
-                if let date = uploader.lastUploadDate, !sessionID.isEmpty {
+                if let date = pairing.lastPairedDate, !sessionID.isEmpty {
                     Text(verbatim: strings.lastSent(date.formatted(date: .omitted, time: .standard)))
                         .font(Typeface.font(unit * 0.22, .medium))
                         .foregroundStyle(.white.opacity(0.4))
@@ -165,9 +154,9 @@ struct WebGuideView: View {
         .fullScreenCover(isPresented: $showsScanner) {
             ZStack(alignment: .topTrailing) {
                 QRScannerView { scanned in
-                    if let id = SessionUploader.sessionID(from: scanned) {
+                    if let id = SitePairing.sessionID(from: scanned) {
                         sessionID = id
-                        uploader.send(payload(), sessionID: id)
+                        pairing.pair(sessionID: id)
                     }
                     showsScanner = false
                 }

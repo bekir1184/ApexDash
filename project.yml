@@ -9,7 +9,7 @@ settings:
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: "7NGN8D3PYY"
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "0.1"
+    MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   ApexDash:
@@ -20,6 +20,8 @@ targets:
       - path: Resources/Fonts
         buildPhase: resources
       - path: Resources/Assets.xcassets
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
       # Telefonun yerel agda sundugu analiz sayfasi.
       - path: Web/index.html
         buildPhase: resources
@@ -42,12 +44,13 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         UIStatusBarHidden: true
+        ITSAppUsesNonExemptEncryption: false
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        NSCameraUsageDescription: "Sitedeki QR kodu okuyup turlari siteye gondermek icin kamera gerekiyor."
-        NSLocalNetworkUsageDescription: "F1 oyunundan gelen telemetri paketlerini dinlemek ve tur analizini ayni agdaki tarayiciya sunmak icin gerekli."
+        NSCameraUsageDescription: "The camera scans the QR code on apexdash.pro to pair the phone with your browser."
+        NSLocalNetworkUsageDescription: "Apex Dash receives telemetry from your game and serves lap analysis to browsers on the same network."
         UIAppFonts:
           - Saira-Regular.ttf
           - Saira-Medium.ttf

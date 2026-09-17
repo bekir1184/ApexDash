@@ -52,12 +52,12 @@ struct RootDashboardView: View {
     /// Tam ekran sayfalayicinin konumu; tema secimiyle esittir.
     @State private var page: DashTheme? = DashTheme(rawValue: UserDefaults.standard.string(forKey: "dashTheme") ?? "") ?? .realistic
 
-    @StateObject private var uploader = SessionUploader()
+    @StateObject private var pairing = SitePairing()
     @StateObject private var server = LocalAnalysisServer()
     @Environment(\.scenePhase) private var scenePhase
 
-    /// Siteye giden her sey: tur listesi, ayrintili tur izleri, pist bilgisi.
-    private var uploadPayload: SessionUploader.Payload {
+    /// What the local analysis page serves: laps, their traces and the session.
+    private var snapshot: SessionSnapshot {
         .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
     }
 
@@ -125,17 +125,17 @@ struct RootDashboardView: View {
                 }
                 page = theme
                 // Analiz sayfasi telefondan sunulur; site yalnizca adresi ogrenir.
-                server.snapshot = { uploadPayload }
+                server.snapshot = { snapshot }
                 server.start()
-                uploader.localAddress = { server.address(ip: client.localIP) }
-                uploader.startHeartbeat(payload: { uploadPayload }, sessionID: { sessionID })
+                pairing.localAddress = { server.address(ip: client.localIP) }
+                pairing.startWatching(sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
-                client.selectedFormat = PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126
+                client.use(F1Game(format: PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126))
                 if !didCompleteSetup && !showsOnboarding { showsSetup = true }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
             .onChange(of: udpFormat) { _, new in
-                client.selectedFormat = PacketFormat(rawValue: UInt16(new)) ?? .f126
+                client.use(F1Game(format: PacketFormat(rawValue: UInt16(new)) ?? .f126))
             }
             // Vites uyarisi: ekranla birlikte telefonun flasi (ayarlardan acilir).
             .onChange(of: dash.shiftFlash) { _, on in
@@ -375,8 +375,7 @@ struct RootDashboardView: View {
         ZStack {
             if showsLaps {
                 LapsView(laps: dash.completedLaps, bestSectorMS: dash.bestSectorMS,
-                         strings: strings, unit: unit, sessionID: $sessionID,
-                         uploader: uploader, payload: { uploadPayload }) {
+                         strings: strings, unit: unit, server: server) {
                     withAnimation(spring) { showsLaps = false }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -390,7 +389,7 @@ struct RootDashboardView: View {
             }
             if showsWebGuide {
                 WebGuideView(strings: strings, unit: unit, sessionID: $sessionID,
-                             uploader: uploader, payload: { uploadPayload },
+                             pairing: pairing,
                              localAddress: server.address(ip: client.localIP), server: server) {
                     withAnimation(spring) { showsWebGuide = false }
                 }
@@ -407,7 +406,7 @@ struct RootDashboardView: View {
                 .zIndex(10)
             }
             if showsSetup {
-                SetupView(port: $udpPort, format: $udpFormat, mismatch: client.mismatchedFormat,
+                SetupView(port: $udpPort, format: $udpFormat, mismatch: client.formatWarning,
                           strings: strings, localIP: client.localIP, unit: unit) {
                     didCompleteSetup = true
                     withAnimation(spring) { showsSetup = false }
