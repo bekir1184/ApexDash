@@ -29,6 +29,7 @@ struct HomeView: View {
     @State private var warming = false
     @State private var warmUpEnd: Task<Void, Never>?
     @State private var showsConnection = false
+    @State private var tour: Task<Void, Never>?
 
     private let themes = DashTheme.allCases
     /// An odd number of repeats keeps the middle block exactly in the middle.
@@ -70,6 +71,7 @@ struct HomeView: View {
             .animation(.spring(duration: 0.35, bounce: 0.15), value: showsConnection)
             .onAppear {
                 if position == nil { position = middleBase + (themes.firstIndex(of: selectedTheme) ?? 0) }
+                startMenuTourIfRequested()
             }
             .onChange(of: position) { old, new in
                 guard let new else { return }
@@ -126,6 +128,19 @@ struct HomeView: View {
                     if client.isDemoRunning { client.stopDemo() }
                     else if client.status != .receiving { showsConnection.toggle() }
                 }
+            }
+        }
+    }
+
+    /// `-menuTour YES` walks through the dashboards on its own, for recording
+    /// the menu without a hand on the screen.
+    private func startMenuTourIfRequested() {
+        guard UserDefaults.standard.bool(forKey: "menuTour"), tour == nil else { return }
+        tour = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            while !Task.isCancelled {
+                withAnimation(.spring(duration: 0.55, bounce: 0.12)) { position = (position ?? 0) + 1 }
+                try? await Task.sleep(for: .seconds(2.2))
             }
         }
     }

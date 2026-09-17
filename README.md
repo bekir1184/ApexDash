@@ -62,7 +62,7 @@ dashboard, tap the screen for a back button, pull down for the menu.
 </td>
 <td>
 
-<img src="docs/images/menu.png" alt="The dashboard menu">
+<img src="docs/images/menu.gif" alt="Swiping between dashboards in the menu">
 
 </td>
 </tr>
@@ -197,6 +197,10 @@ help just as much.
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — build the app, find your way around
 - [docs/ADDING_A_GAME.md](docs/ADDING_A_GAME.md) — add another racing game
+- [.claude/skills/apex-dash/SKILL.md](.claude/skills/apex-dash/SKILL.md) — the
+  architecture, the project's direction and the recipes in one file. It is a
+  skill for AI coding assistants: clone the repo and Claude Code picks it up on
+  its own, or hand the file to any other assistant.
 - First pull request? A bot asks you to sign the [CLA](CLA.md) once.
 
 ```bash

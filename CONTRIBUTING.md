@@ -54,6 +54,12 @@ Useful launch arguments (Scheme › Run › Arguments):
 | `-onboardingPage 2` | Opens the onboarding at a given scene |
 | `-appLanguage tr` | Forces a language |
 
+## Working with an AI assistant
+
+`.claude/skills/apex-dash/SKILL.md` describes the architecture, the conventions
+and the recipes below in a form an assistant can follow. Claude Code picks it up
+automatically inside the repository; for other tools, paste the file in.
+
 ## How the app is organised
 
 ```
