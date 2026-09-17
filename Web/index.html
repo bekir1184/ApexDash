@@ -628,7 +628,8 @@ function sessionSummary() {
 function renderOverview() {
   const t = state.track, sum = sessionSummary();
   $("sessionType").textContent = t ? (SESSIONS[t.sessionType] || L("Oturum", "Session")) : L("Oturum", "Session");
-  $("trackTitle").textContent = t && t.id >= 0 ? (TRACKS[t.id] || `${L("Pist", "Track")} #${t.id}`) : L("Pist bekleniyor", "Waiting for track");
+  $("trackTitle").textContent = t?.name ? t.name
+    : t && t.id >= 0 ? (TRACKS[t.id] || `${L("Pist", "Track")} #${t.id}`) : L("Pist bekleniyor", "Waiting for track");
   $("trackMeta").textContent = t ? [
     t.length ? `${(t.length / 1000).toFixed(3)} km` : null,
     WEATHER[t.weather],

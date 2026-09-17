@@ -20,6 +20,8 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     @Published private(set) var sessionInfo = SessionInfo()
     /// Set when the game sends a format the player did not select, for example "F1 25".
     @Published private(set) var formatWarning: String?
+    /// True while the built-in demo drive feeds the dashboards.
+    @Published private(set) var isDemoRunning = false
 
     enum ConnectionStatus: Equatable {
         case idle
@@ -39,6 +41,8 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     private var monitoring = false
     private var packetCounter = 0
     private var tickTimer: Timer?
+    private var demo: TelemetryDemo?
+    private var demoTimer: Timer?
 
     init(port: UInt16 = 20777, game: TelemetryGame? = nil) {
         self.port = NWEndpoint.Port(rawValue: port)!
@@ -48,6 +52,7 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
 
     /// Switches to another game or game setting and starts from a clean state.
     func use(_ game: TelemetryGame) {
+        stopDemo()
         self.game = game
         dash = DashboardModel()
         lapTraces = []
@@ -105,9 +110,40 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
         status = .idle
     }
 
-    /// Feeds a datagram as if it came from the network. Used by the demo drive.
-    func receive(_ data: Data) {
-        handle(data)
+    // MARK: - Demo drive
+
+    /// Starts a simulated session of the current game. Real telemetry arriving
+    /// from the network stops it.
+    func startDemo() {
+        guard !isDemoRunning, let demo = game.makeDemo() else { return }
+        clearSession()
+        self.demo = demo
+        isDemoRunning = true
+        if tickTimer == nil { startTicker() }
+        demoTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let demo = self.demo else { return }
+                demo.nextDatagrams().forEach { self.handle($0) }
+            }
+        }
+    }
+
+    func stopDemo() {
+        guard isDemoRunning else { return }
+        demoTimer?.invalidate()
+        demoTimer = nil
+        demo = nil
+        isDemoRunning = false
+        clearSession()
+        status = listener == nil ? .idle : .listening
+    }
+
+    private func clearSession() {
+        game.reset()
+        dash = DashboardModel()
+        lapTraces = []
+        sessionInfo = SessionInfo()
+        lastPacketDate = nil
     }
 
     // MARK: - TelemetrySink
@@ -117,6 +153,8 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     }
 
     func publish(session: SessionInfo) {
+        var session = session
+        if isDemoRunning { session.trackName = "Demo" }
         if session != sessionInfo { sessionInfo = session }
     }
 
@@ -155,7 +193,11 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     nonisolated private func receive(on connection: NWConnection) {
         connection.receiveMessage { [weak self] data, _, _, error in
             if let data, !data.isEmpty {
-                Task { @MainActor in self?.handle(data) }
+                Task { @MainActor in
+                    // The real game takes over from the demo.
+                    if self?.isDemoRunning == true { self?.stopDemo() }
+                    self?.handle(data)
+                }
             }
             if error == nil {
                 self?.receive(on: connection)

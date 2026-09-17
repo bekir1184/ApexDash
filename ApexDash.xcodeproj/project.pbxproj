@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0141391145A6437778398539 /* LocalAnalysisServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DCC65F9DF565B57258ED23 /* LocalAnalysisServer.swift */; };
+		08429A73BBCD8EF5CCDFD724 /* ByteWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94E0A177F8701F09D7FA1A6 /* ByteWriter.swift */; };
+		0C16B49560A2CF2D09C2133C /* DemoDriveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */; };
 		1006D14CC8529D7D2DD2C997 /* F1Packets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B834D27E57033DD565C36E /* F1Packets.swift */; };
 		104A03FAAFB4043C1782F373 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B479463063808FB38FE317 /* OnboardingView.swift */; };
 		160A7205436138981F98A758 /* ByteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B03317C3CEAF76EC70FC71 /* ByteReader.swift */; };
@@ -27,6 +29,7 @@
 		4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18A785D9AA723C02BE0B5E2 /* Typeface.swift */; };
 		4AB072017DEBB9EE6F6FABEC /* F1Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F5E596BCFB9C5FBDE1B32FF /* F1Game.swift */; };
 		4C55E03491F2E67742AE9EB7 /* LapTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838B03534F8726569779170A /* LapTiming.swift */; };
+		4D2C94BE1F9407B2D81B5B8B /* AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96FEB17E156DB88DBDEF138C /* AppLinks.swift */; };
 		50359040D33CE1CE6642FB55 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD717D5DFA547B616504051 /* QRScannerView.swift */; };
 		52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BA05288D4012C11EF8CD89 /* Theme.swift */; };
 		5C991BBF2DF6507800CDC352 /* ApexDashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */; };
@@ -48,6 +51,7 @@
 		991371F9681CDC2F3F512CDB /* DashboardModel+F1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA44149F11D73CF4A356556 /* DashboardModel+F1.swift */; };
 		9B3F12B5A642087AB0501310 /* F1TraceRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9103190A17A6CA10564FC02C /* F1TraceRecorder.swift */; };
 		9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF9E52820C0DD046259B7F /* PedalBarsView.swift */; };
+		A8F799AEC0D76E9BAF0F404F /* F1DemoDrive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9930488D71102645B9C3D341 /* F1DemoDrive.swift */; };
 		AA03D81F5DBC4B793928FD94 /* RootDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */; };
 		AFB9199670F2CA48F63DFAAD /* Saira-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */; };
 		B1BAFB2A6B5918BE133216E0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB5CB276ACF999183003EBB /* SettingsView.swift */; };
@@ -117,6 +121,8 @@
 		9103190A17A6CA10564FC02C /* F1TraceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1TraceRecorder.swift; sourceTree = "<group>"; };
 		9402716F54863E44811C2959 /* DotMatrixEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMatrixEffect.swift; sourceTree = "<group>"; };
 		94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-SemiBold.ttf"; sourceTree = "<group>"; };
+		96FEB17E156DB88DBDEF138C /* AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLinks.swift; sourceTree = "<group>"; };
+		9930488D71102645B9C3D341 /* F1DemoDrive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1DemoDrive.swift; sourceTree = "<group>"; };
 		99DCC65F9DF565B57258ED23 /* LocalAnalysisServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAnalysisServer.swift; sourceTree = "<group>"; };
 		A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDashboardView.swift; sourceTree = "<group>"; };
 		A82A52F16E2574492B934ACF /* ShiftTorch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTorch.swift; sourceTree = "<group>"; };
@@ -132,9 +138,11 @@
 		D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryClient.swift; sourceTree = "<group>"; };
 		D757B2C0EF365F3B821A7677 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		D92F3C60C716E9C138A6BDFC /* logo.svg */ = {isa = PBXFileReference; path = logo.svg; sourceTree = "<group>"; };
+		D94E0A177F8701F09D7FA1A6 /* ByteWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteWriter.swift; sourceTree = "<group>"; };
 		E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectorViews.swift; sourceTree = "<group>"; };
 		E4AD853655601417E4B1A7C0 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Bold.ttf"; sourceTree = "<group>"; };
+		EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDriveTests.swift; sourceTree = "<group>"; };
 		F641A1E78C2B0916F202F012 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -162,7 +170,9 @@
 		5DAFFABAC48DD1A094088C92 /* Telemetry */ = {
 			isa = PBXGroup;
 			children = (
+				96FEB17E156DB88DBDEF138C /* AppLinks.swift */,
 				34B03317C3CEAF76EC70FC71 /* ByteReader.swift */,
+				D94E0A177F8701F09D7FA1A6 /* ByteWriter.swift */,
 				FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */,
 				528970F575D7C7DE3D11948A /* LapExport.swift */,
 				838B03534F8726569779170A /* LapTiming.swift */,
@@ -179,6 +189,7 @@
 		610D0E164AFAD8B5A33ACDC6 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */,
 				6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */,
 			);
 			path = Tests;
@@ -246,6 +257,7 @@
 			isa = PBXGroup;
 			children = (
 				3EA44149F11D73CF4A356556 /* DashboardModel+F1.swift */,
+				9930488D71102645B9C3D341 /* F1DemoDrive.swift */,
 				6F5E596BCFB9C5FBDE1B32FF /* F1Game.swift */,
 				39B834D27E57033DD565C36E /* F1Packets.swift */,
 				9103190A17A6CA10564FC02C /* F1TraceRecorder.swift */,
@@ -392,6 +404,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C16B49560A2CF2D09C2133C /* DemoDriveTests.swift in Sources */,
 				366F3F2310E718EE3DA0CB06 /* PacketParsingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -401,13 +414,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C991BBF2DF6507800CDC352 /* ApexDashApp.swift in Sources */,
+				4D2C94BE1F9407B2D81B5B8B /* AppLinks.swift in Sources */,
 				32EF03C89D380AD91FBE8BDD /* BroadcastDashboardView.swift in Sources */,
 				160A7205436138981F98A758 /* ByteReader.swift in Sources */,
+				08429A73BBCD8EF5CCDFD724 /* ByteWriter.swift in Sources */,
 				FD5013D2E356192882CFADB9 /* ClusterDashboardView.swift in Sources */,
 				991371F9681CDC2F3F512CDB /* DashboardModel+F1.swift in Sources */,
 				7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */,
 				F73E54228C0195530E2A48EB /* DotMatrixDashboardView.swift in Sources */,
 				20E2603CC2EC508073BC6D77 /* DotMatrixEffect.swift in Sources */,
+				A8F799AEC0D76E9BAF0F404F /* F1DemoDrive.swift in Sources */,
 				4AB072017DEBB9EE6F6FABEC /* F1Game.swift in Sources */,
 				1006D14CC8529D7D2DD2C997 /* F1Packets.swift in Sources */,
 				9B3F12B5A642087AB0501310 /* F1TraceRecorder.swift in Sources */,

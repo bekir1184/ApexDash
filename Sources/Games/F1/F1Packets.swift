@@ -466,6 +466,8 @@ struct SessionInfo: Equatable {
     var trackLength: Int = 0
     var sessionType: Int = 0
     var trackID: Int = -1
+    /// Track name for games that send one instead of an F1 track id.
+    var trackName: String?
 
     init() {}
 

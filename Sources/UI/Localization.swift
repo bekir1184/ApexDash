@@ -54,6 +54,20 @@ struct Strings {
     }
 
     var connectionOff: String { pick("BAGLANTI KAPALI", "NOT LISTENING") }
+    var demoStart: String { pick("DEMO SÜRÜŞ", "DEMO DRIVE") }
+    var demoBadge: String { pick("DEMO", "DEMO") }
+    var demoTitle: String { pick("DEMO SÜRÜŞ", "DEMO DRIVE") }
+    var demoSubtitle: String {
+        pick("Oyun olmadan simüle bir seans: panolar, turlar ve analiz sayfası çalışır.",
+             "A simulated session without the game: dashboards, laps and the analysis page all work.")
+    }
+    var projectTitle: String { pick("PROJE", "PROJECT") }
+    var projectSubtitle: String {
+        pick("Apex Dash ücretsiz ve açık kaynak. Beğendiysen yıldız ver ya da yorum yaz.",
+             "Apex Dash is free and open source. If you like it, star it or leave a review.")
+    }
+    var starOnGitHub: String { pick("GITHUB'DA YILDIZLA", "STAR ON GITHUB") }
+    var rateApp: String { pick("DEĞERLENDİR", "RATE") }
     var waitingForData: String { pick("VERI BEKLENIYOR", "WAITING FOR DATA") }
     func formatMismatch(_ game: String) -> String {
         pick("OYUN \(game) BİÇİMİNDE GÖNDERİYOR", "GAME SENDS \(game) FORMAT")

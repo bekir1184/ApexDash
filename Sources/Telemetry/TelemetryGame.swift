@@ -24,10 +24,24 @@ protocol TelemetryGame: AnyObject {
     /// Called once a second while listening, for time based clean-up such as
     /// hiding a sector banner after a few seconds.
     func tick(sink: TelemetrySink)
+
+    /// Forgets laps, timing and other session state.
+    func reset()
+
+    /// A simulated session that produces this game's datagrams, for trying the
+    /// app without the game. Return `nil` if the game has no demo.
+    func makeDemo() -> TelemetryDemo?
 }
 
 extension TelemetryGame {
     func tick(sink: TelemetrySink) {}
+    func makeDemo() -> TelemetryDemo? { nil }
+}
+
+/// Produces datagrams for a demo drive. Called 60 times a second.
+@MainActor
+protocol TelemetryDemo: AnyObject {
+    func nextDatagrams() -> [Data]
 }
 
 /// What a game can publish. Implemented by `TelemetryClient`.

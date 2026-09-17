@@ -120,8 +120,9 @@ struct HomeView: View {
 
             TimelineView(.periodic(from: .now, by: 0.5)) { _ in
                 ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
-                                strings: strings, unit: unit) {
-                    if client.status != .receiving { showsConnection.toggle() }
+                                isDemo: client.isDemoRunning, strings: strings, unit: unit) {
+                    if client.isDemoRunning { client.stopDemo() }
+                    else if client.status != .receiving { showsConnection.toggle() }
                 }
             }
         }
@@ -390,6 +391,7 @@ struct DashboardContent: View {
 struct ConnectionBadge: View {
     let status: TelemetryClient.ConnectionStatus
     let hz: Int
+    var isDemo = false
     let strings: Strings
     let unit: CGFloat
     let action: () -> Void
@@ -397,7 +399,13 @@ struct ConnectionBadge: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: unit * 0.12) {
-                if status == .receiving {
+                if isDemo {
+                    Image(systemName: "play.circle.fill")
+                        .foregroundStyle(Palette.accent)
+                    Text(strings.demoBadge)
+                    Image(systemName: "xmark")
+                        .foregroundStyle(.white.opacity(0.5))
+                } else if status == .receiving {
                     Circle().fill(Palette.live)
                         .frame(width: unit * 0.16, height: unit * 0.16)
                         .shadow(color: Palette.live.opacity(0.8), radius: unit * 0.1)
@@ -417,7 +425,8 @@ struct ConnectionBadge: View {
             .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
         }
         .buttonStyle(PressScaleStyle())
-        .allowsHitTesting(status != .receiving)
+        // Tapping during the demo stops it.
+        .allowsHitTesting(isDemo || status != .receiving)
         .animation(.spring(duration: 0.3), value: status == .receiving)
     }
 }
@@ -450,6 +459,20 @@ struct ConnectionCard: View {
                     .padding(.horizontal, unit * 0.6)
                     .padding(.vertical, unit * 0.18)
                     .background(Capsule().fill(Palette.accent))
+            }
+            .buttonStyle(PressScaleStyle())
+
+            // Try everything without the game.
+            Button {
+                client.startDemo()
+                onClose()
+            } label: {
+                Label(strings.demoStart, systemImage: "play.fill")
+                    .font(Typeface.font(unit * 0.26, .black))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.horizontal, unit * 0.5)
+                    .padding(.vertical, unit * 0.14)
+                    .background(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1.5))
             }
             .buttonStyle(PressScaleStyle())
         }

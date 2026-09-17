@@ -25,6 +25,17 @@ final class F1Game: TelemetryGame {
         self.format = format
     }
 
+    func reset() {
+        timing = LapTiming()
+        recorder = F1TraceRecorder()
+        participants = []
+        deltaSample = nil
+    }
+
+    func makeDemo() -> TelemetryDemo? {
+        F1DemoDrive(format: format)
+    }
+
     func consume(_ data: Data, sink: TelemetrySink) -> Bool {
         guard let header = PacketHeader(data) else { return false }
         guard header.format == format else {

@@ -25,7 +25,7 @@ struct SessionSnapshot {
         return [
             "best": self.laps.map(\.timeMS).min() ?? 0,
             "laps": laps,
-            "track": ["id": session.trackID, "length": session.trackLength,
+            "track": ["id": session.trackID, "name": session.trackName as Any? ?? NSNull(), "length": session.trackLength,
                       "weather": session.weather, "trackTemp": session.trackTemperature,
                       "airTemp": session.airTemperature, "sessionType": session.sessionType]
         ]

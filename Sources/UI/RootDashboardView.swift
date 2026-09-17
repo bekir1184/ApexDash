@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 /// Kok gorunum. Tam ekran pano bir "sahne" olarak tek bir gorunumdur ve
 /// tek bir animasyonlu degerle (`stage`, 0 = tam ekran, 1 = karuseldeki
@@ -55,6 +56,9 @@ struct RootDashboardView: View {
     @StateObject private var pairing = SitePairing()
     @StateObject private var server = LocalAnalysisServer()
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage("launchCount") private var launchCount = 0
+    @AppStorage("lastReviewRequest") private var lastReviewRequest: Double = 0
 
     /// What the local analysis page serves: laps, their traces and the session.
     private var snapshot: SessionSnapshot {
@@ -119,6 +123,7 @@ struct RootDashboardView: View {
     private func observed<V: View>(_ view: V) -> some View {
         view
             .onAppear {
+                launchCount += 1
                 if !didResetLanguage {
                     languageID = ""
                     didResetLanguage = true
@@ -132,6 +137,8 @@ struct RootDashboardView: View {
                 client.update(port: UInt16(udpPort))
                 client.use(F1Game(format: PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126))
                 if !didCompleteSetup && !showsOnboarding { showsSetup = true }
+                // `-startDemo YES` starts the demo drive at launch, for screenshots.
+                if UserDefaults.standard.bool(forKey: "startDemo") { client.startDemo() }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
             .onChange(of: udpFormat) { _, new in
@@ -150,6 +157,19 @@ struct RootDashboardView: View {
             }
             .onChange(of: themeID) { _, _ in
                 if page != theme { page = theme }
+            }
+            // Ask for a rating at a good moment: a new personal best in a real
+            // session, after a few launches, at most once every four months.
+            .onChange(of: dash.bestLapMS) { old, new in
+                guard old > 0, new > 0, new < old, !client.isDemoRunning,
+                      dash.completedLaps.count >= 3, launchCount >= 3,
+                      Date().timeIntervalSince1970 - lastReviewRequest > 120 * 24 * 3600
+                else { return }
+                lastReviewRequest = Date().timeIntervalSince1970
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    requestReview()
+                }
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { server.start() }
@@ -382,6 +402,8 @@ struct RootDashboardView: View {
             }
             if showsSettings {
                 SettingsView(languageID: $languageID, strings: strings, unit: unit,
+                             isDemoRunning: client.isDemoRunning,
+                             onDemo: { $0 ? client.startDemo() : client.stopDemo() },
                              onOpenConnection: { withAnimation(spring) { showsSetup = true } },
                              onOpenWebGuide: { withAnimation(spring) { showsWebGuide = true } },
                              onClose: { withAnimation(spring) { showsSettings = false } })
@@ -438,9 +460,10 @@ struct RootDashboardView: View {
     private func connectionOverlay(unit: CGFloat) -> some View {
         if fullscreen && !showsSetup && !showsLaps && !showsSettings {
             VStack(alignment: .trailing, spacing: unit * 0.15) {
-                if client.status != .receiving {
+                if client.status != .receiving || client.isDemoRunning {
                     ConnectionBadge(status: client.status, hz: client.packetsPerSecond,
-                                    strings: strings, unit: unit) {
+                                    isDemo: client.isDemoRunning, strings: strings, unit: unit) {
+                        if client.isDemoRunning { client.stopDemo(); return }
                         withAnimation(.spring(duration: 0.35, bounce: 0.15)) { showsConnection.toggle() }
                     }
                 }

@@ -1,11 +1,15 @@
 import SwiftUI
 
-/// Ayarlar: baglanti (IP / port), dil ve vites uyarisinda flas.
+/// Settings: connection, telemetry site, demo drive, language, shift flash
+/// and links to the project.
 struct SettingsView: View {
     @Binding var languageID: String
     @AppStorage("shiftTorch") private var shiftTorch = false
+    @Environment(\.openURL) private var openURL
     let strings: Strings
     let unit: CGFloat
+    let isDemoRunning: Bool
+    let onDemo: (Bool) -> Void
     let onOpenConnection: () -> Void
     let onOpenWebGuide: () -> Void
     let onClose: () -> Void
@@ -29,7 +33,9 @@ struct SettingsView: View {
                 .buttonStyle(PressScaleStyle())
             }
 
-            // Baglanti
+            ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: unit * 0.3) {
+            // Connection
             Button(action: onOpenConnection) {
                 row(title: strings.connectionTitle, subtitle: strings.connectionSubtitle) {
                     Image(systemName: "chevron.right")
@@ -39,7 +45,7 @@ struct SettingsView: View {
             }
             .buttonStyle(PressScaleStyle())
 
-            // Telemetri sitesi
+            // Telemetry site
             Button(action: onOpenWebGuide) {
                 row(title: strings.webGuideTitle, subtitle: strings.webGuideSubtitle) {
                     Image(systemName: "chevron.right")
@@ -49,7 +55,12 @@ struct SettingsView: View {
             }
             .buttonStyle(PressScaleStyle())
 
-            // Dil
+            // Demo drive
+            row(title: strings.demoTitle, subtitle: strings.demoSubtitle) {
+                Toggle("", isOn: Binding(get: { isDemoRunning }, set: onDemo)).labelsHidden().tint(accent)
+            }
+
+            // Language
             row(title: strings.languageTitle, subtitle: nil) {
                 HStack(spacing: 0) {
                     ForEach(LanguagePreference.allCases) { option in
@@ -70,17 +81,41 @@ struct SettingsView: View {
                 .animation(.spring(duration: 0.3), value: languageID)
             }
 
-            // Flas
+            // Shift flash
             row(title: strings.torchToggle, subtitle: strings.torchNote) {
                 Toggle("", isOn: $shiftTorch).labelsHidden().tint(accent)
             }
 
-            Spacer(minLength: 0)
+            // Project: open source links
+            row(title: strings.projectTitle, subtitle: strings.projectSubtitle) {
+                HStack(spacing: unit * 0.2) {
+                    linkButton(strings.starOnGitHub, systemImage: "star.fill", url: AppLinks.repository)
+                    if let review = AppLinks.writeReview {
+                        linkButton(strings.rateApp, systemImage: "heart.fill", url: review)
+                    }
+                }
+            }
+            }
+            .padding(.bottom, unit * 0.3)
+            }
+            .scrollBounceBehavior(.basedOnSize)
         }
         .padding(.horizontal, unit * 0.7)
         .padding(.vertical, unit * 0.45)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(StripedBackground())
+    }
+
+    private func linkButton(_ title: String, systemImage: String, url: URL) -> some View {
+        Button { openURL(url) } label: {
+            Label(title, systemImage: systemImage)
+                .font(Typeface.font(unit * 0.22, .black))
+                .foregroundStyle(.white)
+                .padding(.horizontal, unit * 0.26)
+                .padding(.vertical, unit * 0.12)
+                .background(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1.5))
+        }
+        .buttonStyle(PressScaleStyle())
     }
 
     private func row<Trailing: View>(title: String, subtitle: String?,
