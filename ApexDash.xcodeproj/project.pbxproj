@@ -13,6 +13,7 @@
 		1006D14CC8529D7D2DD2C997 /* F1Packets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B834D27E57033DD565C36E /* F1Packets.swift */; };
 		104A03FAAFB4043C1782F373 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B479463063808FB38FE317 /* OnboardingView.swift */; };
 		160A7205436138981F98A758 /* ByteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B03317C3CEAF76EC70FC71 /* ByteReader.swift */; };
+		1BECDD1AA3B6E82838720A65 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 0BA8589E415F010F214F1E43 /* Localizable.xcstrings */; };
 		1CEBEC9406EB3AF3537CADC5 /* logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = D92F3C60C716E9C138A6BDFC /* logo.svg */; };
 		206DB912B0FF95887B7768BD /* Saira-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5B6B63D65BFECCE8303D020 /* Saira-Medium.ttf */; };
 		20A161B82878FEFECAFC91E6 /* TelemetryGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7056055156F538011956B56 /* TelemetryGame.swift */; };
@@ -64,8 +65,10 @@
 		DC368D282C3F6DF61ABE55AD /* GameDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */; };
 		DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CA98442171449A28BA231B /* StartLightsView.swift */; };
 		DD9BE6B9886F7B253B25394E /* Saira-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */; };
+		DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B118086835AB8A632F50FA85 /* LocalizationTests.swift */; };
 		E886B89B093E5448F3540D70 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = E4AD853655601417E4B1A7C0 /* index.html */; };
 		EE09C6D27EA2BFC1A8659052 /* LapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D757B2C0EF365F3B821A7677 /* LapsView.swift */; };
+		EE6F639B89CC5FF7ADACC058 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3F516455413BBD4C0AF2B363 /* InfoPlist.xcstrings */; };
 		F73E54228C0195530E2A48EB /* DotMatrixDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F75832D998633683E86EC9 /* DotMatrixDashboardView.swift */; };
 		FD5013D2E356192882CFADB9 /* ClusterDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423199CC0F31539536E11CDB /* ClusterDashboardView.swift */; };
 /* End PBXBuildFile section */
@@ -82,6 +85,7 @@
 
 /* Begin PBXFileReference section */
 		0AD717D5DFA547B616504051 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		0BA8589E415F010F214F1E43 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashWarningView.swift; sourceTree = "<group>"; };
 		1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-ExtraBold.ttf"; sourceTree = "<group>"; };
 		1689804A80A8FDA2DAAB0AC7 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -96,6 +100,7 @@
 		35FDB733B3C447A2D1327CB2 /* RevLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevLightsView.swift; sourceTree = "<group>"; };
 		39B834D27E57033DD565C36E /* F1Packets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Packets.swift; sourceTree = "<group>"; };
 		3EA44149F11D73CF4A356556 /* DashboardModel+F1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardModel+F1.swift"; sourceTree = "<group>"; };
+		3F516455413BBD4C0AF2B363 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		40418B585559552200C7D352 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		421795F1F46A0D96A98E27F7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		423199CC0F31539536E11CDB /* ClusterDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterDashboardView.swift; sourceTree = "<group>"; };
@@ -127,6 +132,7 @@
 		A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDashboardView.swift; sourceTree = "<group>"; };
 		A82A52F16E2574492B934ACF /* ShiftTorch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTorch.swift; sourceTree = "<group>"; };
 		AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Regular.ttf"; sourceTree = "<group>"; };
+		B118086835AB8A632F50FA85 /* LocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationTests.swift; sourceTree = "<group>"; };
 		B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootDashboardView.swift; sourceTree = "<group>"; };
 		B18A785D9AA723C02BE0B5E2 /* Typeface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typeface.swift; sourceTree = "<group>"; };
 		B5222EB6F53F247A66653A84 /* WebGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebGuideView.swift; sourceTree = "<group>"; };
@@ -190,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */,
+				B118086835AB8A632F50FA85 /* LocalizationTests.swift */,
 				6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */,
 			);
 			path = Tests;
@@ -269,6 +276,8 @@
 			isa = PBXGroup;
 			children = (
 				425E7F8ABFB292E799328D6B /* Assets.xcassets */,
+				3F516455413BBD4C0AF2B363 /* InfoPlist.xcstrings */,
+				0BA8589E415F010F214F1E43 /* Localizable.xcstrings */,
 				6529AA60DBF6D4D9074F07B6 /* PrivacyInfo.xcprivacy */,
 				F129C766FF91AF87A108253A /* Fonts */,
 			);
@@ -382,6 +391,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */,
+				EE6F639B89CC5FF7ADACC058 /* InfoPlist.xcstrings in Resources */,
+				1BECDD1AA3B6E82838720A65 /* Localizable.xcstrings in Resources */,
 				7D7DDB74A075B94E90C8D2DD /* PrivacyInfo.xcprivacy in Resources */,
 				B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */,
 				40498FE0B4C007F83055065A /* Saira-Black.ttf in Resources */,
@@ -405,6 +416,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C16B49560A2CF2D09C2133C /* DemoDriveTests.swift in Sources */,
+				DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */,
 				366F3F2310E718EE3DA0CB06 /* PacketParsingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

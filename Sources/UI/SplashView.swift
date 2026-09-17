@@ -152,5 +152,5 @@ struct SplashView: View {
 }
 
 extension Strings {
-    var rotatePhone: String { pick("TELEFONU YATAY ÇEVİR", "TURN YOUR PHONE SIDEWAYS") }
+    var rotatePhone: String { text("rotatePhone") }
 }

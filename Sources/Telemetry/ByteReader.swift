@@ -1,7 +1,7 @@
 import Foundation
 
-/// F1 26 UDP paketleri "packed" ve little-endian gonderilir; struct'lari
-/// hizalamaya guvenmeden, alan alan okuyoruz.
+/// Reads little-endian binary packets field by field. Game packets are
+/// "packed", so fields are read one by one instead of relying on struct layout.
 struct ByteReader {
     private let data: Data
     private(set) var offset: Int
@@ -41,6 +41,14 @@ struct ByteReader {
     mutating func uint32() -> UInt32? {
         guard let bytes = next(4) else { return nil }
         return Self.littleEndian(bytes)
+    }
+
+    mutating func int16() -> Int16? {
+        uint16().map { Int16(bitPattern: $0) }
+    }
+
+    mutating func int32() -> Int32? {
+        uint32().map { Int32(bitPattern: $0) }
     }
 
     mutating func uint64() -> UInt64? {

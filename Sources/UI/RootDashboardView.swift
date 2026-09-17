@@ -67,7 +67,7 @@ struct RootDashboardView: View {
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .realistic }
     private var language: AppLanguage {
-        (LanguagePreference(rawValue: languageID) ?? .automatic).resolved
+        AppLanguage.resolve(languageID)
     }
     private var strings: Strings { Strings(language: language) }
     private var dash: DashboardModel { client.dash }

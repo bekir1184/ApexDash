@@ -966,34 +966,25 @@ private struct LightsOutScene: View {
 // MARK: - Metinler
 
 extension Strings {
-    var obNext: String { pick("DEVAM", "NEXT") }
-    var obSkip: String { pick("ATLA", "SKIP") }
+    var obNext: String { text("obNext") }
+    var obSkip: String { text("obSkip") }
 
-    var obDashesEyebrow: String { pick("PANOLAR", "DASHBOARDS") }
-    var obDashesTitle: String { pick("KOKPİTİNİ SEÇ", "PICK YOUR COCKPIT") }
-    var obDashesBody: String {
-        pick("Altı farklı pano; F1 25 ve F1 26 telemetrisiyle anlık. Menüde kaydır, dokun ve sür.",
-             "Six dashboards, live from F1 25 and F1 26 telemetry. Swipe in the menu, tap and drive.")
-    }
+    var obDashesEyebrow: String { text("obDashesEyebrow") }
+    var obDashesTitle: String { text("obDashesTitle") }
+    var obDashesBody: String { text("obDashesBody") }
 
-    var obConnectEyebrow: String { pick("BAĞLANTI", "CONNECTION") }
-    var obConnectTitle: String { pick("OYUNA BAĞLAN", "CONNECT THE GAME") }
-    var obConnectBody: String {
-        pick("Oyunda Ayarlar › Telemetri'de UDP'yi aç ve bu adresi gir. Telefon ve oyun aynı ağda olsun.",
-             "In the game, turn on UDP under Settings › Telemetry and enter this address. Keep both on the same network.")
-    }
-    var obUDP: String { pick("UDP TELEMETRİ", "UDP TELEMETRY") }
-    var obOn: String { pick("AÇIK", "ON") }
+    var obConnectEyebrow: String { text("obConnectEyebrow") }
+    var obConnectTitle: String { text("obConnectTitle") }
+    var obConnectBody: String { text("obConnectBody") }
+    var obUDP: String { text("obUDP") }
+    var obOn: String { text("obOn") }
 
-    var obAnalyseEyebrow: String { pick("ANALİZ", "ANALYSIS") }
-    var obAnalyseTitle: String { pick("HER TURU İNCELE", "STUDY EVERY LAP") }
-    var obAnalyseBody: String {
-        pick("Turlarını apexdash.pro'da gör; QR'ı okutman yeter: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma.",
-             "See your laps on apexdash.pro; just scan the QR: track map, speed and pedal traces, corner-by-corner comparison.")
-    }
-    var obBest: String { pick("EN İYİ", "BEST") }
-    var obLap: String { pick("TUR", "LAP") }
+    var obAnalyseEyebrow: String { text("obAnalyseEyebrow") }
+    var obAnalyseTitle: String { text("obAnalyseTitle") }
+    var obAnalyseBody: String { text("obAnalyseBody") }
+    var obBest: String { text("obBest") }
+    var obLap: String { text("obLap") }
 
-    var obReadyTitle: String { pick("HAZIR MISIN?", "READY?") }
-    var obLightsOut: String { pick("BAŞLA", "START") }
+    var obReadyTitle: String { text("obReadyTitle") }
+    var obLightsOut: String { text("obLightsOut") }
 }

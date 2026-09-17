@@ -22,6 +22,9 @@ targets:
       - path: Resources/Assets.xcassets
       - path: Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
+      # Translations: add a language to these catalogs in Xcode.
+      - path: Resources/Localizable.xcstrings
+      - path: Resources/InfoPlist.xcstrings
       # Telefonun yerel agda sundugu analiz sayfasi.
       - path: Web/index.html
         buildPhase: resources

@@ -1,0 +1,46 @@
+# Builds the app and runs the tests on every pull request and push to main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for runtime, items in sorted(devices.items(), reverse=True):
+              if 'iOS' not in runtime: continue
+              for d in items:
+                  if d['name'].startswith('iPhone'):
+                      print(d['udid']); sys.exit()
+          ")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project ApexDash.xcodeproj \
+            -scheme ApexDash \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet

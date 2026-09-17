@@ -63,10 +63,11 @@ struct SettingsView: View {
             // Language
             row(title: strings.languageTitle, subtitle: nil) {
                 HStack(spacing: 0) {
-                    ForEach(LanguagePreference.allCases) { option in
-                        let on = option.rawValue == languageID
-                        Button { languageID = option.rawValue } label: {
-                            Text(verbatim: option.label(strings))
+                    // "" follows the phone; the rest come from the String Catalog.
+                    ForEach([""] + AppLanguage.available.map(\.code), id: \.self) { option in
+                        let on = option == languageID
+                        Button { languageID = option } label: {
+                            Text(verbatim: option.isEmpty ? strings.automaticLanguage : option.uppercased())
                                 .font(Typeface.font(unit * 0.26, .black))
                                 .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
                                 .padding(.horizontal, unit * 0.3)

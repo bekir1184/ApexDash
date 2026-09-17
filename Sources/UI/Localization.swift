@@ -1,202 +1,142 @@
 import SwiftUI
 
-/// Uygulama dili. Ekrana dokununca cikan cubuktan degistirilir ve saklanir.
-enum AppLanguage: String, CaseIterable, Identifiable {
-    case turkish = "tr"
-    case english = "en"
+/// A language the app ships in. The list comes from the translations in
+/// `Resources/Localizable.xcstrings`: add a language there and it appears in
+/// Settings on its own. See CONTRIBUTING.md.
+struct AppLanguage: Hashable, Identifiable {
+    /// Language code as used by the String Catalog, for example "en", "tr", "pt-BR".
+    let code: String
 
-    var id: String { rawValue }
+    var id: String { code }
 
-    /// Telefonun dili Turkce degilse uygulama Ingilizce baslar.
+    /// Short label for the language picker, for example "EN".
+    var label: String { code.uppercased() }
+
+    static let english = AppLanguage(code: "en")
+
+    /// Languages with a translation in the app bundle, English first.
+    static var available: [AppLanguage] {
+        let codes = Bundle.main.localizations.filter { $0 != "Base" }
+        return codes.sorted { $0 == "en" ? true : ($1 == "en" ? false : $0 < $1) }.map(AppLanguage.init)
+    }
+
+    /// The first of the phone's preferred languages the app supports, else English.
     static var systemDefault: AppLanguage {
-        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
-        return preferred.hasPrefix("tr") ? .turkish : .english
-    }
-    var label: String { self == .turkish ? "TR" : "EN" }
-    var next: AppLanguage { self == .turkish ? .english : .turkish }
-}
-
-/// Kullanicinin dil tercihi. Varsayilan "otomatik": telefonun dili neyse o.
-/// Bir dil secilirse telefon dili degisse de o dilde kalir; otomatike
-/// donunce yeniden telefonu izler.
-enum LanguagePreference: String, CaseIterable, Identifiable {
-    case automatic = ""
-    case turkish = "tr"
-    case english = "en"
-
-    var id: String { rawValue }
-
-    var resolved: AppLanguage {
-        switch self {
-        case .automatic: return .systemDefault
-        case .turkish: return .turkish
-        case .english: return .english
+        let available = self.available
+        for preferred in Locale.preferredLanguages {
+            let lower = preferred.lowercased()
+            if let exact = available.first(where: { lower.hasPrefix($0.code.lowercased()) }) { return exact }
         }
+        return .english
     }
 
-    func label(_ strings: Strings) -> String {
-        switch self {
-        case .automatic: return strings.automaticLanguage
-        case .turkish: return "TR"
-        case .english: return "EN"
-        }
+    /// Resolves a stored preference: an empty string means "follow the phone".
+    static func resolve(_ preference: String) -> AppLanguage {
+        guard !preference.isEmpty,
+              let match = available.first(where: { $0.code == preference }) else { return systemDefault }
+        return match
+    }
+
+    fileprivate var bundle: Bundle {
+        Bundle.main.path(forResource: code, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
     }
 }
 
-/// Ekranda gecen az sayidaki cumle icin basit bir metin tablosu.
-/// Gostergelerin kendi etiketleri (KPH, FUEL, LAP...) her iki dilde de ayni
-/// kaldigi icin burada yer almiyor.
+/// All user-facing text, looked up in the String Catalog for the chosen
+/// language. Dashboard labels such as KPH, FUEL and LAP stay in English, as on
+/// real steering wheel displays.
 struct Strings {
     let language: AppLanguage
+    private let bundle: Bundle
+    private let fallback: Bundle
 
-    func pick(_ turkish: String, _ english: String) -> String {
-        language == .turkish ? turkish : english
-    }
-
-    var connectionOff: String { pick("BAGLANTI KAPALI", "NOT LISTENING") }
-    var demoStart: String { pick("DEMO SÜRÜŞ", "DEMO DRIVE") }
-    var demoBadge: String { pick("DEMO", "DEMO") }
-    var demoTitle: String { pick("DEMO SÜRÜŞ", "DEMO DRIVE") }
-    var demoSubtitle: String {
-        pick("Oyun olmadan simüle bir seans: panolar, turlar ve analiz sayfası çalışır.",
-             "A simulated session without the game: dashboards, laps and the analysis page all work.")
-    }
-    var projectTitle: String { pick("PROJE", "PROJECT") }
-    var projectSubtitle: String {
-        pick("Apex Dash ücretsiz ve açık kaynak. Beğendiysen yıldız ver ya da yorum yaz.",
-             "Apex Dash is free and open source. If you like it, star it or leave a review.")
-    }
-    var starOnGitHub: String { pick("GITHUB'DA YILDIZLA", "STAR ON GITHUB") }
-    var rateApp: String { pick("DEĞERLENDİR", "RATE") }
-    var waitingForData: String { pick("VERI BEKLENIYOR", "WAITING FOR DATA") }
-    func formatMismatch(_ game: String) -> String {
-        pick("OYUN \(game) BİÇİMİNDE GÖNDERİYOR", "GAME SENDS \(game) FORMAT")
-    }
-    var formatMismatchHint: String {
-        pick("Oyundaki UDP Format ayarı buradakiyle aynı olmalı.", "The UDP Format in the game must match the one selected here.")
-    }
-    func failure(_ message: String) -> String { pick("HATA: \(message)", "ERROR: \(message)") }
-
-    var settingsPath: String { pick("Oyunda: Ayarlar › Telemetri", "In game: Settings › Telemetry") }
-    var themeHint: String {
-        pick("Tasarimi degistirmek icin ekrana dokun veya yana kaydir",
-             "Tap the screen or swipe sideways to change the layout")
-    }
-    var tyreInner: String { pick("iç", "in") }
-
-    var lapsTitle: String { pick("TURLAR", "LAPS") }
-    var noLaps: String {
-        pick("Henuz tamamlanmis tur yok.", "No completed laps yet.")
-    }
-    var scanQR: String { pick("QR OKUT", "SCAN QR") }
-    var scanHint: String {
-        pick("www.apexdash.pro sitesini aç ve oradaki QR'ı okut.",
-             "Open www.apexdash.pro and scan the QR shown there.")
-    }
-    func connectedTo(_ code: String) -> String {
-        pick("EŞLEŞTİ · \(code) · TARAYICI BEKLENİYOR", "PAIRED · \(code) · WAITING FOR BROWSER")
-    }
-    var disconnect: String { pick("BAGLANTIYI KES", "DISCONNECT") }
-    var sendNow: String { pick("SIMDI GONDER", "SEND NOW") }
-    func lastSent(_ time: String) -> String {
-        pick("son gonderim \(time)", "last sent \(time)")
-    }
-    var cameraDenied: String {
-        pick("Kamera izni yok. Ayarlar › Apex Dash'ten acabilirsin.",
-             "No camera access. Enable it in Settings › Apex Dash.")
+    init(language: AppLanguage) {
+        self.language = language
+        self.bundle = language.bundle
+        self.fallback = AppLanguage.english.bundle
     }
 
-    var shareCSV: String { pick("CSV PAYLAS", "SHARE CSV") }
-    var scanForWeb: String {
-        pick("Turlari sitede gormek icin okut", "Scan to open these laps on the web")
-    }
-    var close: String { pick("KAPAT", "CLOSE") }
-    var lapsButton: String { pick("TURLAR", "LAPS") }
-
-    func addressChanged(from old: String, to new: String) -> String {
-        pick("IP DEGISTI: \(old) → \(new). Oyundaki adresi guncelle.",
-             "IP CHANGED: \(old) → \(new). Update the address in the game.")
+    /// The translation for `key`, with `%1$@`-style placeholders filled in.
+    /// Missing translations fall back to English.
+    func text(_ key: String, _ arguments: String...) -> String {
+        let english = fallback.localizedString(forKey: key, value: key, table: nil)
+        let format = bundle.localizedString(forKey: key, value: english, table: nil)
+        guard !arguments.isEmpty else { return format }
+        return String(format: format, arguments: arguments.map { $0 as NSString })
     }
 
-    var setupTitle: String { pick("BAĞLANTI", "CONNECTION") }
-    var settingsTitle: String { pick("AYARLAR", "SETTINGS") }
-    var settingsButton: String { pick("AYARLAR", "SETTINGS") }
-    var connectionTitle: String { pick("BAĞLANTI", "CONNECTION") }
-    var connectionSubtitle: String { pick("IP adresi, port ve oyun ayarları", "IP address, port and game settings") }
-    var languageTitle: String { pick("DİL", "LANGUAGE") }
-    var webGuideTitle: String { pick("TELEMETRİ SİTESİ", "TELEMETRY SITE") }
-    var webGuideSubtitle: String {
-        pick("Turlarını sitede gör ve incele", "See and study your laps on the site")
-    }
-    var webGuideIntro: String {
-        pick("Her turun tam telemetrisi sitede kendiliğinden belirir: pist haritası, hız, gaz, fren, direksiyon, ERS ve viraj viraj karşılaştırma.",
-             "Every lap shows up on the site by itself: track map, speed, throttle, brake, steering, ERS, and a corner by corner comparison.")
-    }
-    var webGuideStep1: String {
-        pick("Bilgisayarında ya da tabletinde bu siteyi aç. Sayfa bir kod ve QR gösterir.",
-             "Open this site on a computer or tablet. The page shows a code and a QR.")
-    }
-    var webGuideStep2: String {
-        pick("Aşağıdaki QR OKUT'a bas ve telefonu sitedeki QR koduna tut.",
-             "Tap SCAN QR below and point the phone at the QR code on the site.")
-    }
-    func localAnalysisHint(_ address: String) -> String {
-        pick("QR olmadan: aynı Wi-Fi'daki tarayıcıda \(address) adresini aç.",
-             "Without the QR: open \(address) in a browser on the same Wi-Fi.")
-    }
-    var webGuideStep3: String {
-        pick("Site seni telefondaki analize geçirir. Turlar doğrudan telefondan gelir; ikisi aynı Wi-Fi'da olsun.",
-             "The site hands you over to the analysis on your phone. Laps come straight from the phone; keep both on the same Wi-Fi.")
-    }
-    func browserConnected(_ address: String) -> String {
-        pick("Tarayıcı bağlı · \(address)", "Browser connected · \(address)")
-    }
-    var webGuideNotPaired: String { pick("Henüz eşleşmedi", "Not paired yet") }
-    var copyLink: String { pick("KOPYALA", "COPY") }
-    var copied: String { pick("KOPYALANDI", "COPIED") }
-    var pairInSettings: String {
-        pick("Siteye bağlanmak için AYARLAR › TELEMETRİ SİTESİ sayfasını aç.",
-             "To connect the site, open SETTINGS › TELEMETRY SITE.")
-    }
-    var automaticLanguage: String { pick("OTO", "AUTO") }
-    var setupIntro: String {
-        pick("Oyun telemetriyi bu telefona gonderecek. Asagidaki degerleri oyunda birebir gir.",
-             "The game sends telemetry to this phone. Enter these values in the game exactly.")
-    }
-    var portLabel: String { pick("DINLENEN PORT", "LISTENING PORT") }
-    var phoneAddress: String { pick("BU TELEFONUN IP ADRESI", "THIS PHONE'S IP ADDRESS") }
-    var gameSettings: String { pick("OYUNDA: AYARLAR › TELEMETRI", "IN GAME: SETTINGS › TELEMETRY") }
-    var broadcastNote: String {
-        pick("Broadcast kapali kalmali: iOS yayin trafigini ancak Apple onayli bir yetkiyle alabilir.",
-             "Broadcast must stay off: iOS only receives broadcast traffic with an Apple-approved entitlement.")
-    }
-    var startButton: String { pick("BASLA", "START") }
-    var setupButton: String { pick("BAĞLANTI", "CONNECTION") }
-    var selectButton: String { pick("SEÇ", "SELECT") }
-    var flashWarningAccept: String { pick("OKUDUM, ANLADIM", "I UNDERSTAND") }
-    var flashWarningTitle: String { pick("IŞIK UYARISI", "FLASHING LIGHTS") }
-    var flashWarningBody: String {
-        pick("Vites zamanı geldiğinde ekran hızla yanıp söner ve ayarlardan açılırsa telefonun flaşı da kullanılır. Işığa duyarlı epilepsiniz varsa bu uyarıları kapalı tutun.",
-             "The screen flashes rapidly at the shift point, and the phone's flash can be used too if you enable it. If you have photosensitive epilepsy, keep these warnings off.")
-    }
-    var torchToggle: String { pick("VITES UYARISINDA FLAS", "FLASH ON SHIFT WARNING") }
-    var torchNote: String {
-        pick("Devir sinira dayaninca ekranla birlikte telefonun flasi da yanip soner.",
-             "When revs hit the limit the phone's flash blinks in sync with the screen.")
-    }
-    var menuButton: String { pick("MENÜ", "MENU") }
-    var connected: String { pick("BAĞLI", "CONNECTED") }
-    var notConnected: String { pick("BAĞLANTI YOK", "NOT CONNECTED") }
+    var connectionOff: String { text("connectionOff") }
+    var demoStart: String { text("demoStart") }
+    var demoBadge: String { text("demoBadge") }
+    var demoTitle: String { text("demoTitle") }
+    var demoSubtitle: String { text("demoSubtitle") }
+    var projectTitle: String { text("projectTitle") }
+    var projectSubtitle: String { text("projectSubtitle") }
+    var starOnGitHub: String { text("starOnGitHub") }
+    var rateApp: String { text("rateApp") }
+    var waitingForData: String { text("waitingForData") }
+    func formatMismatch(_ game: String) -> String { text("formatMismatch", game) }
+    func failure(_ message: String) -> String { text("failure", message) }
+
+    var settingsPath: String { text("settingsPath") }
+    var themeHint: String { text("themeHint") }
+    var tyreInner: String { text("tyreInner") }
+
+    var lapsTitle: String { text("lapsTitle") }
+    var noLaps: String { text("noLaps") }
+    var scanQR: String { text("scanQR") }
+    func connectedTo(_ code: String) -> String { text("connectedTo", code) }
+    var disconnect: String { text("disconnect") }
+    func lastSent(_ time: String) -> String { text("lastSent", time) }
+
+    var shareCSV: String { text("shareCSV") }
+    var lapsButton: String { text("lapsButton") }
+
+    func addressChanged(from old: String, to new: String) -> String { text("addressChanged", old, new) }
+
+    var setupTitle: String { text("setupTitle") }
+    var settingsTitle: String { text("settingsTitle") }
+    var settingsButton: String { text("settingsButton") }
+    var connectionTitle: String { text("connectionTitle") }
+    var connectionSubtitle: String { text("connectionSubtitle") }
+    var languageTitle: String { text("languageTitle") }
+    var webGuideTitle: String { text("webGuideTitle") }
+    var webGuideSubtitle: String { text("webGuideSubtitle") }
+    var webGuideIntro: String { text("webGuideIntro") }
+    var webGuideStep1: String { text("webGuideStep1") }
+    var webGuideStep2: String { text("webGuideStep2") }
+    func localAnalysisHint(_ address: String) -> String { text("localAnalysisHint", address) }
+    var webGuideStep3: String { text("webGuideStep3") }
+    func browserConnected(_ address: String) -> String { text("browserConnected", address) }
+    var webGuideNotPaired: String { text("webGuideNotPaired") }
+    var copyLink: String { text("copyLink") }
+    var copied: String { text("copied") }
+    var pairInSettings: String { text("pairInSettings") }
+    var automaticLanguage: String { text("automaticLanguage") }
+    var setupIntro: String { text("setupIntro") }
+    var portLabel: String { text("portLabel") }
+    var phoneAddress: String { text("phoneAddress") }
+    var gameSettings: String { text("gameSettings") }
+    var broadcastNote: String { text("broadcastNote") }
+    var setupButton: String { text("setupButton") }
+    var selectButton: String { text("selectButton") }
+    var flashWarningAccept: String { text("flashWarningAccept") }
+    var flashWarningTitle: String { text("flashWarningTitle") }
+    var flashWarningBody: String { text("flashWarningBody") }
+    var torchToggle: String { text("torchToggle") }
+    var torchNote: String { text("torchNote") }
+    var connected: String { text("connected") }
+    var notConnected: String { text("notConnected") }
 
 
     func themeTitle(_ theme: DashTheme) -> String {
         switch theme {
-        case .modern: return "MODERN"
-        case .dotMatrix: return "DOT MATRIX"
-        case .realistic: return "REALISTIC"
-        case .broadcast: return pick("YAYIN", "BROADCAST")
-        case .game: return pick("OYUN", "GAME")
-        case .cluster: return pick("GÖSTERGE", "CLUSTER")
+        case .modern: return text("themeModern")
+        case .dotMatrix: return text("themeDotMatrix")
+        case .realistic: return text("themeRealistic")
+        case .broadcast: return text("themeBroadcast")
+        case .game: return text("themeGame")
+        case .cluster: return text("themeCluster")
         }
     }
 }
