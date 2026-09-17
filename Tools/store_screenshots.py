@@ -1,47 +1,57 @@
 #!/usr/bin/env python3
 """Builds App Store screenshots from raw simulator captures.
 
-Each image keeps the app's look: the navy ground with its two slanted stripes,
-a caption set in Saira, and the capture inset with rounded corners.
+The app is landscape, the App Store is browsed in portrait. Each store image is
+a portrait canvas carrying a caption and one or two landscape screens, over the
+app's own navy ground and slanted stripes, set in Saira.
 
-    python3 Tools/store_screenshots.py <captures dir> <output dir>
+    python3 Tools/store_screenshots.py <captures dir> <output dir> [--landscape]
 
-Captures are named "<language>-<scene>.png"; the scene order and captions are
-below. Output is written at the size Apple asks for the 6.9 inch iPhone in
-landscape (2868 x 1320).
+Captures are named "<language>-<scene>.png". Portrait output is 1320 x 2868 and
+landscape output 2868 x 1320, the sizes Apple asks for the 6.9 inch iPhone.
+Run from the repository root, so the fonts are found.
 """
 import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-SIZE = (2868, 1320)
+PORTRAIT = (1320, 2868)
+LANDSCAPE = (2868, 1320)
 GROUND = (21, 21, 30)
 STRIPE_NEAR = (41, 41, 51)
 STRIPE_FAR = (49, 49, 59)
 ACCENT = (225, 6, 0)
 INK = (241, 242, 245)
+DIM = (150, 150, 168)
 
 FONTS = Path("Resources/Fonts")
-SCENES = ["realistic", "menu", "broadcast", "dotMatrix", "cluster", "analysis", "laps"]
-CAPTIONS = {
+
+# Each store image: the scenes it shows, its caption and its closing line.
+PAGES = {
     "en": [
-        "Your phone becomes the wheel display",
-        "Six dashboards, one swipe away",
-        "TV graphics on your desk",
-        "Every LED, every temperature",
-        "Analogue dials, live data",
-        "Study every lap in your browser",
-        "Lap times and sectors on the phone",
+        (["realistic", "broadcast"], "Your phone becomes the wheel display",
+         "Live from your game over Wi-Fi, 60 times a second"),
+        (["menu", "cluster"], "Six dashboards, one swipe away",
+         "Swipe to change, tap to go full screen"),
+        (["dotMatrix", "modern", "game"], "Pick the look you like",
+         "Every layout draws the same live telemetry"),
+        (["analysis", "laps"], "Every lap, recorded and compared",
+         "Track map, speed and pedal traces, corner by corner"),
+        (["setup", "webguide"], "Two-minute setup, no PC in between",
+         "Free and open source. No ads, no account, no tracking."),
     ],
     "tr": [
-        "Telefonun direksiyon ekranına dönüşür",
-        "Altı pano, tek kaydırma",
-        "Yayın grafikleri masanda",
-        "Her LED, her sıcaklık",
-        "Analog kadranlar, canlı veri",
-        "Her turu tarayıcında incele",
-        "Tur süreleri ve sektörler telefonda",
+        (["realistic", "broadcast"], "Telefonun direksiyon ekranına dönüşür",
+         "Oyundan Wi-Fi ile saniyede 60 kez canlı"),
+        (["menu", "cluster"], "Altı pano, tek kaydırma",
+         "Kaydırarak değiştir, dokunarak tam ekrana geç"),
+        (["dotMatrix", "modern", "game"], "Beğendiğin görünümü seç",
+         "Her pano aynı canlı telemetriyi çizer"),
+        (["analysis", "laps"], "Her tur kayıtta ve karşılaştırmada",
+         "Pist haritası, hız ve pedal grafikleri, viraj viraj"),
+        (["setup", "webguide"], "İki dakikada kurulum, arada PC yok",
+         "Ücretsiz ve açık kaynak. Reklam yok, hesap yok, takip yok."),
     ],
 }
 
@@ -50,11 +60,11 @@ def stripes(image):
     """The app's background: two grey bands leaning across the screen."""
     draw = ImageDraw.Draw(image)
     width, height = image.size
-    band = width * 0.17
+    band = width * 0.42
     gap = band * 0.22
-    shift = height * 0.42
+    shift = height * 0.18
     for index, colour in enumerate((STRIPE_NEAR, STRIPE_FAR)):
-        x = width * 0.22 + index * (band + gap)
+        x = width * 0.18 + index * (band + gap)
         draw.polygon([(x + shift, 0), (x + shift + band, 0), (x + band, height), (x, height)], fill=colour)
 
 
@@ -70,6 +80,19 @@ def tracked_width(draw, text, font, tracking):
     return sum(draw.textlength(c, font=font) + tracking for c in text) - tracking
 
 
+def wrapped(draw, text, font, tracking, limit):
+    lines, current = [], ""
+    for word in text.split():
+        candidate = f"{current} {word}".strip()
+        if tracked_width(draw, candidate, font, tracking) <= limit:
+            current = candidate
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    return lines
+
+
 def rounded(image, radius):
     mask = Image.new("L", image.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle([0, 0, image.width - 1, image.height - 1], radius, fill=255)
@@ -78,49 +101,73 @@ def rounded(image, radius):
     return out
 
 
-def compose(capture_path, caption, font_path):
-    canvas = Image.new("RGB", SIZE, GROUND)
+def place(canvas, path, top, width):
+    """Draws one screen with rounded corners and a soft shadow."""
+    shot = Image.open(path).convert("RGB")
+    height = int(width * shot.height / shot.width)
+    shot = rounded(shot.resize((width, height), Image.LANCZOS), 40)
+    x = (canvas.width - width) // 2
+    shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle([x, top + 18, x + width, top + height + 18], 40, fill=(0, 0, 0, 160))
+    canvas.paste(Image.alpha_composite(canvas.convert("RGBA"), shadow).convert("RGB"), (0, 0))
+    canvas.paste(shot, (x, top), shot)
+    return height
+
+
+def compose(paths, caption, footer, portrait=True):
+    size = PORTRAIT if portrait else LANDSCAPE
+    canvas = Image.new("RGB", size, GROUND)
     stripes(canvas)
     draw = ImageDraw.Draw(canvas)
 
-    font = ImageFont.truetype(str(font_path), 88)
-    tracking = 2
-    text_width = tracked_width(draw, caption, font, tracking)
-    tracked_text(draw, ((SIZE[0] - text_width) / 2, 92), caption, font, INK, tracking)
-    # A short accent rule under the caption, like the app's dividers.
-    rule = 150
-    draw.rounded_rectangle([(SIZE[0] - rule) / 2, 232, (SIZE[0] + rule) / 2, 240], 4, fill=ACCENT)
+    title = ImageFont.truetype(str(FONTS / "Saira-Black.ttf"), 104 if portrait else 88)
+    note = ImageFont.truetype(str(FONTS / "Saira-Medium.ttf"), 50 if portrait else 44)
+    margin = int(size[0] * 0.09)
 
-    shot = Image.open(capture_path).convert("RGB")
-    top = 320
-    max_height = SIZE[1] - top - 90
-    width = min(int(max_height * shot.width / shot.height), 2360)
-    height = int(width * shot.height / shot.width)
-    shot = rounded(shot.resize((width, height), Image.LANCZOS), 44)
+    y = 150 if portrait else 86
+    for line in wrapped(draw, caption, title, 2, size[0] - margin * 2):
+        width = tracked_width(draw, line, title, 2)
+        tracked_text(draw, ((size[0] - width) / 2, y), line, title, INK, 2)
+        y += int(title.size * 1.22)
+    draw.rounded_rectangle([(size[0] - 160) / 2, y + 26, (size[0] + 160) / 2, y + 36], 5, fill=ACCENT)
+    y += 120
 
-    x = (SIZE[0] - width) // 2
-    # A soft dark shadow so the screen sits above the background.
-    shadow = Image.new("RGBA", SIZE, (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle([x, top + 16, x + width, top + height + 16], 44, fill=(0, 0, 0, 150))
-    canvas.paste(Image.alpha_composite(canvas.convert("RGBA"), shadow).convert("RGB"), (0, 0))
-    canvas.paste(shot, (x, top), shot)
+    footer_height = 190 if portrait else 150
+    available = size[1] - y - footer_height
+    shot_width = size[0] - margin * 2
+    gap = 80
+    shot_height = int(shot_width * 1320 / 2868)
+    total = shot_height * len(paths) + gap * (len(paths) - 1)
+    if total > available:                      # one tall screen, or a small canvas
+        shot_width = int(shot_width * available / total)
+        shot_height = int(shot_width * 1320 / 2868)
+        total = shot_height * len(paths) + gap * (len(paths) - 1)
+    y += max((available - total) // 2, 0)
+    for path in paths:
+        y += place(canvas, path, y, shot_width) + gap
+
+    width = tracked_width(draw, footer, note, 1)
+    tracked_text(draw, ((size[0] - width) / 2, size[1] - footer_height + 30), footer, note, DIM, 1)
     return canvas
 
 
 def main():
-    captures = Path(sys.argv[1] if len(sys.argv) > 1 else "captures")
-    output = Path(sys.argv[2] if len(sys.argv) > 2 else "docs/store")
+    arguments = [a for a in sys.argv[1:] if not a.startswith("--")]
+    portrait = "--landscape" not in sys.argv
+    captures = Path(arguments[0] if arguments else "captures")
+    output = Path(arguments[1] if len(arguments) > 1 else "docs/store")
     output.mkdir(parents=True, exist_ok=True)
-    font_path = FONTS / "Saira-Black.ttf"
 
-    for language, captions in CAPTIONS.items():
-        for index, (scene, caption) in enumerate(zip(SCENES, captions), start=1):
-            source = captures / f"{language}-{scene}.png"
-            if not source.exists():
-                print(f"missing {source}")
+    for language, pages in PAGES.items():
+        for index, (scenes, caption, footer) in enumerate(pages, start=1):
+            paths = [captures / f"{language}-{scene}.png" for scene in scenes]
+            missing = [p for p in paths if not p.exists()]
+            if missing:
+                print(f"missing {missing[0]}")
                 continue
-            image = compose(source, caption, font_path)
-            target = output / f"{language}-{index}-{scene}.png"
+            image = compose(paths, caption, footer, portrait=portrait)
+            shape = "portrait" if portrait else "landscape"
+            target = output / f"{language}-{index}-{scenes[0]}-{shape}.png"
             image.save(target)
             print(target, image.size)
 
