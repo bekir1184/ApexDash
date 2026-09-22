@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Shift light app icon">
+  <defs>
+    <linearGradient id="vignette" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.06"></stop>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.35"></stop>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"></stop>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop>
+    </linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"></stop>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.3"></stop>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b"></feMergeNode>
+        <feMergeNode in="b"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+  <g>
+    <rect width="240" height="240" fill="#0D0D11"></rect>
+    <rect x="26" y="-80" width="74" height="420" fill="#191920" transform="rotate(25 63 130)"></rect>
+    <rect x="150" y="-80" width="74" height="420" fill="#191920" transform="rotate(25 187 130)"></rect>
+    <rect width="240" height="240" fill="url(#vignette)"></rect>
+    <g filter="url(#glow)" transform="translate(120 120) skewX(-9) translate(-120 -120)">
+      <g>
+        <rect x="35.5" y="68" width="25" height="104" rx="4" fill="#1BE36C"></rect>
+        <rect x="35.5" y="68" width="25" height="44" rx="4" fill="url(#sheen)"></rect>
+        <rect x="35.5" y="128" width="25" height="44" rx="4" fill="url(#shade)"></rect>
+      </g>
+      <g>
+        <rect x="71.5" y="68" width="25" height="104" rx="4" fill="#1BE36C"></rect>
+        <rect x="71.5" y="68" width="25" height="44" rx="4" fill="url(#sheen)"></rect>
+        <rect x="71.5" y="128" width="25" height="44" rx="4" fill="url(#shade)"></rect>
+      </g>
+      <g>
+        <rect x="107.5" y="68" width="25" height="104" rx="4" fill="#FFC21A"></rect>
+        <rect x="107.5" y="68" width="25" height="44" rx="4" fill="url(#sheen)"></rect>
+        <rect x="107.5" y="128" width="25" height="44" rx="4" fill="url(#shade)"></rect>
+      </g>
+      <g>
+        <rect x="143.5" y="68" width="25" height="104" rx="4" fill="#FF2D16"></rect>
+        <rect x="143.5" y="68" width="25" height="44" rx="4" fill="url(#sheen)"></rect>
+        <rect x="143.5" y="128" width="25" height="44" rx="4" fill="url(#shade)"></rect>
+      </g>
+      <g>
+        <rect x="179.5" y="68" width="25" height="104" rx="4" fill="#FF2D16"></rect>
+        <rect x="179.5" y="68" width="25" height="44" rx="4" fill="url(#sheen)"></rect>
+        <rect x="179.5" y="128" width="25" height="44" rx="4" fill="url(#shade)"></rect>
+      </g>
+    </g>
+  </g>
+</svg>

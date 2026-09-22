@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex Dash · Privacy</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #121219; --panel: rgba(26,26,35,.92); --line: rgba(255,255,255,.08); --ink: #f1f2f5; --dim: #9a9aac; --accent: #e10600; --stripe: #292933; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 "Saira", -apple-system, "Segoe UI", system-ui, sans-serif; position: relative; }
+  body::before { content: ""; position: fixed; inset: -20vh -20vw; z-index: -1; pointer-events: none;
+    background: linear-gradient(110.3deg, transparent 28%, var(--stripe) 28%, var(--stripe) 39%, transparent 39%),
+                linear-gradient(110.3deg, transparent 46%, var(--stripe) 46%, var(--stripe) 57%, transparent 57%); }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 60px; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  header a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: .3em; }
+  header img { width: 26px; height: 26px; border-radius: 6px; }
+  header span { color: var(--accent); }
+  article { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+  article + article { margin-top: 20px; }
+  h1 { margin: 0 0 4px; font-size: 30px; font-weight: 900; text-transform: uppercase; }
+  h2 { margin: 26px 0 6px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  p, li { color: #d6d6e0; }
+  small { color: var(--dim); }
+  a { color: #ff6b63; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/"><img src="/logo.svg" alt="">APEX<span>DASH</span></a></header>
+
+  <article>
+    <h1>Privacy policy</h1>
+    <small>Last updated: 17 September 2026</small>
+
+    <p>Apex Dash does not collect, store or share personal data. There are no
+    accounts, analytics, advertising or tracking.</p>
+
+    <h2>Game telemetry</h2>
+    <p>Your racing game sends telemetry to the app over your local network. It is
+    processed on the phone to draw the dashboards, and completed laps are kept in
+    the phone's memory until the app is closed. It is never sent to us.</p>
+
+    <h2>Lap analysis in the browser</h2>
+    <p>The analysis page is served by the phone itself to browsers on the same
+    network. To help your browser find the phone, the app publishes the phone's
+    local network address (for example 192.168.1.20) once to a topic on
+    <a href="https://ntfy.sh">ntfy.sh</a>, a public notification relay, named after
+    the pairing code shown on apexdash.pro. Local network addresses cannot be
+    reached from the internet. No telemetry or other data is sent there.</p>
+
+    <h2>Camera</h2>
+    <p>The camera is used only to scan the pairing QR code. Images are not stored
+    or sent anywhere.</p>
+
+    <h2>Settings</h2>
+    <p>Your choices, such as dashboard, language and UDP port, are stored on the
+    device.</p>
+
+    <h2>This website</h2>
+    <p>apexdash.pro is hosted by Vercel, which keeps standard server logs. The
+    site sets no cookies, and loads the Saira font from Google Fonts.</p>
+
+    <h2>Contact</h2>
+    <p>Questions: open an issue on <a href="https://github.com/bekir1184/ApexDash/issues">GitHub</a>.</p>
+  </article>
+
+  <article lang="tr">
+    <h1>Gizlilik politikası</h1>
+    <small>Son güncelleme: 17 Eylül 2026</small>
+
+    <p>Apex Dash kişisel veri toplamaz, saklamaz ve paylaşmaz. Hesap, analitik,
+    reklam ya da takip yoktur.</p>
+
+    <h2>Oyun telemetrisi</h2>
+    <p>Yarış oyunun telemetriyi yerel ağ üzerinden uygulamaya gönderir. Veriler
+    panoları çizmek için telefonda işlenir; tamamlanan turlar uygulama kapanana
+    kadar telefonun belleğinde tutulur. Bize hiçbir şekilde gönderilmez.</p>
+
+    <h2>Tarayıcıda tur analizi</h2>
+    <p>Analiz sayfasını aynı ağdaki tarayıcılara telefonun kendisi sunar.
+    Tarayıcının telefonu bulabilmesi için uygulama, telefonun yerel ağ adresini
+    (örneğin 192.168.1.20) bir kez, apexdash.pro'da görünen eşleştirme koduyla
+    adlandırılmış bir <a href="https://ntfy.sh">ntfy.sh</a> konusuna yayınlar.
+    Yerel ağ adreslerine internetten erişilemez. Oraya telemetri ya da başka bir
+    veri gönderilmez.</p>
+
+    <h2>Kamera</h2>
+    <p>Kamera yalnızca eşleştirme QR kodunu okumak için kullanılır. Görüntüler
+    saklanmaz ve hiçbir yere gönderilmez.</p>
+
+    <h2>Ayarlar</h2>
+    <p>Pano, dil ve UDP portu gibi seçimlerin cihazda saklanır.</p>
+
+    <h2>Bu site</h2>
+    <p>apexdash.pro, standart sunucu kayıtları tutan Vercel'de barındırılır. Site
+    çerez kullanmaz ve Saira yazı tipini Google Fonts'tan yükler.</p>
+
+    <h2>İletişim</h2>
+    <p>Sorular için <a href="https://github.com/bekir1184/ApexDash/issues">GitHub</a>'da issue aç.</p>
+  </article>
+</div>
+</body>
+</html>

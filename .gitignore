@@ -1,0 +1,16 @@
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+.DS_Store
+F1Dash.xcodeproj/
+Web/.vercel/
+
+# Generated App Store screenshots (rebuild with Tools/store_screenshots.py)
+docs/store/
+
+# Lansman planı yereldedir, depoya girmez
+docs/launch-plan.md
+*.xcworkspace/xcuserdata/
+docs/launch-day.md
+build*/
+DerivedData/

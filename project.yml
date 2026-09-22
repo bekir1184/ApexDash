@@ -1,0 +1,78 @@
+name: ApexDash
+options:
+  bundleIdPrefix: com.bekirersever
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: "7NGN8D3PYY"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "2"
+targets:
+  ApexDash:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - path: Resources/Fonts
+        buildPhase: resources
+      - path: Resources/Assets.xcassets
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      # Translations: add a language to these catalogs in Xcode.
+      - path: Resources/Localizable.xcstrings
+      - path: Resources/InfoPlist.xcstrings
+      # Telefonun yerel agda sundugu analiz sayfasi.
+      - path: Web/index.html
+        buildPhase: resources
+      - path: Web/logo.svg
+        buildPhase: resources
+      - path: Web/qrcode.js
+        buildPhase: resources
+      - path: Web/apple-touch-icon.png
+        buildPhase: resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Apex Dash
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations:
+          - en
+          - tr
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIStatusBarHidden: true
+        ITSAppUsesNonExemptEncryption: false
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSCameraUsageDescription: "The camera scans the QR code on apexdash.pro to pair the phone with your browser."
+        NSLocalNetworkUsageDescription: "Apex Dash receives telemetry from your game and serves lap analysis to browsers on the same network."
+        UIAppFonts:
+          - Saira-Regular.ttf
+          - Saira-Medium.ttf
+          - Saira-SemiBold.ttf
+          - Saira-Bold.ttf
+          - Saira-ExtraBold.ttf
+          - Saira-Black.ttf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bekirersever.apexdash
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+  ApexDashTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests
+    dependencies:
+      - target: ApexDash
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

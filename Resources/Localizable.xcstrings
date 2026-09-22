@@ -1,0 +1,1383 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "connectionOff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOT LISTENING"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI KAPALI"
+          }
+        }
+      }
+    },
+    "demoStart": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO DRIVE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO SÜRÜŞ"
+          }
+        }
+      }
+    },
+    "demoBadge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO"
+          }
+        }
+      }
+    },
+    "demoTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO DRIVE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO SÜRÜŞ"
+          }
+        }
+      }
+    },
+    "demoSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A simulated session without the game: dashboards, laps and the analysis page all work."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun olmadan simüle bir seans: panolar, turlar ve analiz sayfası çalışır."
+          }
+        }
+      }
+    },
+    "projectTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PROJECT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PROJE"
+          }
+        }
+      }
+    },
+    "projectSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apex Dash is free and open source. If you like it, star it or leave a review."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apex Dash ücretsiz ve açık kaynak. Beğendiysen yıldız ver ya da yorum yaz."
+          }
+        }
+      }
+    },
+    "starOnGitHub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STAR ON GITHUB"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GITHUB'DA YILDIZLA"
+          }
+        }
+      }
+    },
+    "rateApp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RATE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEĞERLENDİR"
+          }
+        }
+      }
+    },
+    "waitingForData": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WAITING FOR DATA"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERİ BEKLENİYOR"
+          }
+        }
+      }
+    },
+    "formatMismatch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GAME SENDS %1$@ FORMAT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OYUN %1$@ BİÇİMİNDE GÖNDERİYOR"
+          }
+        }
+      }
+    },
+    "failure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ERROR: %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HATA: %1$@"
+          }
+        }
+      }
+    },
+    "settingsPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In game: Settings › Telemetry"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunda: Ayarlar › Telemetri"
+          }
+        }
+      }
+    },
+    "themeHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the screen or swipe sideways to change the layout"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasarımı değiştirmek için ekrana dokun veya yana kaydır"
+          }
+        }
+      }
+    },
+    "tyreInner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iç"
+          }
+        }
+      }
+    },
+    "lapsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LAPS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TURLAR"
+          }
+        }
+      }
+    },
+    "noLaps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No completed laps yet."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz tamamlanmış tur yok."
+          }
+        }
+      }
+    },
+    "scanQR": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SCAN QR"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR OKUT"
+          }
+        }
+      }
+    },
+    "connectedTo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PAIRED · %1$@ · WAITING FOR BROWSER"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EŞLEŞTİ · %1$@ · TARAYICI BEKLENİYOR"
+          }
+        }
+      }
+    },
+    "disconnect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DISCONNECT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTIYI KES"
+          }
+        }
+      }
+    },
+    "lastSent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last paired %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son eşleşme %1$@"
+          }
+        }
+      }
+    },
+    "shareCSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHARE CSV"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CSV PAYLAŞ"
+          }
+        }
+      }
+    },
+    "lapsButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LAPS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TURLAR"
+          }
+        }
+      }
+    },
+    "addressChanged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP CHANGED: %1$@ → %2$@. Update the address in the game."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP DEĞİŞTİ: %1$@ → %2$@. Oyundaki adresi güncelle."
+          }
+        }
+      }
+    },
+    "setupTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI"
+          }
+        }
+      }
+    },
+    "settingsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SETTINGS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AYARLAR"
+          }
+        }
+      }
+    },
+    "settingsButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SETTINGS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AYARLAR"
+          }
+        }
+      }
+    },
+    "connectionTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI"
+          }
+        }
+      }
+    },
+    "connectionSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP address, port and game settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP adresi, port ve oyun ayarları"
+          }
+        }
+      }
+    },
+    "languageTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LANGUAGE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DİL"
+          }
+        }
+      }
+    },
+    "webGuideTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TELEMETRY SITE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TELEMETRİ SİTESİ"
+          }
+        }
+      }
+    },
+    "webGuideSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See and study your laps on the site"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turlarını sitede gör ve incele"
+          }
+        }
+      }
+    },
+    "webGuideIntro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every lap shows up on the site by itself: track map, speed, throttle, brake, steering, ERS, and a corner by corner comparison."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her turun tam telemetrisi sitede kendiliğinden belirir: pist haritası, hız, gaz, fren, direksiyon, ERS ve viraj viraj karşılaştırma."
+          }
+        }
+      }
+    },
+    "webGuideStep1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this site on a computer or tablet. The page shows a code and a QR."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilgisayarında ya da tabletinde bu siteyi aç. Sayfa bir kod ve QR gösterir."
+          }
+        }
+      }
+    },
+    "webGuideStep2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap SCAN QR below and point the phone at the QR code on the site."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki QR OKUT'a bas ve telefonu sitedeki QR koduna tut."
+          }
+        }
+      }
+    },
+    "localAnalysisHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without the QR: open %1$@ in a browser on the same Wi-Fi."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR olmadan: aynı Wi-Fi'daki tarayıcıda %1$@ adresini aç."
+          }
+        }
+      }
+    },
+    "webGuideStep3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The site hands you over to the analysis on your phone. Laps come straight from the phone; keep both on the same Wi-Fi."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Site seni telefondaki analize geçirir. Turlar doğrudan telefondan gelir; ikisi aynı Wi-Fi'da olsun."
+          }
+        }
+      }
+    },
+    "browserConnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser connected · %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarayıcı bağlı · %1$@"
+          }
+        }
+      }
+    },
+    "webGuideNotPaired": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not paired yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz eşleşmedi"
+          }
+        }
+      }
+    },
+    "copyLink": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COPY"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KOPYALA"
+          }
+        }
+      }
+    },
+    "copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COPIED"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KOPYALANDI"
+          }
+        }
+      }
+    },
+    "pairInSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To connect the site, open SETTINGS › TELEMETRY SITE."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siteye bağlanmak için AYARLAR › TELEMETRİ SİTESİ sayfasını aç."
+          }
+        }
+      }
+    },
+    "automaticLanguage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OTO"
+          }
+        }
+      }
+    },
+    "setupIntro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game sends telemetry to this phone. Enter these values in the game exactly."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun telemetriyi bu telefona gönderecek. Aşağıdaki değerleri oyunda birebir gir."
+          }
+        }
+      }
+    },
+    "portLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LISTENING PORT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DİNLENEN PORT"
+          }
+        }
+      }
+    },
+    "phoneAddress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "THIS PHONE'S IP ADDRESS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BU TELEFONUN IP ADRESİ"
+          }
+        }
+      }
+    },
+    "gameSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IN GAME: SETTINGS › TELEMETRY"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OYUNDA: AYARLAR › TELEMETRİ"
+          }
+        }
+      }
+    },
+    "broadcastNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broadcast must stay off: iOS only receives broadcast traffic with an Apple-approved entitlement."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broadcast kapalı kalmalı: iOS yayın trafiğini ancak Apple onaylı bir yetkiyle alabilir."
+          }
+        }
+      }
+    },
+    "setupButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI"
+          }
+        }
+      }
+    },
+    "selectButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SELECT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEÇ"
+          }
+        }
+      }
+    },
+    "flashWarningAccept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I UNDERSTAND"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OKUDUM, ANLADIM"
+          }
+        }
+      }
+    },
+    "flashWarningTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FLASHING LIGHTS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IŞIK UYARISI"
+          }
+        }
+      }
+    },
+    "flashWarningBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The screen flashes rapidly at the shift point, and the phone's flash can be used too if you enable it. If you have photosensitive epilepsy, keep these warnings off."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vites zamanı geldiğinde ekran hızla yanıp söner ve ayarlardan açılırsa telefonun flaşı da kullanılır. Işığa duyarlı epilepsiniz varsa bu uyarıları kapalı tutun."
+          }
+        }
+      }
+    },
+    "torchToggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FLASH ON SHIFT WARNING"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VİTES UYARISINDA FLAŞ"
+          }
+        }
+      }
+    },
+    "torchNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When revs hit the limit the phone's flash blinks in sync with the screen."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devir sınıra dayanınca ekranla birlikte telefonun flaşı da yanıp söner."
+          }
+        }
+      }
+    },
+    "connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTED"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLI"
+          }
+        }
+      }
+    },
+    "notConnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOT CONNECTED"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI YOK"
+          }
+        }
+      }
+    },
+    "themeBroadcast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BROADCAST"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YAYIN"
+          }
+        }
+      }
+    },
+    "themeGame": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GAME"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OYUN"
+          }
+        }
+      }
+    },
+    "themeCluster": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLUSTER"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GÖSTERGE"
+          }
+        }
+      }
+    },
+    "themeModern": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MODERN"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MODERN"
+          }
+        }
+      }
+    },
+    "themeDotMatrix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DOT MATRIX"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DOT MATRIX"
+          }
+        }
+      }
+    },
+    "themeRealistic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REALISTIC"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REALISTIC"
+          }
+        }
+      }
+    },
+    "obNext": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEXT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEVAM"
+          }
+        }
+      }
+    },
+    "obSkip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SKIP"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATLA"
+          }
+        }
+      }
+    },
+    "obDashesEyebrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DASHBOARDS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PANOLAR"
+          }
+        }
+      }
+    },
+    "obDashesTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PICK YOUR COCKPIT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KOKPİTİNİ SEÇ"
+          }
+        }
+      }
+    },
+    "obDashesBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Six dashboards, live from F1 25 and F1 26 telemetry. Swipe in the menu, tap and drive."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altı farklı pano; F1 25 ve F1 26 telemetrisiyle anlık. Menüde kaydır, dokun ve sür."
+          }
+        }
+      }
+    },
+    "obConnectEyebrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI"
+          }
+        }
+      }
+    },
+    "obConnectTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECT THE GAME"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OYUNA BAĞLAN"
+          }
+        }
+      }
+    },
+    "obConnectBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the game, turn on UDP under Settings › Telemetry and enter this address. Keep both on the same network."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunda Ayarlar › Telemetri'de UDP'yi aç ve bu adresi gir. Telefon ve oyun aynı ağda olsun."
+          }
+        }
+      }
+    },
+    "obUDP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UDP TELEMETRY"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UDP TELEMETRİ"
+          }
+        }
+      }
+    },
+    "obOn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ON"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AÇIK"
+          }
+        }
+      }
+    },
+    "obAnalyseEyebrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ANALYSIS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ANALİZ"
+          }
+        }
+      }
+    },
+    "obAnalyseTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STUDY EVERY LAP"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HER TURU İNCELE"
+          }
+        }
+      }
+    },
+    "obAnalyseBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See your laps on apexdash.pro; just scan the QR: track map, speed and pedal traces, corner-by-corner comparison."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turlarını apexdash.pro'da gör; QR'ı okutman yeter: harita, hız ve pedal grafikleri, viraj viraj karşılaştırma."
+          }
+        }
+      }
+    },
+    "obBest": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BEST"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EN İYİ"
+          }
+        }
+      }
+    },
+    "obLap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LAP"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TUR"
+          }
+        }
+      }
+    },
+    "obReadyTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "READY?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HAZIR MISIN?"
+          }
+        }
+      }
+    },
+    "obLightsOut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "START"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAŞLA"
+          }
+        }
+      }
+    },
+    "rotatePhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TURN YOUR PHONE SIDEWAYS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TELEFONU YATAY ÇEVİR"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

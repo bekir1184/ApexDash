@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead? Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Start a session in ...
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Game and platform
+      placeholder: F1 26 on PlayStation 5
+    validations:
+      required: true
+  - type: input
+    id: settings
+    attributes:
+      label: Telemetry settings in the game
+      placeholder: UDP on, broadcast off, port 20777, 60 Hz, format 2026
+  - type: input
+    id: device
+    attributes:
+      label: Phone or tablet and iOS version
+      placeholder: iPhone 15 Pro, iOS 26.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Apex Dash version
+      description: Shown on the App Store page or in TestFlight
