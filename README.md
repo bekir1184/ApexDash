@@ -18,6 +18,10 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/app/id6813199957"><img src="https://img.shields.io/badge/Download_on_the-App_Store-0D96F6?logo=apple&logoColor=white&style=for-the-badge" alt="Download Apex Dash on the App Store"></a>
+</p>
+
+<p align="center">
   <img src="docs/images/dashboard.gif" width="720" alt="The realistic dashboard running live telemetry">
 </p>
 
@@ -36,6 +40,9 @@ speed and pedal charts, a lap-to-lap comparison and a corner by corner table.
 
 **You need:** an iPhone or iPad, a racing game on the same Wi-Fi (PC, PlayStation
 or Xbox), and two minutes of setup. No PC in the middle, no cloud, no account.
+
+The app is free on the **[App Store](https://apps.apple.com/app/id6813199957)** —
+no ads, no purchases. Everything you see here is what you get.
 
 ## Three steps
 
