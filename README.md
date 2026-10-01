@@ -257,3 +257,17 @@ FIA, Electronic Arts or Codemasters. F1 and Formula 1 are trademarks of Formula
 One Licensing B.V., used only to say which games the app reads telemetry from.
 
 <p align="center"><sub>Screenshots show the built-in demo drive.</sub></p>
+
+## Building for the App Store
+
+Archive with the public Xcode, not a beta: App Store Connect refuses builds made
+with a seed release. The machine may have both installed, so point one build at
+the release without changing the system setting:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild archive ...
+```
+
+Check which one an archive used with
+`plutil -extract DTXcodeBuild raw <archive>/Products/Applications/ApexDash.app/Info.plist`;
+a build number like `27A9269` is a seed, `27A266a` is public.
