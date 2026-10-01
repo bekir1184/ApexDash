@@ -15,6 +15,7 @@ struct SplashLogo: View {
     var hold: Duration = .milliseconds(900)
     let onDone: () -> Void
 
+    @StateObject private var tilt = DeviceTilt()
     @State private var lit = 0
     @State private var wordmark = false
     /// Rotation (degrees) that keeps the logo upright for the user.
@@ -47,13 +48,11 @@ struct SplashLogo: View {
         }
         .rotationEffect(.degrees(angle))
         .onAppear {
-            UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+            tilt.start()
             updateOrientation(animated: false)
         }
-        .onDisappear { UIDevice.current.endGeneratingDeviceOrientationNotifications() }
-        .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-            updateOrientation(animated: true)
-        }
+        .onDisappear { tilt.stop() }
+        .onChange(of: tilt.angle) { _, _ in updateOrientation(animated: true) }
         .task { await run() }
     }
 
@@ -96,30 +95,29 @@ struct SplashLogo: View {
     }
 
     private func updateOrientation(animated: Bool) {
-        let device = UIDevice.current.orientation
         let interface = UIApplication.shared.connectedScenes
             .compactMap { ($0 as? UIWindowScene)?.interfaceOrientation }
             .first ?? .landscapeRight
-        let target: Double
-        switch device {
         // With the home button on the left (landscapeLeft), the top of the interface faces
-        // the phone's left edge; held upright, content must rotate right, +90 degrees.
-        case .portrait: target = interface == .landscapeLeft ? 90 : -90
-        case .portraitUpsideDown: target = interface == .landscapeLeft ? -90 : 90
-        case .landscapeLeft, .landscapeRight: target = 0
-        // Flat on a table or unknown: leave as is.
-        default: return
-        }
-        let isPortrait = device.isPortrait
-        guard target != angle || isPortrait != portrait else { return }
+        // the phone's left edge, a quarter turn clockwise from upright.
+        let interfaceAngle: Double = interface == .landscapeLeft ? 90 : -90
+        // Turn the logo back by however far the interface and the phone disagree. While
+        // rotation lock holds the interface still, this also covers a phone turned the other
+        // way, where the logo lands upside down and has to come all the way round.
+        var target = interfaceAngle - tilt.angle
+        while target > 180 { target -= 360 }
+        while target <= -180 { target += 360 }
+
+        let isUpright = tilt.isUpright
+        guard target != angle || isUpright != portrait else { return }
         if animated {
             withAnimation(.spring(duration: 0.7, bounce: 0.18)) {
                 angle = target
-                portrait = isPortrait
+                portrait = isUpright
             }
         } else {
             angle = target
-            portrait = isPortrait
+            portrait = isUpright
         }
     }
 }
