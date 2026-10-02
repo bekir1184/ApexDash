@@ -27,4 +27,6 @@ jobs:
           path-to-signatures: signatures/version1/cla.json
           path-to-document: https://github.com/bekir1184/ApexDash/blob/main/CLA.md
           branch: cla-signatures
-          allowlist: bekir1184,bot*
+          # Co-authors without a GitHub account, such as the assistant used to
+          # write some commits, cannot sign; the repository owner stands for them.
+          allowlist: bekir1184,bot*,*[bot],Claude*
