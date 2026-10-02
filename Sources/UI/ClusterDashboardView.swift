@@ -5,6 +5,7 @@ import SwiftUI
 struct ClusterDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
+    @Environment(\.speedUnit) private var speedUnit
 
     var body: some View {
         GeometryReader { geo in
@@ -13,7 +14,7 @@ struct ClusterDashboardView: View {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !dash.shiftFlash)) { timeline in
                 let phase = timeline.date.timeIntervalSinceReferenceDate
                 Canvas(rendersAsynchronously: false) { context, size in
-                    ClusterHUD(dash: dash, size: size, time: phase).draw(in: &context)
+                    ClusterHUD(dash: dash, size: size, time: phase, speedUnit: speedUnit).draw(in: &context)
                 }
             }
         }
@@ -25,6 +26,7 @@ struct ClusterHUD {
     let size: CGSize
     /// Time base of the shift warning animation.
     var time: TimeInterval = 0
+    var speedUnit: SpeedUnit = .kph
 
     /// Warning pulse moving between 0 and 1.
     private var pulse: Double {
@@ -346,7 +348,8 @@ struct ClusterHUD {
     private func drawSpeed(in ctx: inout GraphicsContext, centre: CGPoint, radius r: CGFloat) {
         bezel(&ctx, centre: centre, radius: r)
         let start = 145.0, sweep = 250.0
-        let top = 360, step = 20
+        // The dial is read in whole divisions, so each unit gets its own top speed.
+        let top = speedUnit == .mph ? 240 : 360, step = 20
         let divisions = top / step
         // First half of the scale yellow, second half white, as in the reference.
         scale(&ctx, centre: centre, radius: r, from: start, sweep: sweep,
@@ -354,15 +357,16 @@ struct ClusterHUD {
               values: { "\($0 * step)" }, colour: warm,
               accentUntil: divisions / 2, accentColour: ink)
 
-        let fraction = min(Double(dash.speedKPH) / Double(top), 1)
+        let speed = speedUnit.value(fromKPH: dash.speedKPH)
+        let fraction = min(Double(speed) / Double(top), 1)
         needle(&ctx, centre: centre, radius: r, angle: start + sweep * fraction)
         ctx.fill(circle(centre, r * 0.50), with: .color(.black))
         ctx.stroke(circle(centre, r * 0.50), with: .color(.white.opacity(0.10)),
                    lineWidth: max(1, r * 0.01))
 
-        text(&ctx, "\(dash.speedKPH)", size: r * 0.36, colour: ink, weight: .medium,
+        text(&ctx, "\(speed)", size: r * 0.36, colour: ink, weight: .medium,
              at: CGPoint(x: centre.x, y: centre.y + r * 0.06))
-        text(&ctx, "km/h", size: r * 0.10, colour: faint,
+        text(&ctx, speedUnit.smallLabel, size: r * 0.10, colour: faint,
              at: CGPoint(x: centre.x, y: centre.y + r * 0.24))
 
         // ERS arc at the bottom, where the reference had the fuel gauge.

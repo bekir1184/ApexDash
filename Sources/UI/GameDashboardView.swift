@@ -6,6 +6,7 @@ import SwiftUI
 /// bar at the bottom.
 struct GameDashboardView: View {
     let dash: DashboardModel
+    @Environment(\.speedUnit) private var speedUnit
     let unit: CGFloat
 
     private let panel = Color(red: 0.11, green: 0.14, blue: 0.18)
@@ -57,10 +58,10 @@ struct GameDashboardView: View {
                 // Top left: speed
                 cell(x: 0, y: 0, w: 0.26, h: 0.30, in: geo) {
                     VStack(spacing: 0) {
-                        Text(verbatim: "\(dash.speedKPH)")
+                        Text(verbatim: "\(speedUnit.value(fromKPH: dash.speedKPH))")
                             .font(.system(size: h * 0.16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white)
-                        Text("KPH")
+                        Text(verbatim: speedUnit.compactLabel)
                             .font(.system(size: h * 0.065, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.7))
                     }

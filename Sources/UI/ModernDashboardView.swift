@@ -3,6 +3,7 @@ import SwiftUI
 /// A clean, high contrast layout in the style of a Bosch DDU.
 struct ModernDashboardView: View {
     let dash: DashboardModel
+    @Environment(\.speedUnit) private var speedUnit
     let unit: CGFloat
     let strings: Strings
 
@@ -33,10 +34,10 @@ struct ModernDashboardView: View {
         VStack(alignment: .leading, spacing: unit * 0.16) {
             label("SPEED")
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: "\(dash.speedKPH)")
+                Text(verbatim: "\(speedUnit.value(fromKPH: dash.speedKPH))")
                     .font(.system(size: unit * 1.7, weight: .black, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("KM/H")
+                Text(verbatim: speedUnit.label)
                     .font(.system(size: unit * 0.33, weight: .heavy, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }

@@ -448,8 +448,12 @@ const state = {
   sort: "lap",
   lap: null, compare: null, // lap detail
   mapMode: "speed", showAll: false,
-  orient: null, cursor: null, corners: []
+  orient: null, cursor: null, corners: [],
+  speedUnit: "kph"           // follows the app's setting; traces stay in km/h
 };
+/** Speeds travel in km/h; these two turn them into what the app shows. */
+const spd = v => state.speedUnit === "mph" ? v * 0.621371 : v;
+const spdUnit = () => state.speedUnit === "mph" ? "mph" : "km/h";
 const lapInfo = n => state.laps.find(l => l.lap === n);
 const hasTrace = l => l && l.trace && !state.missing.has(l.lap);
 const topSpeedOf = l => l?.vmax ?? state.traces.get(l?.lap)?.vmax ?? null;
@@ -474,6 +478,7 @@ async function poll() {
     state.updatedAt = data.updatedAt || null;
     state.laps = (data.laps || []).filter(l => l.time > 0);
     state.track = data.track || null;
+    state.speedUnit = data.speedUnit === "mph" ? "mph" : "kph";
     if (changed || !state.loaded) { state.loaded = true; render(); }
     fillTopSpeeds();
   } catch (_) { state.error = true; }
@@ -664,7 +669,7 @@ function renderOverview() {
     card({ label: L("Teorik en iyi", "Theoretical best"), value: fmtLap(sum.theoretical),
            sub: gain > 0 ? `<span class="green">${fmtGap(-gain)}</span> ${L("en iyi sektörlerle", "from best sectors")}` : L("En iyi sektörlerin toplamı", "Sum of best sectors") }),
     card({ lap: sum.fastest?.lap, label: L("En yüksek hız", "Top speed"),
-           value: sum.fastest ? `${Math.round(sum.fastest.v)}<small>km/h</small>` : "—",
+           value: sum.fastest ? `${Math.round(spd(sum.fastest.v))}<small>${spdUnit()}</small>` : "—",
            sub: sum.fastest ? `${L("Tur", "Lap")} ${sum.fastest.lap}` : L("Tur izleri yükleniyor", "Loading lap traces") }),
     card({ label: L("Turlar", "Laps"), value: String(state.laps.length),
            sub: `${L("Ortanca", "Median")} ${fmtLap(sum.median)}` })
@@ -689,7 +694,7 @@ function renderLapList(sum) {
   const scale = Math.max(1000, Math.min(sum.worst - sum.best.time, (sum.median - sum.best.time) * 2.5));
   const head = `<div class="lap-row head"><span>${L("Tur", "Lap")}</span><span>${L("Süre", "Time")}</span>
     <span>${L("Fark", "Gap")}</span><span class="secs"><span>S1</span><span>S2</span><span>S3</span></span>
-    <span style="text-align:right">km/h</span><span class="chev"></span></div>`;
+    <span style="text-align:right">${spdUnit()}</span><span class="chev"></span></div>`;
   const rows = laps.map(l => {
     const isBest = l === sum.best, gap = l.time - sum.best.time, v = topSpeedOf(l);
     const secs = [0, 1, 2].map(i => {
@@ -703,7 +708,7 @@ function renderLapList(sum) {
       <span class="gap"><span class="bar"><i style="--w:${isBest ? 0 : Math.min(gap / scale, 1).toFixed(3)}"></i></span>
         <em>${isBest ? L("EN İYİ", "BEST") : fmtGap(gap)}</em></span>
       <span class="secs">${secs}</span>
-      <span class="vmax ${v != null && sum.fastest && v === sum.fastest.v ? "top" : ""}">${v != null ? Math.round(v) : "—"}</span>
+      <span class="vmax ${v != null && sum.fastest && v === sum.fastest.v ? "top" : ""}">${v != null ? Math.round(spd(v)) : "—"}</span>
       <span class="chev">›</span>
     </button>`;
   }).join("");
@@ -796,8 +801,8 @@ function diff(a, b, digits, unit, higherIsBetter) {
 function renderLapHero(tr, cmp) {
   const a = lapStats(tr), b = cmp ? lapStats(cmp) : null;
   $("lapHero").innerHTML = [
-    card({ key: true, label: L("En yüksek hız", "Top speed"), value: `${Math.round(a.top)}<small>km/h</small>`, sub: b ? diff(a.top, b.top, 0, " km/h", true) : "&nbsp;" }),
-    card({ label: L("Ortalama hız", "Average speed"), value: `${Math.round(a.avg)}<small>km/h</small>`, sub: b ? diff(a.avg, b.avg, 1, " km/h", true) : "&nbsp;" }),
+    card({ key: true, label: L("En yüksek hız", "Top speed"), value: `${Math.round(spd(a.top))}<small>${spdUnit()}</small>`, sub: b ? diff(spd(a.top), spd(b.top), 0, ` ${spdUnit()}`, true) : "&nbsp;" }),
+    card({ label: L("Ortalama hız", "Average speed"), value: `${Math.round(spd(a.avg))}<small>${spdUnit()}</small>`, sub: b ? diff(spd(a.avg), spd(b.avg), 1, ` ${spdUnit()}`, true) : "&nbsp;" }),
     card({ label: L("Tam gaz", "Full throttle"), value: `${Math.round(a.full * 100)}<small>%</small>`, sub: b ? diff(a.full * 100, b.full * 100, 0, "%", true) : L("turun", "of the lap") }),
     card({ label: L("Frende", "Braking"), value: `${Math.round(a.braking * 100)}<small>%</small>`, sub: b ? diff(a.braking * 100, b.braking * 100, 0, "%", false) : L("turun", "of the lap") })
   ].join("");
@@ -1007,7 +1012,7 @@ $("mapMode").querySelectorAll("button").forEach(b => b.onclick = () => {
 const CHARTS = [
   { key: "delta", name: L("Fark", "Delta"), h: 72, zero: true, needsCompare: true,
     get: (tr, cmp) => deltaSeries(tr, cmp), fmt: v => (v > 0 ? "+" : "") + v.toFixed(3) + " s" },
-  { key: "v", name: L("Hız", "Speed"), h: 130, col: "v", fmt: v => Math.round(v) + " km/h" },
+  { key: "v", name: L("Hız", "Speed"), h: 130, col: "v", fmt: v => Math.round(spd(v)) + " " + spdUnit() },
   { key: "th", name: L("Gaz", "Throttle"), h: 64, min: 0, max: 1, col: "th", fmt: v => Math.round(v * 100) + "%" },
   { key: "br", name: L("Fren", "Brake"), h: 64, min: 0, max: 1, col: "br", fmt: v => Math.round(v * 100) + "%" },
   { key: "g", name: L("Vites", "Gear"), h: 64, min: 0, max: 8, step: true, col: "g", fmt: v => String(Math.round(v)), more: true },
@@ -1168,9 +1173,9 @@ function renderCorners() {
     const pick = key => b ? b[key] ?? null : undefined;
     return `<tr><td class="turn">T${k.n}</td><td>${Math.round(k.d)} m</td>
       ${cell(a.brake, pick("brake"), v => `${Math.round(v)} m`, false)}
-      ${cell(a.entry, pick("entry"), v => Math.round(v), true)}
-      ${cell(a.apex, pick("apex"), v => Math.round(v), true)}
-      ${cell(a.exit, pick("exit"), v => Math.round(v), true)}
+      ${cell(a.entry, pick("entry"), v => Math.round(spd(v)), true)}
+      ${cell(a.apex, pick("apex"), v => Math.round(spd(v)), true)}
+      ${cell(a.exit, pick("exit"), v => Math.round(spd(v)), true)}
       ${cell(a.gear, pick("gear"), v => v, null)}
       ${cell(a.gLat, pick("gLat"), v => v.toFixed(2), null)}</tr>`;
   }).join("");

@@ -7,6 +7,8 @@ struct SessionSnapshot {
     var laps: [CompletedLap]
     var traces: [LapTrace]
     var session: SessionInfo
+    /// "kph" or "mph": the page shows speeds the way the app does.
+    var speedUnit: String = "kph"
 
     static let empty = SessionSnapshot(laps: [], traces: [], session: SessionInfo())
 
@@ -25,6 +27,7 @@ struct SessionSnapshot {
         return [
             "best": self.laps.map(\.timeMS).min() ?? 0,
             "laps": laps,
+            "speedUnit": speedUnit,
             "track": ["id": session.trackID, "name": session.trackName as Any? ?? NSNull(), "length": session.trackLength,
                       "weather": session.weather, "trackTemp": session.trackTemperature,
                       "airTemp": session.airTemperature, "sessionType": session.sessionType]
