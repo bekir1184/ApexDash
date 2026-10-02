@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Settings: connection, telemetry site, demo drive, language, shift flash
+/// Settings: connection, telemetry site, demo drive, language, speed unit, shift flash
 /// and links to the project.
 struct SettingsView: View {
     @Binding var languageID: String
+    @Binding var speedUnitID: String
     @AppStorage("shiftTorch") private var shiftTorch = false
     @Environment(\.openURL) private var openURL
     let strings: Strings
@@ -80,6 +81,29 @@ struct SettingsView: View {
                 .padding(unit * 0.05)
                 .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
                 .animation(.spring(duration: 0.3), value: languageID)
+            }
+
+            // Speed unit
+            row(title: strings.speedUnitTitle, subtitle: nil) {
+                HStack(spacing: 0) {
+                    // "" follows the phone's region, as the language row follows its language.
+                    ForEach([""] + SpeedUnit.allCases.map(\.rawValue), id: \.self) { option in
+                        let on = option == speedUnitID
+                        Button { speedUnitID = option } label: {
+                            Text(verbatim: option.isEmpty ? strings.automaticLanguage
+                                                          : SpeedUnit(rawValue: option)?.label ?? option)
+                                .font(Typeface.font(unit * 0.26, .black))
+                                .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
+                                .padding(.horizontal, unit * 0.3)
+                                .padding(.vertical, unit * 0.12)
+                                .background(Capsule().fill(on ? Palette.accent : Color.clear))
+                        }
+                        .buttonStyle(PressScaleStyle())
+                    }
+                }
+                .padding(unit * 0.05)
+                .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
+                .animation(.spring(duration: 0.3), value: speedUnitID)
             }
 
             // Shift flash

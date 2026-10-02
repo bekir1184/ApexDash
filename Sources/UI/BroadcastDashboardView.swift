@@ -8,17 +8,18 @@ import SwiftUI
 struct BroadcastDashboardView: View {
     let dash: DashboardModel
     let unit: CGFloat
+    @Environment(\.speedUnit) private var speedUnit
 
     var body: some View {
         GeometryReader { geo in
             let layout = BroadcastLayout(size: geo.size)
             Canvas(rendersAsynchronously: false) { context, _ in
                 var ctx = context
-                BroadcastHUD(dash: dash).draw(in: &ctx, layout: layout)
+                BroadcastHUD(dash: dash, speedUnit: speedUnit).draw(in: &ctx, layout: layout)
             }
             .overlay {
                 // The shift warning flashes inside the dial's (stretched) ellipse.
-                let frame = layout.centre(BroadcastHUD(dash: dash).dialFrame)
+                let frame = layout.centre(BroadcastHUD(dash: dash, speedUnit: speedUnit).dialFrame)
                 ShiftFlashOverlay(active: dash.shiftFlash, color: Color(hex: 0x63d6dd))
                     .clipShape(Ellipse())
                     .frame(width: frame.width, height: frame.height)
@@ -78,6 +79,7 @@ struct BroadcastLayout {
 /// Everything in design space, drawn in one pass on a GraphicsContext.
 struct BroadcastHUD {
     let dash: DashboardModel
+    var speedUnit: SpeedUnit = .kph
 
     // Constants from the prototype
     let R: CGFloat = 340
@@ -343,9 +345,9 @@ struct BroadcastHUD {
         rings.stroke(circle(R * 0.96), with: .color(ringInner), lineWidth: 2)
 
         // Inside the dial
-        drawText(&ctx, dash.speedUnitLabel, size: 59, weight: .bold, italic: false, colour: .white,
+        drawText(&ctx, speedUnit.label, size: 59, weight: .bold, italic: false, colour: .white,
                  at: CGPoint(x: CX, y: CY - R * 0.66))
-        drawText(&ctx, "\(dash.speedKPH)", size: 197, weight: .heavy, italic: false, colour: .white,
+        drawText(&ctx, "\(speedUnit.value(fromKPH: dash.speedKPH))", size: 197, weight: .heavy, italic: false, colour: .white,
                  at: CGPoint(x: CX, y: CY - R * 0.11))
 
         var hatch = ctx
@@ -486,6 +488,3 @@ extension Color {
     }
 }
 
-private extension DashboardModel {
-    var speedUnitLabel: String { "KM/H" }
-}

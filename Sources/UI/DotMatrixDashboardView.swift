@@ -5,6 +5,7 @@ import SwiftUI
 /// four corners, the battery (boost) column on the right and lap time at the bottom.
 struct DotMatrixDashboardView: View {
     let dash: DashboardModel
+    @Environment(\.speedUnit) private var speedUnit
     let unit: CGFloat
 
     private let panelStroke = Color.white.opacity(0.55)
@@ -309,7 +310,7 @@ struct DotMatrixDashboardView: View {
             SectorStrip(dash: dash, unit: unit)
                 .frame(width: unit * 3.6)
 
-            Text(verbatim: "\(dash.speedKPH) KM/H")
+            Text(verbatim: "\(speedUnit.value(fromKPH: dash.speedKPH)) \(speedUnit.label)")
                 .font(.system(size: unit * 0.62, weight: .black, design: .monospaced))
                 .foregroundStyle(.white)
                 .frame(width: unit * 3.4)

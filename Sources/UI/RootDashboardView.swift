@@ -20,6 +20,8 @@ struct RootDashboardView: View {
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
+    /// Empty follows the phone's region; see `SpeedUnit`.
+    @AppStorage("speedUnit") private var speedUnitID: String = ""
     @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
     /// Shown once; `-forceOnboarding YES` shows it again.
@@ -63,7 +65,8 @@ struct RootDashboardView: View {
 
     /// What the local analysis page serves: laps, their traces and the session.
     private var snapshot: SessionSnapshot {
-        .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo)
+        .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo,
+              speedUnit: SpeedUnit.resolve(speedUnitID).rawValue)
     }
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .realistic }
@@ -92,6 +95,7 @@ struct RootDashboardView: View {
                 ShiftFlashOverlay(active: dash.shiftFlash).ignoresSafeArea()
             }
         }
+        .environment(\.speedUnit, SpeedUnit.resolve(speedUnitID))
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
     }
@@ -404,7 +408,8 @@ struct RootDashboardView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             if showsSettings {
-                SettingsView(languageID: $languageID, strings: strings, unit: unit,
+                SettingsView(languageID: $languageID, speedUnitID: $speedUnitID,
+                             strings: strings, unit: unit,
                              isDemoRunning: client.isDemoRunning,
                              onDemo: { $0 ? client.startDemo() : client.stopDemo() },
                              onOpenConnection: { withAnimation(spring) { showsSetup = true } },

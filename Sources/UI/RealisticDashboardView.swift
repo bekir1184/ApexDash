@@ -21,6 +21,7 @@ enum RealisticPalette {
 
 struct RealisticDashboardView: View {
     let dash: DashboardModel
+    @Environment(\.speedUnit) private var speedUnit
     let unit: CGFloat
 
     private var limiter: Bool { dash.pitLimiterOn }
@@ -200,7 +201,7 @@ struct RealisticDashboardView: View {
 
     private var mainRow: some View {
         HStack(spacing: 0) {
-            value(text: "\(dash.speedKPH)", caption: "KPH")
+            value(text: "\(speedUnit.value(fromKPH: dash.speedKPH))", caption: speedUnit.compactLabel)
                 .frame(maxWidth: .infinity)
 
             Rectangle().fill(rule).frame(width: 1)

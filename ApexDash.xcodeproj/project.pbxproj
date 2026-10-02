@@ -39,6 +39,8 @@
 		6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9EC280D6D6980935FB039D /* TyreTempsView.swift */; };
 		6111625078E8AB3293AD3D04 /* FlashWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */; };
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
+		75A80E14C20E609298E77D62 /* SpeedUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24131558E0677601F912A07 /* SpeedUnit.swift */; };
+		7939F4A5DD31BC0C258013BD /* SpeedUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C884C11858C09051007D6B /* SpeedUnitTests.swift */; };
 		7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421795F1F46A0D96A98E27F7 /* Localization.swift */; };
 		7D7DDB74A075B94E90C8D2DD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6529AA60DBF6D4D9074F07B6 /* PrivacyInfo.xcprivacy */; };
 		81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 425E7F8ABFB292E799328D6B /* Assets.xcassets */; };
@@ -126,6 +128,7 @@
 		83CA98442171449A28BA231B /* StartLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLightsView.swift; sourceTree = "<group>"; };
 		8BB5CB276ACF999183003EBB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9103190A17A6CA10564FC02C /* F1TraceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1TraceRecorder.swift; sourceTree = "<group>"; };
+		93C884C11858C09051007D6B /* SpeedUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedUnitTests.swift; sourceTree = "<group>"; };
 		9402716F54863E44811C2959 /* DotMatrixEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMatrixEffect.swift; sourceTree = "<group>"; };
 		94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-SemiBold.ttf"; sourceTree = "<group>"; };
 		96FEB17E156DB88DBDEF138C /* AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLinks.swift; sourceTree = "<group>"; };
@@ -143,6 +146,7 @@
 		C7056055156F538011956B56 /* TelemetryGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryGame.swift; sourceTree = "<group>"; };
 		C85DC3B6CCEA35DB1E5296E2 /* ApexDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApexDashApp.swift; sourceTree = "<group>"; };
 		CF1E40F9B00F4F714A20E863 /* BroadcastDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastDashboardView.swift; sourceTree = "<group>"; };
+		D24131558E0677601F912A07 /* SpeedUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedUnit.swift; sourceTree = "<group>"; };
 		D4AC41915FA193E20FDA9054 /* TelemetryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryClient.swift; sourceTree = "<group>"; };
 		D757B2C0EF365F3B821A7677 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		D92F3C60C716E9C138A6BDFC /* logo.svg */ = {isa = PBXFileReference; path = logo.svg; sourceTree = "<group>"; };
@@ -200,6 +204,7 @@
 				EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */,
 				B118086835AB8A632F50FA85 /* LocalizationTests.swift */,
 				6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */,
+				93C884C11858C09051007D6B /* SpeedUnitTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -252,6 +257,7 @@
 				8BB5CB276ACF999183003EBB /* SettingsView.swift */,
 				62142A6E18D317F91D53AF82 /* SetupView.swift */,
 				2FDFE873E35C11A0A241F921 /* ShiftFlashOverlay.swift */,
+				D24131558E0677601F912A07 /* SpeedUnit.swift */,
 				43EF28A59EB57FD0629F5AD0 /* SplashView.swift */,
 				83CA98442171449A28BA231B /* StartLightsView.swift */,
 				23BA05288D4012C11EF8CD89 /* Theme.swift */,
@@ -421,6 +427,7 @@
 				0C16B49560A2CF2D09C2133C /* DemoDriveTests.swift in Sources */,
 				DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */,
 				366F3F2310E718EE3DA0CB06 /* PacketParsingTests.swift in Sources */,
+				7939F4A5DD31BC0C258013BD /* SpeedUnitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,6 +473,7 @@
 				31587BF704B74C177D7C3FCC /* ShiftFlashOverlay.swift in Sources */,
 				5F8D43409E9EA7CBDBAE795E /* ShiftTorch.swift in Sources */,
 				985A8702A0B263A0CEF06502 /* SitePairing.swift in Sources */,
+				75A80E14C20E609298E77D62 /* SpeedUnit.swift in Sources */,
 				B60C4AE029E4D7B5A3E4483A /* SplashView.swift in Sources */,
 				DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */,
 				848BB8AC38EFB0A22AF11509 /* TelemetryClient.swift in Sources */,

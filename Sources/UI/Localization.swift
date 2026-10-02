@@ -102,6 +102,7 @@ struct Strings {
     var connectionTitle: String { text("connectionTitle") }
     var connectionSubtitle: String { text("connectionSubtitle") }
     var languageTitle: String { text("languageTitle") }
+    var speedUnitTitle: String { text("speedUnitTitle") }
     var webGuideTitle: String { text("webGuideTitle") }
     var webGuideSubtitle: String { text("webGuideSubtitle") }
     var webGuideIntro: String { text("webGuideIntro") }
