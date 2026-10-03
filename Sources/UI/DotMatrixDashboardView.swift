@@ -6,6 +6,7 @@ import SwiftUI
 struct DotMatrixDashboardView: View {
     let dash: DashboardModel
     @Environment(\.speedUnit) private var speedUnit
+    @Environment(\.tyreTempSource) private var tyreTemps
     let unit: CGFloat
 
     private let panelStroke = Color.white.opacity(0.55)
@@ -185,7 +186,8 @@ struct DotMatrixDashboardView: View {
     }
 
     private func tyreCell(index: Int, label: String) -> some View {
-        let surface = dash.tyreSurfaceTemps.indices.contains(index) ? dash.tyreSurfaceTemps[index] : 0
+        let temps = tyreTemps.primary(dash)
+        let surface = temps.indices.contains(index) ? temps[index] : 0
         let brake = dash.brakeTemps.indices.contains(index) ? dash.brakeTemps[index] : 0
         return VStack(spacing: 0) {
             Text(label)

@@ -7,6 +7,7 @@ import SwiftUI
 struct GameDashboardView: View {
     let dash: DashboardModel
     @Environment(\.speedUnit) private var speedUnit
+    @Environment(\.tyreTempSource) private var tyreTemps
     let unit: CGFloat
 
     private let panel = Color(red: 0.11, green: 0.14, blue: 0.18)
@@ -136,7 +137,8 @@ struct GameDashboardView: View {
     }
 
     private func tyreLabel(index: Int, height: CGFloat) -> some View {
-        let temp = dash.tyreSurfaceTemps.indices.contains(index) ? dash.tyreSurfaceTemps[index] : 0
+        let temps = tyreTemps.primary(dash)
+        let temp = temps.indices.contains(index) ? temps[index] : 0
         return Text(verbatim: "\(temp)°C")
             .font(.system(size: height * 0.085, weight: .bold, design: .monospaced))
             .foregroundStyle(temp == 0 ? Color.white.opacity(0.3) : TempScale.tyre(temp))

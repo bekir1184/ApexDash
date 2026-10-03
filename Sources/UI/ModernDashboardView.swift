@@ -4,6 +4,7 @@ import SwiftUI
 struct ModernDashboardView: View {
     let dash: DashboardModel
     @Environment(\.speedUnit) private var speedUnit
+    @Environment(\.tyreTempSource) private var tyreTemps
     let unit: CGFloat
     let strings: Strings
 
@@ -16,11 +17,12 @@ struct ModernDashboardView: View {
                 leftColumn
                     .frame(maxWidth: .infinity, alignment: .leading)
                 gearBlock
-                TyreTempsView(tyreSurface: dash.tyreSurfaceTemps,
-                              tyreInner: dash.tyreInnerTemps,
+                TyreTempsView(primary: tyreTemps.primary(dash),
+                              secondary: tyreTemps.secondary(dash),
                               brakes: dash.brakeTemps,
                               unit: unit,
-                              innerLabel: strings.tyreInner)
+                              secondaryLabel: tyreTemps == .core ? strings.tyreSurfaceShort
+                                                                 : strings.tyreInner)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .frame(maxHeight: .infinity)

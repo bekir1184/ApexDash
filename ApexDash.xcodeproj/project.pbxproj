@@ -27,6 +27,7 @@
 		3CA503570BD78982F9481DC0 /* WaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */; };
 		40498FE0B4C007F83055065A /* Saira-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 759926D4971C7CA2BF2B675B /* Saira-Black.ttf */; };
 		4173261F129B82C52541959B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1689804A80A8FDA2DAAB0AC7 /* HomeView.swift */; };
+		47729CB7F774C2A3F0CF8A24 /* TyreTempSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E609025C1A37984252D9032C /* TyreTempSource.swift */; };
 		4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18A785D9AA723C02BE0B5E2 /* Typeface.swift */; };
 		4AB072017DEBB9EE6F6FABEC /* F1Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F5E596BCFB9C5FBDE1B32FF /* F1Game.swift */; };
 		4C55E03491F2E67742AE9EB7 /* LapTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838B03534F8726569779170A /* LapTiming.swift */; };
@@ -41,6 +42,7 @@
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
 		75A80E14C20E609298E77D62 /* SpeedUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24131558E0677601F912A07 /* SpeedUnit.swift */; };
 		7939F4A5DD31BC0C258013BD /* SpeedUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C884C11858C09051007D6B /* SpeedUnitTests.swift */; };
+		797E1F418A9AB3CC8676ACA9 /* TyreTempSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057489FB07C364FD570CC754 /* TyreTempSourceTests.swift */; };
 		7B7719CEA6DEF5DBF4C4FEEC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421795F1F46A0D96A98E27F7 /* Localization.swift */; };
 		7D7DDB74A075B94E90C8D2DD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6529AA60DBF6D4D9074F07B6 /* PrivacyInfo.xcprivacy */; };
 		81CB2A25B9C08438E8B33ED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 425E7F8ABFB292E799328D6B /* Assets.xcassets */; };
@@ -87,6 +89,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		057489FB07C364FD570CC754 /* TyreTempSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TyreTempSourceTests.swift; sourceTree = "<group>"; };
 		0AD717D5DFA547B616504051 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
 		0BA8589E415F010F214F1E43 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashWarningView.swift; sourceTree = "<group>"; };
@@ -153,6 +156,7 @@
 		D94E0A177F8701F09D7FA1A6 /* ByteWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteWriter.swift; sourceTree = "<group>"; };
 		E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectorViews.swift; sourceTree = "<group>"; };
 		E4AD853655601417E4B1A7C0 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
+		E609025C1A37984252D9032C /* TyreTempSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TyreTempSource.swift; sourceTree = "<group>"; };
 		ECEB7C2274F8CBACB9C72040 /* Saira-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Bold.ttf"; sourceTree = "<group>"; };
 		EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDriveTests.swift; sourceTree = "<group>"; };
 		F641A1E78C2B0916F202F012 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
@@ -205,6 +209,7 @@
 				B118086835AB8A632F50FA85 /* LocalizationTests.swift */,
 				6E2790717FDE18F414FE2D2F /* PacketParsingTests.swift */,
 				93C884C11858C09051007D6B /* SpeedUnitTests.swift */,
+				057489FB07C364FD570CC754 /* TyreTempSourceTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -262,6 +267,7 @@
 				83CA98442171449A28BA231B /* StartLightsView.swift */,
 				23BA05288D4012C11EF8CD89 /* Theme.swift */,
 				B18A785D9AA723C02BE0B5E2 /* Typeface.swift */,
+				E609025C1A37984252D9032C /* TyreTempSource.swift */,
 				2E9EC280D6D6980935FB039D /* TyreTempsView.swift */,
 				5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */,
 				B5222EB6F53F247A66653A84 /* WebGuideView.swift */,
@@ -428,6 +434,7 @@
 				DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */,
 				366F3F2310E718EE3DA0CB06 /* PacketParsingTests.swift in Sources */,
 				7939F4A5DD31BC0C258013BD /* SpeedUnitTests.swift in Sources */,
+				797E1F418A9AB3CC8676ACA9 /* TyreTempSourceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,6 +487,7 @@
 				20A161B82878FEFECAFC91E6 /* TelemetryGame.swift in Sources */,
 				52F91CB43B847E2D58D6C3CD /* Theme.swift in Sources */,
 				4983AC73C173AF19831ADC37 /* Typeface.swift in Sources */,
+				47729CB7F774C2A3F0CF8A24 /* TyreTempSource.swift in Sources */,
 				6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */,
 				3CA503570BD78982F9481DC0 /* WaitingView.swift in Sources */,
 				8461FB61ACBCCB22E36F33D5 /* WebGuideView.swift in Sources */,

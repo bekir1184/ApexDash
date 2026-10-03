@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// Settings: connection, telemetry site, demo drive, language, speed unit, shift flash
+/// Settings: connection, telemetry site, demo drive, language, speed unit, tyre
+/// temperature, shift flash
 /// and links to the project.
 struct SettingsView: View {
     @Binding var languageID: String
     @Binding var speedUnitID: String
+    @Binding var tyreTempID: String
     @AppStorage("shiftTorch") private var shiftTorch = false
     @Environment(\.openURL) private var openURL
     let strings: Strings
@@ -104,6 +106,27 @@ struct SettingsView: View {
                 .padding(unit * 0.05)
                 .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
                 .animation(.spring(duration: 0.3), value: speedUnitID)
+            }
+
+            // Tyre temperature: which one is the big number
+            row(title: strings.tyreTempTitle, subtitle: nil) {
+                HStack(spacing: 0) {
+                    ForEach(TyreTempSource.allCases, id: \.self) { option in
+                        let on = option == TyreTempSource.resolve(tyreTempID)
+                        Button { tyreTempID = option.rawValue } label: {
+                            Text(verbatim: option == .core ? strings.tyreCoreOption : strings.tyreSurfaceOption)
+                                .font(Typeface.font(unit * 0.26, .black))
+                                .foregroundStyle(on ? Palette.onAccent : .white.opacity(0.7))
+                                .padding(.horizontal, unit * 0.3)
+                                .padding(.vertical, unit * 0.12)
+                                .background(Capsule().fill(on ? Palette.accent : Color.clear))
+                        }
+                        .buttonStyle(PressScaleStyle())
+                    }
+                }
+                .padding(unit * 0.05)
+                .background(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1.5))
+                .animation(.spring(duration: 0.3), value: tyreTempID)
             }
 
             // Shift flash

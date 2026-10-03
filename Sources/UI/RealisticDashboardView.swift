@@ -22,6 +22,7 @@ enum RealisticPalette {
 struct RealisticDashboardView: View {
     let dash: DashboardModel
     @Environment(\.speedUnit) private var speedUnit
+    @Environment(\.tyreTempSource) private var tyreTemps
     let unit: CGFloat
 
     private var limiter: Bool { dash.pitLimiterOn }
@@ -271,7 +272,8 @@ struct RealisticDashboardView: View {
     }
 
     private func tyreLine(index: Int, label: String) -> some View {
-        let surface = dash.tyreSurfaceTemps.indices.contains(index) ? dash.tyreSurfaceTemps[index] : 0
+        let temps = tyreTemps.primary(dash)
+        let surface = temps.indices.contains(index) ? temps[index] : 0
         let brake = dash.brakeTemps.indices.contains(index) ? dash.brakeTemps[index] : 0
         return HStack(spacing: unit * 0.14) {
             Text(label)
