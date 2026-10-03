@@ -109,7 +109,7 @@ struct SettingsView: View {
             }
 
             // Tyre temperature: which one is the big number
-            row(title: strings.tyreTempTitle, subtitle: nil) {
+            row(title: strings.tyreTempTitle, subtitle: strings.tyreTempSubtitle) {
                 HStack(spacing: 0) {
                     ForEach(TyreTempSource.allCases, id: \.self) { option in
                         let on = option == TyreTempSource.resolve(tyreTempID)

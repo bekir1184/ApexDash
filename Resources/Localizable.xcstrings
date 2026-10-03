@@ -1310,6 +1310,23 @@
         }
       }
     },
+    "tyreTempSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The one you pick is the big number on the dashboards"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçtiğin sıcaklık panolarda büyük gösterilir"
+          }
+        }
+      }
+    },
     "tyreTempTitle": {
       "extractionState": "manual",
       "localizations": {

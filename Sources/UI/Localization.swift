@@ -104,6 +104,7 @@ struct Strings {
     var languageTitle: String { text("languageTitle") }
     var speedUnitTitle: String { text("speedUnitTitle") }
     var tyreTempTitle: String { text("tyreTempTitle") }
+    var tyreTempSubtitle: String { text("tyreTempSubtitle") }
     var tyreSurfaceOption: String { text("tyreSurfaceOption") }
     var tyreCoreOption: String { text("tyreCoreOption") }
     var tyreSurfaceShort: String { text("tyreSurfaceShort") }
