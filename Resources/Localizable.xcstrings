@@ -1242,6 +1242,23 @@
         }
       }
     },
+    "tyreCoreOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CORE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ÇEKİRDEK"
+          }
+        }
+      }
+    },
     "tyreInner": {
       "extractionState": "manual",
       "localizations": {
@@ -1255,6 +1272,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "iç"
+          }
+        }
+      }
+    },
+    "tyreSurfaceOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SURFACE"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YÜZEY"
+          }
+        }
+      }
+    },
+    "tyreSurfaceShort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "surf"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yüz"
+          }
+        }
+      }
+    },
+    "tyreTempTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TYRE TEMP"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LASTİK SICAKLIĞI"
           }
         }
       }

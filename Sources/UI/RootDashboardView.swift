@@ -22,6 +22,8 @@ struct RootDashboardView: View {
     @AppStorage("shiftTorch") private var shiftTorch = false
     /// Empty follows the phone's region; see `SpeedUnit`.
     @AppStorage("speedUnit") private var speedUnitID: String = ""
+    /// Which tyre temperature the dashboards show large; see `TyreTempSource`.
+    @AppStorage("tyreTemp") private var tyreTempID: String = ""
     @AppStorage("didShowFlashWarning") private var didShowFlashWarning = false
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
     /// Shown once; `-forceOnboarding YES` shows it again.
@@ -96,6 +98,7 @@ struct RootDashboardView: View {
             }
         }
         .environment(\.speedUnit, SpeedUnit.resolve(speedUnitID))
+        .environment(\.tyreTempSource, TyreTempSource.resolve(tyreTempID))
         .persistentSystemOverlays(.hidden)
         .statusBarHidden()
     }
@@ -409,6 +412,7 @@ struct RootDashboardView: View {
             }
             if showsSettings {
                 SettingsView(languageID: $languageID, speedUnitID: $speedUnitID,
+                             tyreTempID: $tyreTempID,
                              strings: strings, unit: unit,
                              isDemoRunning: client.isDemoRunning,
                              onDemo: { $0 ? client.startDemo() : client.stopDemo() },

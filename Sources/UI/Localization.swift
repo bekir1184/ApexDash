@@ -103,6 +103,10 @@ struct Strings {
     var connectionSubtitle: String { text("connectionSubtitle") }
     var languageTitle: String { text("languageTitle") }
     var speedUnitTitle: String { text("speedUnitTitle") }
+    var tyreTempTitle: String { text("tyreTempTitle") }
+    var tyreSurfaceOption: String { text("tyreSurfaceOption") }
+    var tyreCoreOption: String { text("tyreCoreOption") }
+    var tyreSurfaceShort: String { text("tyreSurfaceShort") }
     var webGuideTitle: String { text("webGuideTitle") }
     var webGuideSubtitle: String { text("webGuideSubtitle") }
     var webGuideIntro: String { text("webGuideIntro") }

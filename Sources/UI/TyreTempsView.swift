@@ -3,11 +3,12 @@ import SwiftUI
 /// Tyre and brake temperatures for the four corners. Wheel order in the specification: 0 =
 /// RL, 1 = RR, 2 = FL, 3 = FR.
 struct TyreTempsView: View {
-    let tyreSurface: [Int]
-    let tyreInner: [Int]
+    /// Shown large; the other one goes underneath in small type.
+    let primary: [Int]
+    let secondary: [Int]
     let brakes: [Int]
     var unit: CGFloat
-    var innerLabel: String
+    var secondaryLabel: String
     var compact: Bool = false
 
     private enum Corner: Int, CaseIterable {
@@ -37,8 +38,8 @@ struct TyreTempsView: View {
 
     private func corner(_ corner: Corner) -> some View {
         let index = corner.rawValue
-        let surface = tyreSurface.indices.contains(index) ? tyreSurface[index] : 0
-        let inner = tyreInner.indices.contains(index) ? tyreInner[index] : 0
+        let surface = primary.indices.contains(index) ? primary[index] : 0
+        let inner = secondary.indices.contains(index) ? secondary[index] : 0
         let brake = brakes.indices.contains(index) ? brakes[index] : 0
 
         return VStack(spacing: 1) {
@@ -51,7 +52,7 @@ struct TyreTempsView: View {
                 .font(.system(size: unit * 0.42, weight: .black, design: .monospaced))
                 .foregroundStyle(TempScale.tyre(surface))
             if !compact {
-                Text(verbatim: "\(inner)° \(innerLabel)")
+                Text(verbatim: "\(inner)° \(secondaryLabel)")
                     .font(.system(size: unit * 0.19, weight: .semibold, design: .monospaced))
                     .foregroundStyle(TempScale.tyre(inner).opacity(0.6))
             }
