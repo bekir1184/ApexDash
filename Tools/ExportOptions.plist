@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Upload an archive to App Store Connect:
+     PATH=/usr/bin:/bin DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+       xcodebuild -exportArchive -archivePath … -exportOptionsPlist Tools/ExportOptions.plist -exportPath …
+     The system-only PATH avoids a Homebrew rsync that breaks the upload, and
+     DEVELOPER_DIR picks the public Xcode: a build from a beta is rejected. -->
+<plist version="1.0">
+<dict>
+  <key>method</key><string>app-store-connect</string>
+  <key>destination</key><string>upload</string>
+  <key>teamID</key><string>7NGN8D3PYY</string>
+  <key>uploadSymbols</key><true/>
+  <key>manageAppVersionAndBuildNumber</key><false/>
+</dict>
+</plist>
