@@ -1,8 +1,8 @@
 import Foundation
 
 /// A completed lap. The CSV export is built from these records.
-struct CompletedLap: Identifiable, Equatable {
-    let id = UUID()
+struct CompletedLap: Identifiable, Equatable, Codable {
+    var id = UUID()
     let number: Int
     let timeMS: Int
     let sector1MS: Int

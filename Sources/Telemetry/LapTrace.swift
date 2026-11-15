@@ -2,7 +2,7 @@ import Foundation
 
 /// One telemetry sample, recorded at 20 Hz during a lap. Games fill in what
 /// they have; missing channels stay zero.
-struct TraceSample {
+struct TraceSample: Equatable {
     var timeMS: Int
     var distance: Float
     var x: Float
@@ -22,7 +22,7 @@ struct TraceSample {
 }
 
 /// The full trace of a completed lap, served to the analysis page.
-struct LapTrace: Identifiable {
+struct LapTrace: Identifiable, Equatable {
     var id: Int { number }
     let number: Int
     let timeMS: Int
@@ -46,3 +46,50 @@ struct LapTrace: Identifiable {
     private func round1(_ v: Float) -> Double { (Double(v) * 10).rounded() / 10 }
     private func round2(_ v: Float) -> Double { (Double(v) * 100).rounded() / 100 }
 }
+
+// MARK: - Storage
+
+extension TraceSample: Codable {
+    /// Stored as a bare array in field order, so a saved lap stays small.
+    init(from decoder: Decoder) throws {
+        var c = try decoder.unkeyedContainer()
+        timeMS = try c.decode(Int.self)
+        distance = try c.decode(Float.self)
+        x = try c.decode(Float.self)
+        z = try c.decode(Float.self)
+        speedKPH = try c.decode(Int.self)
+        throttle = try c.decode(Float.self)
+        brake = try c.decode(Float.self)
+        steer = try c.decode(Float.self)
+        gear = try c.decode(Int.self)
+        rpm = try c.decode(Int.self)
+        ersStore = try c.decode(Float.self)
+        ersDeployed = try c.decode(Float.self)
+        overtake = try c.decode(Int.self) != 0
+        straightMode = try c.decode(Int.self) != 0
+        gLat = try c.decode(Float.self)
+        gLong = try c.decode(Float.self)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.unkeyedContainer()
+        try c.encode(timeMS)
+        try c.encode(distance)
+        try c.encode(x)
+        try c.encode(z)
+        try c.encode(speedKPH)
+        try c.encode(throttle)
+        try c.encode(brake)
+        try c.encode(steer)
+        try c.encode(gear)
+        try c.encode(rpm)
+        try c.encode(ersStore)
+        try c.encode(ersDeployed)
+        try c.encode(overtake ? 1 : 0)
+        try c.encode(straightMode ? 1 : 0)
+        try c.encode(gLat)
+        try c.encode(gLong)
+    }
+}
+
+extension LapTrace: Codable {}
