@@ -67,7 +67,7 @@ struct RootDashboardView: View {
 
     /// What the local analysis page serves: laps, their traces and the session.
     private var snapshot: SessionSnapshot {
-        .init(laps: dash.completedLaps, traces: client.lapTraces, session: client.sessionInfo,
+        .init(laps: client.shownLaps, traces: client.shownTraces, session: client.shownSession,
               speedUnit: SpeedUnit.resolve(speedUnitID).rawValue)
     }
 
@@ -404,7 +404,7 @@ struct RootDashboardView: View {
         let spring = Animation.spring(duration: 0.35, bounce: 0.1)
         ZStack {
             if showsLaps {
-                LapsView(laps: dash.completedLaps, bestSectorMS: dash.bestSectorMS,
+                LapsView(laps: client.shownLaps, bestSectorMS: client.shownBestSectorMS,
                          strings: strings, unit: unit, server: server) {
                     withAnimation(spring) { showsLaps = false }
                 }

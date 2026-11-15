@@ -17,7 +17,7 @@ final class DemoDriveTests: XCTestCase {
 
     private func runDemo(format: PacketFormat) {
         let game = F1Game(format: format)
-        let client = TelemetryClient(game: game)
+        let client = TelemetryClient(game: game, store: nil)
         let demo = game.makeDemo()!
         var topSpeed = 0
         var sawActiveAero = false

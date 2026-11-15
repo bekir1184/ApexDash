@@ -458,7 +458,7 @@ struct CarMotion {
 }
 
 /// Packet ID 1 - Session. Only track and weather are read.
-struct SessionInfo: Equatable {
+struct SessionInfo: Equatable, Codable {
     var weather: Int = 0
     var trackTemperature: Int = 0
     var airTemperature: Int = 0

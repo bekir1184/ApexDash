@@ -22,6 +22,9 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     @Published private(set) var formatWarning: String?
     /// True while the built-in demo drive feeds the dashboards.
     @Published private(set) var isDemoRunning = false
+    /// The latest session on disk: the current one once it has a lap, or the
+    /// previous one after a launch. Shown while the live session has no laps.
+    @Published private(set) var savedSession: StoredSession?
 
     enum ConnectionStatus: Equatable {
         case idle
@@ -43,11 +46,38 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     private var tickTimer: Timer?
     private var demo: TelemetryDemo?
     private var demoTimer: Timer?
+    private let store: LapStore?
+    private var sessionID = LapStore.newID()
+    private var savedLapCount = 0
 
-    init(port: UInt16 = 20777, game: TelemetryGame? = nil) {
+    /// - Parameter store: where sessions are kept; `nil` keeps everything in memory.
+    init(port: UInt16 = 20777, game: TelemetryGame? = nil, store: LapStore? = LapStore()) {
         self.port = NWEndpoint.Port(rawValue: port)!
         self.game = game ?? F1Game()
+        self.store = store
         self.localIP = Self.currentWiFiAddress() ?? "-"
+        self.savedSession = store?.latest()
+    }
+
+    // MARK: - What the laps screen and the analysis page show
+
+    /// True when the live session has no laps yet and the saved one is shown instead.
+    var showsSavedSession: Bool { dash.completedLaps.isEmpty && savedSession != nil }
+
+    var shownLaps: [CompletedLap] {
+        showsSavedSession ? savedSession?.laps ?? [] : dash.completedLaps
+    }
+
+    var shownTraces: [LapTrace] {
+        showsSavedSession ? savedSession?.traces ?? [] : lapTraces
+    }
+
+    var shownSession: SessionInfo {
+        showsSavedSession ? savedSession?.session ?? sessionInfo : sessionInfo
+    }
+
+    var shownBestSectorMS: [Int] {
+        showsSavedSession ? savedSession?.bestSectorMS ?? [0, 0, 0] : dash.bestSectorMS
     }
 
     /// Switches to another game or game setting and starts from a clean state.
@@ -58,6 +88,7 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
         lapTraces = []
         sessionInfo = SessionInfo()
         formatWarning = nil
+        startNewSession()
     }
 
     /// Rebuilds the listener when the port changes.
@@ -144,6 +175,30 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
         lapTraces = []
         sessionInfo = SessionInfo()
         lastPacketDate = nil
+        startNewSession()
+    }
+
+    // MARK: - Saving laps
+
+    /// The next completed lap goes to a new file; the last saved session stays on show until then.
+    private func startNewSession() {
+        sessionID = LapStore.newID()
+        savedLapCount = 0
+    }
+
+    /// Saves the session each time a lap is completed.
+    private func saveIfLapCompleted() {
+        let laps = dash.completedLaps
+        guard let store, laps.count > savedLapCount else { return }
+        #if !DEBUG
+        // Demo laps would push real sessions off the disk. Debug builds keep them for testing.
+        if isDemoRunning { return }
+        #endif
+        savedLapCount = laps.count
+        let session = StoredSession(id: sessionID, gameID: type(of: game).id, savedAt: Date(),
+                                    session: sessionInfo, laps: laps, traces: lapTraces)
+        savedSession = session
+        store.save(session)
     }
 
     // MARK: - TelemetrySink
@@ -207,6 +262,7 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
 
     private func handle(_ data: Data) {
         guard game.consume(data, sink: self) else { return }
+        saveIfLapCompleted()
         packetCounter += 1
         lastPacketDate = Date()
         if status != .receiving { status = .receiving }
