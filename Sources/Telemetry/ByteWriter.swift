@@ -10,6 +10,8 @@ struct ByteWriter {
     mutating func uint16(_ value: UInt16) { append(value.littleEndian) }
     mutating func int16(_ value: Int16) { append(value.littleEndian) }
     mutating func uint32(_ value: UInt32) { append(value.littleEndian) }
+    mutating func int32(_ value: Int32) { append(value.littleEndian) }
+    mutating func bytes(_ value: Data) { data.append(value) }
     mutating func uint64(_ value: UInt64) { append(value.littleEndian) }
     mutating func float(_ value: Float) { append(value.bitPattern.littleEndian) }
 

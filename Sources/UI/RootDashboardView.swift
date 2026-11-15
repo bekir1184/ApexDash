@@ -17,6 +17,10 @@ struct RootDashboardView: View {
     @AppStorage("udpPort") private var udpPort: Int = 20777
     /// F1 26 by default; 2025 selects F1 25.
     @AppStorage("udpFormat") private var udpFormat: Int = 2026
+    @AppStorage("game") private var gameID: String = GameChoice.f1.rawValue
+    /// broadcasting.json values for ACC: the PC's address and connectionPassword.
+    @AppStorage("accAddress") private var accAddress: String = ""
+    @AppStorage("accPassword") private var accPassword: String = "asd"
     @AppStorage("didCompleteSetup") private var didCompleteSetup = false
     @AppStorage("webSession") private var sessionID: String = ""
     @AppStorage("shiftTorch") private var shiftTorch = false
@@ -72,6 +76,10 @@ struct RootDashboardView: View {
     }
 
     private var theme: DashTheme { DashTheme(rawValue: themeID) ?? .realistic }
+
+    private func makeGame() -> TelemetryGame {
+        GameChoice.resolve(gameID).make(f1Format: udpFormat, accPassword: accPassword)
+    }
     private var language: AppLanguage {
         AppLanguage.resolve(languageID)
     }
@@ -144,15 +152,19 @@ struct RootDashboardView: View {
                 pairing.localAddress = { server.address(ip: client.localIP) }
                 pairing.startWatching(sessionID: { sessionID })
                 client.update(port: UInt16(udpPort))
-                client.use(F1Game(format: PacketFormat(rawValue: UInt16(udpFormat)) ?? .f126))
+                client.update(gameAddress: accAddress)
+                client.use(makeGame())
                 if !didCompleteSetup && !showsOnboarding { showsSetup = true }
                 // `-startDemo YES` starts the demo drive at launch, for screenshots.
                 if UserDefaults.standard.bool(forKey: "startDemo") { client.startDemo() }
             }
             .onChange(of: udpPort) { _, new in client.update(port: UInt16(new)) }
-            .onChange(of: udpFormat) { _, new in
-                client.use(F1Game(format: PacketFormat(rawValue: UInt16(new)) ?? .f126))
+            .onChange(of: udpFormat) { _, _ in client.use(makeGame()) }
+            .onChange(of: gameID) { _, _ in client.use(makeGame()) }
+            .onChange(of: accPassword) { _, _ in
+                if GameChoice.resolve(gameID) == .acc { client.use(makeGame()) }
             }
+            .onChange(of: accAddress) { _, new in client.update(gameAddress: new) }
             // Shift warning: the phone's flash blinks with the screen (enabled in
             // Settings).
             .onChange(of: dash.shiftFlash) { _, on in
@@ -440,7 +452,8 @@ struct RootDashboardView: View {
                 .zIndex(10)
             }
             if showsSetup {
-                SetupView(port: $udpPort, format: $udpFormat, mismatch: client.formatWarning,
+                SetupView(port: $udpPort, format: $udpFormat, gameID: $gameID,
+                          accAddress: $accAddress, accPassword: $accPassword, mismatch: client.formatWarning,
                           strings: strings, localIP: client.localIP, unit: unit) {
                     didCompleteSetup = true
                     withAnimation(spring) { showsSetup = false }

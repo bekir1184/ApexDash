@@ -1,6 +1,91 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "accFile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ON THE PC: DOCUMENTS › ACC › CONFIG › BROADCASTING.JSON"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC'DE: BELGELER › ACC › CONFIG › BROADCASTING.JSON"
+          }
+        }
+      }
+    },
+    "accNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart ACC after saving the file. ACC shares speed, gear, position and lap times, not RPM, pedals or tyres, so those stay empty."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyayı kaydettikten sonra ACC'yi yeniden başlat. ACC hız, vites, sıra ve tur sürelerini paylaşır; devir, pedal ve lastik paylaşmaz, bunlar boş kalır."
+          }
+        }
+      }
+    },
+    "accPassword": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION PASSWORD"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI ŞİFRESİ"
+          }
+        }
+      }
+    },
+    "accRejected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACC REFUSED: %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACC REDDETTİ: %1$@"
+          }
+        }
+      }
+    },
+    "accSetupIntro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The phone connects to ACC on your PC. Enter the PC's address here, and the values on the right in broadcasting.json."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon, PC'ndeki ACC'ye bağlanır. PC'nin adresini buraya, sağdaki değerleri broadcasting.json dosyasına gir."
+          }
+        }
+      }
+    },
     "addressChanged": {
       "extractionState": "manual",
       "localizations": {
@@ -354,6 +439,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "OYUN %1$@ BİÇİMİNDE GÖNDERİYOR"
+          }
+        }
+      }
+    },
+    "gameLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GAME"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OYUN"
           }
         }
       }
@@ -796,6 +898,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siteye bağlanmak için AYARLAR › TELEMETRİ SİTESİ sayfasını aç."
+          }
+        }
+      }
+    },
+    "pcAddress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC'S IP ADDRESS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC'NİN IP ADRESİ"
           }
         }
       }

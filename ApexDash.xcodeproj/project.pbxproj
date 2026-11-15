@@ -42,6 +42,7 @@
 		6043D301A6B4A0720A4A3FC4 /* TyreTempsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9EC280D6D6980935FB039D /* TyreTempsView.swift */; };
 		6111625078E8AB3293AD3D04 /* FlashWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C041B2FA8D1615BB707C8B /* FlashWarningView.swift */; };
 		7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */; };
+		72E1CC9D6146382CAB8F7165 /* ACCGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9190023B4AD7D279985B05B /* ACCGame.swift */; };
 		75A80E14C20E609298E77D62 /* SpeedUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24131558E0677601F912A07 /* SpeedUnit.swift */; };
 		7939F4A5DD31BC0C258013BD /* SpeedUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C884C11858C09051007D6B /* SpeedUnitTests.swift */; };
 		797E1F418A9AB3CC8676ACA9 /* TyreTempSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057489FB07C364FD570CC754 /* TyreTempSourceTests.swift */; };
@@ -61,20 +62,25 @@
 		9F62AA4FBD182DC4ECB56942 /* PedalBarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF9E52820C0DD046259B7F /* PedalBarsView.swift */; };
 		A8F799AEC0D76E9BAF0F404F /* F1DemoDrive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9930488D71102645B9C3D341 /* F1DemoDrive.swift */; };
 		AA03D81F5DBC4B793928FD94 /* RootDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */; };
+		AB8CA0BA81F1C68C3AC9D120 /* ACCPacketTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2119DB98B3AE1EAF21CF69 /* ACCPacketTests.swift */; };
 		AFB9199670F2CA48F63DFAAD /* Saira-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 94B1B218335DD0658909DCB3 /* Saira-SemiBold.ttf */; };
 		B1BAFB2A6B5918BE133216E0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB5CB276ACF999183003EBB /* SettingsView.swift */; };
 		B4C96C957CC0EF31C5D7FB33 /* SAIRA-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 56622242113FF35F0E80210C /* SAIRA-OFL.txt */; };
 		B574C53CFBBB238FA278C6A3 /* LapExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528970F575D7C7DE3D11948A /* LapExport.swift */; };
 		B60C4AE029E4D7B5A3E4483A /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EF28A59EB57FD0629F5AD0 /* SplashView.swift */; };
 		B8A99E3C2EBE7D719C4C2A62 /* qrcode.js in Resources */ = {isa = PBXBuildFile; fileRef = B7291FB651F3EEE02154CAB8 /* qrcode.js */; };
+		BC0C1090227562E97139E652 /* ACCDemoDrive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F9B9F8A0BB30AF6D431606 /* ACCDemoDrive.swift */; };
+		BE8A52860484C3387BCB6188 /* DemoTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8995E3B37B588622B6748096 /* DemoTrack.swift */; };
 		BFC0F8C131D63E7B64160E30 /* apple-touch-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 4269B76F33329624B43222C7 /* apple-touch-icon.png */; };
 		C2D5B8A69632DBFA7717A41F /* SectorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20A664CF56AAAEAEFC573D0 /* SectorViews.swift */; };
 		DC368D282C3F6DF61ABE55AD /* GameDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */; };
 		DC379B1AE95F5B1795B04EA0 /* StartLightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CA98442171449A28BA231B /* StartLightsView.swift */; };
 		DD9BE6B9886F7B253B25394E /* Saira-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1366203E861948843FA424F3 /* Saira-ExtraBold.ttf */; };
+		DF3982FC8338D412EA98D6FA /* ACCPackets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B466B4CCEB7557CCADE9899C /* ACCPackets.swift */; };
 		DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B118086835AB8A632F50FA85 /* LocalizationTests.swift */; };
 		E886B89B093E5448F3540D70 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = E4AD853655601417E4B1A7C0 /* index.html */; };
 		EE09C6D27EA2BFC1A8659052 /* LapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D757B2C0EF365F3B821A7677 /* LapsView.swift */; };
+		EE2E4BE8F46D41027D7243C0 /* GameChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A37B169D53398B5C3164F7C /* GameChoice.swift */; };
 		EE6F639B89CC5FF7ADACC058 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3F516455413BBD4C0AF2B363 /* InfoPlist.xcstrings */; };
 		F73E54228C0195530E2A48EB /* DotMatrixDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F75832D998633683E86EC9 /* DotMatrixDashboardView.swift */; };
 		FD5013D2E356192882CFADB9 /* ClusterDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423199CC0F31539536E11CDB /* ClusterDashboardView.swift */; };
@@ -115,11 +121,14 @@
 		425E7F8ABFB292E799328D6B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4269B76F33329624B43222C7 /* apple-touch-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "apple-touch-icon.png"; sourceTree = "<group>"; };
 		43EF28A59EB57FD0629F5AD0 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		45F9B9F8A0BB30AF6D431606 /* ACCDemoDrive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACCDemoDrive.swift; sourceTree = "<group>"; };
 		48BC7C65A36F060F3AA1BCA4 /* RealisticDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealisticDashboardView.swift; sourceTree = "<group>"; };
+		4A37B169D53398B5C3164F7C /* GameChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameChoice.swift; sourceTree = "<group>"; };
 		528970F575D7C7DE3D11948A /* LapExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapExport.swift; sourceTree = "<group>"; };
 		56622242113FF35F0E80210C /* SAIRA-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SAIRA-OFL.txt"; sourceTree = "<group>"; };
 		58AD42A0DBABF56A63835C8A /* ModernDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernDashboardView.swift; sourceTree = "<group>"; };
 		5A0FC87FC047FF4C9B2C2AD5 /* WaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingView.swift; sourceTree = "<group>"; };
+		5A2119DB98B3AE1EAF21CF69 /* ACCPacketTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACCPacketTests.swift; sourceTree = "<group>"; };
 		5DA9A3947624D30403174356 /* DeviceTilt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTilt.swift; sourceTree = "<group>"; };
 		62142A6E18D317F91D53AF82 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		6529AA60DBF6D4D9074F07B6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -131,6 +140,7 @@
 		75DF9E52820C0DD046259B7F /* PedalBarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedalBarsView.swift; sourceTree = "<group>"; };
 		838B03534F8726569779170A /* LapTiming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapTiming.swift; sourceTree = "<group>"; };
 		83CA98442171449A28BA231B /* StartLightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLightsView.swift; sourceTree = "<group>"; };
+		8995E3B37B588622B6748096 /* DemoTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoTrack.swift; sourceTree = "<group>"; };
 		8BB5CB276ACF999183003EBB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9103190A17A6CA10564FC02C /* F1TraceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1TraceRecorder.swift; sourceTree = "<group>"; };
 		93C884C11858C09051007D6B /* SpeedUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedUnitTests.swift; sourceTree = "<group>"; };
@@ -141,11 +151,13 @@
 		99DCC65F9DF565B57258ED23 /* LocalAnalysisServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAnalysisServer.swift; sourceTree = "<group>"; };
 		A26F9D082DCD1711E9B35899 /* GameDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDashboardView.swift; sourceTree = "<group>"; };
 		A82A52F16E2574492B934ACF /* ShiftTorch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTorch.swift; sourceTree = "<group>"; };
+		A9190023B4AD7D279985B05B /* ACCGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACCGame.swift; sourceTree = "<group>"; };
 		AEA16B02BC1662EF9D0FDFFA /* Saira-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Saira-Regular.ttf"; sourceTree = "<group>"; };
 		B0F7951F3FFF46C2055A2C5E /* LapStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapStore.swift; sourceTree = "<group>"; };
 		B118086835AB8A632F50FA85 /* LocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationTests.swift; sourceTree = "<group>"; };
 		B15DB9994752B0B0AEC48BB5 /* RootDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootDashboardView.swift; sourceTree = "<group>"; };
 		B18A785D9AA723C02BE0B5E2 /* Typeface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typeface.swift; sourceTree = "<group>"; };
+		B466B4CCEB7557CCADE9899C /* ACCPackets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACCPackets.swift; sourceTree = "<group>"; };
 		B5222EB6F53F247A66653A84 /* WebGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebGuideView.swift; sourceTree = "<group>"; };
 		B7291FB651F3EEE02154CAB8 /* qrcode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = qrcode.js; sourceTree = "<group>"; };
 		BE36F726A92A7F9D6680FC8F /* LapStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapStoreTests.swift; sourceTree = "<group>"; };
@@ -171,6 +183,8 @@
 		06B36A320B929FC046D43385 /* Games */ = {
 			isa = PBXGroup;
 			children = (
+				4A37B169D53398B5C3164F7C /* GameChoice.swift */,
+				AC7CD3610849B4D4D06E4226 /* ACC */,
 				D96483942A846424CF2091F3 /* F1 */,
 			);
 			path = Games;
@@ -194,6 +208,7 @@
 				34B03317C3CEAF76EC70FC71 /* ByteReader.swift */,
 				D94E0A177F8701F09D7FA1A6 /* ByteWriter.swift */,
 				FD777AC9B2AF96CD4E455F88 /* DashboardModel.swift */,
+				8995E3B37B588622B6748096 /* DemoTrack.swift */,
 				528970F575D7C7DE3D11948A /* LapExport.swift */,
 				B0F7951F3FFF46C2055A2C5E /* LapStore.swift */,
 				838B03534F8726569779170A /* LapTiming.swift */,
@@ -210,6 +225,7 @@
 		610D0E164AFAD8B5A33ACDC6 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				5A2119DB98B3AE1EAF21CF69 /* ACCPacketTests.swift */,
 				EE0DADFDCB918E9EE9D3A18B /* DemoDriveTests.swift */,
 				BE36F726A92A7F9D6680FC8F /* LapStoreTests.swift */,
 				B118086835AB8A632F50FA85 /* LocalizationTests.swift */,
@@ -230,6 +246,16 @@
 				B627EC6D4C9ACCFF156306CE /* UI */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		AC7CD3610849B4D4D06E4226 /* ACC */ = {
+			isa = PBXGroup;
+			children = (
+				45F9B9F8A0BB30AF6D431606 /* ACCDemoDrive.swift */,
+				A9190023B4AD7D279985B05B /* ACCGame.swift */,
+				B466B4CCEB7557CCADE9899C /* ACCPackets.swift */,
+			);
+			path = ACC;
 			sourceTree = "<group>";
 		};
 		B357FEAC31FC1054B8216B5B /* Web */ = {
@@ -436,6 +462,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB8CA0BA81F1C68C3AC9D120 /* ACCPacketTests.swift in Sources */,
 				0C16B49560A2CF2D09C2133C /* DemoDriveTests.swift in Sources */,
 				4F667FFBB453B74B69D0D8A3 /* LapStoreTests.swift in Sources */,
 				DFC160A03640226A74AB30E0 /* LocalizationTests.swift in Sources */,
@@ -449,6 +476,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC0C1090227562E97139E652 /* ACCDemoDrive.swift in Sources */,
+				72E1CC9D6146382CAB8F7165 /* ACCGame.swift in Sources */,
+				DF3982FC8338D412EA98D6FA /* ACCPackets.swift in Sources */,
 				5C991BBF2DF6507800CDC352 /* ApexDashApp.swift in Sources */,
 				4D2C94BE1F9407B2D81B5B8B /* AppLinks.swift in Sources */,
 				32EF03C89D380AD91FBE8BDD /* BroadcastDashboardView.swift in Sources */,
@@ -457,6 +487,7 @@
 				FD5013D2E356192882CFADB9 /* ClusterDashboardView.swift in Sources */,
 				991371F9681CDC2F3F512CDB /* DashboardModel+F1.swift in Sources */,
 				7086E0EB67C4EC48635E1714 /* DashboardModel.swift in Sources */,
+				BE8A52860484C3387BCB6188 /* DemoTrack.swift in Sources */,
 				922800FFCF96B86B0E70F76C /* DeviceTilt.swift in Sources */,
 				F73E54228C0195530E2A48EB /* DotMatrixDashboardView.swift in Sources */,
 				20E2603CC2EC508073BC6D77 /* DotMatrixEffect.swift in Sources */,
@@ -465,6 +496,7 @@
 				1006D14CC8529D7D2DD2C997 /* F1Packets.swift in Sources */,
 				9B3F12B5A642087AB0501310 /* F1TraceRecorder.swift in Sources */,
 				6111625078E8AB3293AD3D04 /* FlashWarningView.swift in Sources */,
+				EE2E4BE8F46D41027D7243C0 /* GameChoice.swift in Sources */,
 				DC368D282C3F6DF61ABE55AD /* GameDashboardView.swift in Sources */,
 				4173261F129B82C52541959B /* HomeView.swift in Sources */,
 				B574C53CFBBB238FA278C6A3 /* LapExport.swift in Sources */,
