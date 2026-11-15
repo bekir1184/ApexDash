@@ -126,13 +126,6 @@ struct Strings {
     var phoneAddress: String { text("phoneAddress") }
     var gameSettings: String { text("gameSettings") }
     var broadcastNote: String { text("broadcastNote") }
-    var gameLabel: String { text("gameLabel") }
-    var accSetupIntro: String { text("accSetupIntro") }
-    var pcAddress: String { text("pcAddress") }
-    var accPassword: String { text("accPassword") }
-    var accFile: String { text("accFile") }
-    var accNote: String { text("accNote") }
-    func accRejected(_ reason: String) -> String { text("accRejected", reason) }
     var setupButton: String { text("setupButton") }
     var selectButton: String { text("selectButton") }
     var flashWarningAccept: String { text("flashWarningAccept") }

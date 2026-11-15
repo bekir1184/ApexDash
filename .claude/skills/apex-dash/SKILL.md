@@ -48,8 +48,6 @@ game ──UDP──▶ TelemetryClient ──▶ TelemetryGame ──▶ Dashbo
 | `Sources/Telemetry/SitePairing.swift` | Announces the phone's local address to an ntfy.sh topic so apexdash.pro can hand the browser over. |
 | `Sources/Telemetry/ByteReader.swift`, `ByteWriter.swift` | Little-endian binary reading and writing. |
 | `Sources/Games/F1/` | F1 25 / F1 26: packets, decoder, trace recorder, demo drive. The reference implementation. |
-| `Sources/Games/ACC/` | Assetto Corsa Competizione broadcasting API: registration handshake, decoder, demo drive. |
-| `Sources/Games/GameChoice.swift` | The games on the connection screen's picker. |
 | `Sources/UI/` | Dashboards, menu carousel, onboarding, settings, splash. |
 | `Resources/Localizable.xcstrings` | Every piece of user-facing text. |
 | `Web/index.html` | The analysis page; bundled into the app and deployed to apexdash.pro. |
@@ -123,13 +121,13 @@ Full version in `docs/ADDING_A_GAME.md`. The shape:
    `sink.publish(lapTraces:)`.
 4. Tests built from the published specification, plus real captured datagrams if
    you have them.
-5. Add a case to `GameChoice` so the connection screen's picker offers it,
-   and give it panels in `SetupView`. Games that must be contacted first set
-   `connectsToGame` and talk through `sink.send(_:)`; `ACCGame` is the example.
+5. Game selection is not built yet: `RootDashboardView` creates `F1Game`
+   directly. The first second game should add the picker to the connection
+   screen, storing `TelemetryGame.id`.
 
-Supported: F1 25 / F1 26 and Assetto Corsa Competizione (broadcasting API).
 Good next targets: Forza Motorsport / Horizon (simple "Data Out" UDP), EA SPORTS
-WRC, Gran Turismo 7 (encrypted, needs a heartbeat).
+WRC, Assetto Corsa Competizione (needs a registration handshake), Gran Turismo 7
+(encrypted, needs a heartbeat).
 
 ## Recipe: add a dashboard
 

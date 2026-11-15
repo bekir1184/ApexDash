@@ -13,12 +13,8 @@ protocol TelemetryGame: AnyObject {
     static var id: String { get }
     /// Name shown in the app, for example "F1 25 / F1 26".
     static var displayName: String { get }
-    /// Port the game sends to unless the player changes it. For a game that
-    /// `connectsToGame`, the port the game listens on.
+    /// Port the game sends to unless the player changes it.
     static var defaultPort: UInt16 { get }
-    /// True when the app must contact the game first, at the address the
-    /// player enters, instead of the game sending to the phone on its own.
-    static var connectsToGame: Bool { get }
 
     /// Decodes one datagram and applies it through `sink`.
     /// - Returns: `true` when the datagram was recognised as this game's
@@ -38,7 +34,6 @@ protocol TelemetryGame: AnyObject {
 }
 
 extension TelemetryGame {
-    static var connectsToGame: Bool { false }
     func tick(sink: TelemetrySink) {}
     func makeDemo() -> TelemetryDemo? { nil }
 }
@@ -61,7 +56,4 @@ protocol TelemetrySink: AnyObject {
     /// Warns the player that the game sends a format they did not select,
     /// for example `"F1 25"`. Pass `nil` once the right format arrives.
     func reportUnexpectedFormat(_ description: String?)
-    /// Sends a datagram to the game, for games that `connectsToGame`. Does
-    /// nothing while no game address is set.
-    func send(_ data: Data)
 }
