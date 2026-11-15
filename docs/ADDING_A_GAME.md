@@ -116,10 +116,15 @@ anyone see your game working without owning it.
 
 ## 6. Let players choose the game
 
-Game selection lives in the connection screen. Until more than one game exists,
-`RootDashboardView` creates `F1Game` directly; the first new game should add a
-picker there, storing `TelemetryGame.id` in settings. Mention it in your pull
-request and we will shape it together.
+Game selection lives in the connection screen. Add a case to `GameChoice`
+(`Sources/Games/GameChoice.swift`) with the game's `id`, a short picker title
+and how to build it, then give the game its own panels in `SetupView`.
+
+Games that do not stream on their own, like ACC, set `connectsToGame` to true:
+the app then opens a socket to the address entered on the connection screen,
+the game sends through `sink.send(_:)` (from `tick(sink:)` to register again
+when the game goes quiet), and replies arrive in `consume(_:sink:)` like any
+other datagram. See `ACCGame`.
 
 ## 7. Document the setup
 

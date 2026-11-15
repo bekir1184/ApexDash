@@ -46,6 +46,10 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     private var tickTimer: Timer?
     private var demo: TelemetryDemo?
     private var demoTimer: Timer?
+    /// The game's address for games that `connectsToGame`: "192.168.1.20" or "192.168.1.20:9000".
+    private(set) var gameAddress = ""
+    /// The socket to a game that `connectsToGame`; its replies arrive on it too.
+    private var outbound: NWConnection?
     private let store: LapStore?
     private var sessionID = LapStore.newID()
     private var savedLapCount = 0
@@ -89,6 +93,44 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
         sessionInfo = SessionInfo()
         formatWarning = nil
         startNewSession()
+        connectToGame()
+    }
+
+    /// Sets where to reach a game that `connectsToGame`, and reconnects.
+    func update(gameAddress newAddress: String) {
+        let trimmed = newAddress.trimmingCharacters(in: .whitespaces)
+        guard trimmed != gameAddress else { return }
+        gameAddress = trimmed
+        connectToGame()
+    }
+
+    /// Opens the socket to the game when the active game needs one, the
+    /// address is set and the client is running.
+    private func connectToGame() {
+        outbound?.cancel()
+        outbound = nil
+        guard type(of: game).connectsToGame, listener != nil,
+              let (host, port) = Self.endpoint(gameAddress, defaultPort: type(of: game).defaultPort)
+        else { return }
+        let connection = NWConnection(host: host, port: port, using: .udp)
+        connection.start(queue: .global(qos: .userInitiated))
+        receive(on: connection)
+        outbound = connection
+        // Lets the game register right away instead of on the next tick.
+        game.tick(sink: self)
+    }
+
+    /// Splits "host" or "host:port" into an endpoint.
+    static func endpoint(_ address: String, defaultPort: UInt16) -> (NWEndpoint.Host, NWEndpoint.Port)? {
+        let parts = address.split(separator: ":", omittingEmptySubsequences: false)
+        guard let hostPart = parts.first, !hostPart.isEmpty, parts.count <= 2 else { return nil }
+        var port = defaultPort
+        if parts.count == 2 {
+            guard let value = UInt16(parts[1]), value > 0 else { return nil }
+            port = value
+        }
+        guard let endpointPort = NWEndpoint.Port(rawValue: port) else { return nil }
+        return (NWEndpoint.Host(String(hostPart)), endpointPort)
     }
 
     /// Rebuilds the listener when the port changes.
@@ -126,12 +168,15 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
             self.localIP = Self.currentWiFiAddress() ?? "-"
             startTicker()
             startPathMonitor()
+            connectToGame()
         } catch {
             status = .failed(error.localizedDescription)
         }
     }
 
     func stop() {
+        outbound?.cancel()
+        outbound = nil
         tickTimer?.invalidate()
         tickTimer = nil
         connections.forEach { $0.cancel() }
@@ -202,6 +247,10 @@ final class TelemetryClient: ObservableObject, TelemetrySink {
     }
 
     // MARK: - TelemetrySink
+
+    func send(_ data: Data) {
+        outbound?.send(content: data, completion: .contentProcessed { _ in })
+    }
 
     func publish(lapTraces: [LapTrace]) {
         self.lapTraces = lapTraces

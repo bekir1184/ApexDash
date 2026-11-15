@@ -26,6 +26,9 @@ struct ByteReader {
 
     mutating func uint8() -> UInt8? { next(1)?.first }
 
+    /// The next `count` raw bytes.
+    mutating func bytes(_ count: Int) -> Data? { next(count) }
+
     mutating func int8() -> Int8? {
         guard let raw = uint8() else { return nil }
         return Int8(bitPattern: raw)

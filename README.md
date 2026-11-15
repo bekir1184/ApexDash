@@ -14,7 +14,7 @@
   <a href="https://github.com/bekir1184/ApexDash/actions/workflows/ci.yml"><img src="https://github.com/bekir1184/ApexDash/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-GPLv3-blue" alt="GPLv3"></a>
   <img src="https://img.shields.io/badge/iOS-17%2B-black" alt="iOS 17+">
-  <img src="https://img.shields.io/badge/games-F1%2025%20%C2%B7%20F1%2026-e10600" alt="F1 25 and F1 26">
+  <img src="https://img.shields.io/badge/games-F1%2025%20%C2%B7%20F1%2026%20%C2%B7%20ACC-e10600" alt="F1 25, F1 26 and ACC">
 </p>
 
 <p align="center">
@@ -158,6 +158,14 @@ The phone keeps a live lap list too, with sector colours and CSV export:
 | --- | --- | --- |
 | EA SPORTS F1 26 | PC, PlayStation, Xbox | UDP Telemetry **On** · Broadcast Mode **Off** · IP Address **your phone's IP** · Port **20777** · Send Rate **60 Hz** · UDP Format **2026** · Your Telemetry **Public** |
 | EA SPORTS F1 25 | PC, PlayStation, Xbox | The same, with UDP Format **2025**, and 2025 selected on the app's connection screen |
+| Assetto Corsa Competizione | PC | No in-game menu: in `Documents\Assetto Corsa Competizione\Config\broadcasting.json` set `"updListenerPort": 9000` and a `"connectionPassword"`, then restart ACC. In the app pick **ACC** on the connection screen and enter the PC's IP address and the same password. |
+
+ACC shares its data through the broadcasting API, which is made for broadcast
+overlays: speed, gear, position, lap and sector times, the gap ahead and the
+track map all work, but there is no RPM, pedals, tyres or fuel, so the rev
+lights and those gauges stay empty. Unlike F1, the phone connects to the PC,
+so the PC needs to accept incoming UDP on that port (Windows asks the first
+time ACC opens it).
 
 More games are welcome — see [Adding a game](docs/ADDING_A_GAME.md).
 
@@ -215,7 +223,8 @@ brew install xcodegen && xcodegen generate && open ApexDash.xcodeproj
 ```
 
 You do not need the game to develop: turn on the demo drive, or run
-`python3 Tools/f1_sim.py 127.0.0.1`.
+`python3 Tools/f1_sim.py 127.0.0.1` for F1, or `python3 Tools/acc_sim.py` for
+ACC (then enter this computer's address on the connection screen).
 
 ## F1 packet layout
 
@@ -253,8 +262,10 @@ The menus use [Saira](https://github.com/Omnibus-Type/Saira) by Omnibus-Type,
 under the SIL Open Font License 1.1, included in `Resources/Fonts`.
 
 Apex Dash is not affiliated with, endorsed by or connected to Formula One, the
-FIA, Electronic Arts or Codemasters. F1 and Formula 1 are trademarks of Formula
-One Licensing B.V., used only to say which games the app reads telemetry from.
+FIA, Electronic Arts, Codemasters or Kunos Simulazioni. F1 and Formula 1 are
+trademarks of Formula One Licensing B.V., and Assetto Corsa Competizione is a
+trademark of Kunos Simulazioni, used only to say which games the app reads
+telemetry from.
 
 <p align="center"><sub>Screenshots show the built-in demo drive.</sub></p>
 
